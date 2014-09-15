@@ -1,0 +1,18 @@
+<package>
+  <description brief="Components for 3D-SLAM">
+  Orogen components using the slam3d library.
+  </description>
+  <author>Sebastian Kasperski/sebastian.kasperski@dfki.de</author>
+  <license></license>
+  <url>http://</url>
+  <logo>http://</logo>
+  <depend package="base/cmake" />
+  <!--
+   To add any dependencies use the depend tag
+  <depend package="dummy-dependency-0" />
+	...
+  <depend package="dummy-dependency-n-1" />
+  <depend package="dummy-dependency-n" />
+  -->
+  <depend package="slam/slam3d" />
+</package>
