@@ -10,8 +10,10 @@ name "slam3d"
 # library's pkg-config name) and then the header can be used. Following Rock
 # conventions, a common use-case would be:
 #
-# using_library "slam3d"
-# import_types_from "slam3d/CustomType.hpp"
+using_library 'velodyne_lidar'
+using_library 'slam3d'
+
+import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
 
 # If this project uses data types that are defined in other oroGen projects,
 # these projects should be imported there as well.
