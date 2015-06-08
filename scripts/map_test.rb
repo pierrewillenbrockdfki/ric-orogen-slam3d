@@ -5,12 +5,12 @@ require 'transformer/runtime'
 
 include Orocos
 
-log = Orocos::Log::Replay.open("/home/dfki.uni-bremen.de/skasperski/Robotics/samples/20150129-2128")
+log = Orocos::Log::Replay.open("/home/dfki.uni-bremen.de/skasperski/Robotics/samples/20130709_velodyne_seekurjr_outdoor_track")
 log.use_sample_time = false
 
 ## Initialize orocos ##
 Orocos.initialize
-Orocos.transformer.load_conf('transforms.rb')
+#Orocos.transformer.load_conf('transforms.rb')
 
 # track only needed ports
 velodyne_ports = log.find_all_output_ports("/velodyne_lidar/MultilevelLaserScan", "laser_scans")
@@ -30,7 +30,7 @@ Orocos.run 'slam3d::Mapper' => 'mapper' do
   end
 
   ## Start the tasks ##
-  Orocos.transformer.setup(mapper)
+#  Orocos.transformer.setup(mapper)
   mapper.configure
   mapper.start
   
@@ -42,6 +42,7 @@ Orocos.run 'slam3d::Mapper' => 'mapper' do
     mapper.stop
     mapper.cleanup
   end
-  Orocos.watch(mapper)
+  
+#  Orocos.watch(mapper)
 end
 
