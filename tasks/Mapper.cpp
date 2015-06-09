@@ -63,22 +63,29 @@ bool Mapper::startHook()
 
 void Mapper::updateHook()
 {
+	LOG_DEBUG("=== updateHook ===");
 	MapperBase::updateHook();
 	
 	// Read the scan from the port
 	velodyne_lidar::MultilevelLaserScan scan;
 	while(_scan.read(scan, false) == RTT::NewData)
 	{
-		mScansReceived++;
-		if(mScansReceived < 600 || mScansReceived % 4 == 0)
-			continue;
+		++mScansReceived;
+//		if(mScansReceived < 600 || mScansReceived % 4 == 0)
+//			continue;
 		
-		if(processScan(scan))
+		try
 		{
-			mScansAdded++;
-		}else
+			if(processScan(scan))
+			{
+				mScansAdded++;
+			}else
+			{
+				LOG_WARN("Scan was not added to map!");
+			}
+		}catch (std::exception &e)
 		{
-			LOG_ERROR("Failed to add scan to map!");
+			LOG_ERROR("Could not add scan: %s", e.what());
 		}
 	}
 
@@ -89,11 +96,16 @@ void Mapper::updateHook()
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = "map";
 	rbs.targetFrame = "robot";
+
+	// TODO: check timestamping from scan
+	rbs.time = base::Time::now();
 	_map2robot.write(rbs);
 	
 
 	if(mScansAdded % 10 != 0)
+	{
 		return;
+	}
 
 	// Publish accumulated cloud
 	slam::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
@@ -123,7 +135,7 @@ bool Mapper::processScan(const velodyne_lidar::MultilevelLaserScan& scan)
 		return false;
 	}else
 	{
-		LOG_INFO("Converted to pointcloud with %d points.", points.size());
+		LOG_DEBUG("Converted to pointcloud with %d points.", points.size());
 	}
 	slam::PointCloud::Ptr cloud(new slam::PointCloud);
 	cloud->header.stamp = scan.time.toMicroseconds();
@@ -139,7 +151,7 @@ bool Mapper::processScan(const velodyne_lidar::MultilevelLaserScan& scan)
 	try
 	{
 		slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, 0.1);
-		LOG_INFO("Downsampled cloud has %d points.", downsampled_cloud->size());
+		LOG_DEBUG("Downsampled cloud has %d points.", downsampled_cloud->size());
 		slam::PointCloudMeasurement* measurement = new slam::PointCloudMeasurement(downsampled_cloud, mPclSensor->getName());
 		mMapper->addReading(measurement);
 	}catch(std::exception& e)

@@ -10,7 +10,7 @@ log.use_sample_time = false
 
 ## Initialize orocos ##
 Orocos.initialize
-#Orocos.transformer.load_conf('transforms.rb')
+Orocos.transformer.load_conf('transforms.rb')
 
 # track only needed ports
 velodyne_ports = log.find_all_output_ports("/velodyne_lidar/MultilevelLaserScan", "laser_scans")
@@ -29,8 +29,10 @@ Orocos.run 'slam3d::Mapper' => 'mapper' do
       port.connect_to mapper.scan, :type => :buffer, :size => 100
   end
 
+  ## Start transformer (should not be necessary?)
+  Orocos.transformer.setup(mapper)
+
   ## Start the tasks ##
-#  Orocos.transformer.setup(mapper)
   mapper.configure
   mapper.start
   
@@ -45,4 +47,3 @@ Orocos.run 'slam3d::Mapper' => 'mapper' do
   
 #  Orocos.watch(mapper)
 end
-
