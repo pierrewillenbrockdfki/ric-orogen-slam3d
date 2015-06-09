@@ -16,4 +16,6 @@
 	<depend package="tools/orocos.rb" />
 	<depend package="gui/vizkit" />
 	
+	<tags>stable</tags>
+	
 </package>
