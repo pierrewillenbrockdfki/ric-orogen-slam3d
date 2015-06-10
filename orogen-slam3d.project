@@ -33,6 +33,11 @@
     <File Name="slam3d.orogen"/>
     <File Name="CMakeLists.txt"/>
   </VirtualDirectory>
+  <VirtualDirectory Name="scripts">
+    <File Name="scripts/map_test.rb"/>
+    <File Name="scripts/transforms.rb"/>
+    <File Name="scripts/dump_pcl.rb"/>
+  </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
@@ -63,7 +68,7 @@
       <CustomBuild Enabled="yes">
         <RebuildCommand/>
         <CleanCommand>make clean</CleanCommand>
-        <BuildCommand>make</BuildCommand>
+        <BuildCommand>make install</BuildCommand>
         <PreprocessFileCommand/>
         <SingleFileCommand/>
         <MakefileGenerationCommand/>
@@ -120,9 +125,4 @@
       </Completion>
     </Configuration>
   </Settings>
-  <VirtualDirectory Name="scripts">
-    <File Name="scripts/map_test.rb"/>
-    <File Name="scripts/transforms.rb"/>
-    <File Name="scripts/dump_pcl.rb"/>
-  </VirtualDirectory>
 </CodeLite_Project>

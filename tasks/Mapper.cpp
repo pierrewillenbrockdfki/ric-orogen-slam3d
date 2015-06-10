@@ -10,6 +10,7 @@
 #include <base/samples/RigidBodyState.hpp>
 
 #include <slam3d/include/FileLogger.hpp>
+#include <slam3d/include/G2oSolver.hpp>
 
 using namespace slam3d;
 
@@ -46,7 +47,10 @@ bool Mapper::configureHook()
 	conf.maximum_iterations = 200;
 	mPclSensor->setConfiguaration(conf);
 	mMapper->registerSensor(mPclSensor);
-	mMapper->setNeighborRadius(3.0);
+	mMapper->setNeighborRadius(2.0);
+	
+	mSolver = new slam::G2oSolver(mLogger);
+	mMapper->setSolver(mSolver);
 	
 	mScansReceived = 0;
 	mScansAdded = 0;
@@ -107,9 +111,12 @@ void Mapper::updateHook()
 		return;
 	}
 
+	// Optimize
+	mMapper->optimize();
+
 	// Publish accumulated cloud
 	slam::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
-	slam::PointCloud::Ptr accCloud = mPclSensor->getAccumulatedCloud(vertices, 0.1);
+	slam::PointCloud::Ptr accCloud = mPclSensor->getAccumulatedCloud(vertices, 0.25);
 	
 	base::samples::Pointcloud mapCloud;
 	for(slam::PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
@@ -150,7 +157,7 @@ bool Mapper::processScan(const velodyne_lidar::MultilevelLaserScan& scan)
 	
 	try
 	{
-		slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, 0.1);
+		slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, 0.5);
 		LOG_DEBUG("Downsampled cloud has %d points.", downsampled_cloud->size());
 		slam::PointCloudMeasurement* measurement = new slam::PointCloudMeasurement(downsampled_cloud, mPclSensor->getName());
 		mMapper->addReading(measurement);
@@ -177,6 +184,7 @@ void Mapper::cleanupHook()
 	MapperBase::cleanupHook();
 	delete mMapper;
 	delete mPclSensor;
+	delete mSolver;
 	delete mLogger;
 	delete mClock;
 }

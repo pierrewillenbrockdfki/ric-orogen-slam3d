@@ -7,7 +7,7 @@
 
 #include <slam3d/include/GraphMapper.hpp>
 #include <slam3d/include/PointCloudSensor.hpp>
-#include <slam3d/include/G2oSolver.hpp>
+#include <slam3d/include/Solver.hpp>
 
 namespace slam3d
 {
@@ -115,6 +115,7 @@ namespace slam3d
 		slam::Logger* mLogger;
 		slam::GraphMapper* mMapper;
 		slam::PointCloudSensor* mPclSensor;
+		slam::Solver* mSolver;
 		
 		int mScansReceived;
 		int mScansAdded;
