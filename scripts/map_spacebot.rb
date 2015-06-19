@@ -20,36 +20,44 @@ end
 
 ## Execute the task 'message_producer::Task' ##
 Orocos.run	'slam3d::convert_scan' => 'converter',
+			'slam3d::indoor_filter' => 'filter',
 			'slam3d::PointcloudMapper' => 'mapper' do
 
-  ## Get the task context ##
-  converter = Orocos.name_service.get 'converter'
-  mapper = Orocos.name_service.get 'mapper'
+	## Get the task context ##
+	converter = Orocos.name_service.get 'converter'
+	filter = Orocos.name_service.get 'filter'
+	mapper = Orocos.name_service.get 'mapper'
 
-  ## Connect ports with the task ##
-  velodyne_ports.each do |port|
-      port.connect_to converter.scan, :type => :buffer, :size => 100
-  end
-  converter.cloud.connect_to mapper.scan, :type => :buffer, :size => 100
+	## Connect ports with the task ##
+	velodyne_ports.each do |port|
+	port.connect_to converter.scan, :type => :buffer, :size => 100
+	end
+	converter.cloud.connect_to    filter.cloud_in,  :type => :buffer, :size => 100
+	filter.cloud_out.connect_to   mapper.scan,      :type => :buffer, :size => 100
 
-  ## Start the tasks ##
-  converter.configure
-  mapper.configure
-  
-  mapper.start
-  converter.start
-  
-  Vizkit.control log
-  Vizkit.display converter.cloud
-  Vizkit.display mapper.cloud
-  begin
-    Vizkit.exec
-  rescue Interrupt => e
-    mapper.stop
-	converter.stop
-    mapper.cleanup
-	converter.cleanup
-  end
+	## Start the tasks ##
+	converter.configure
+	filter.configure
+	mapper.configure
+
+	mapper.start
+	filter.start
+	converter.start
+
+	Vizkit.control log
+	Vizkit.display filter.cloud_out
+	Vizkit.display mapper.cloud
+	begin
+		Vizkit.exec
+	rescue Interrupt => e
+		mapper.stop
+		filter.stop
+		converter.stop
+		
+		mapper.cleanup
+		filter.cleanup
+		converter.cleanup
+	end
   
 #  Orocos.watch(converter)
 end
