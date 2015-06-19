@@ -19,14 +19,18 @@
   </Plugins>
   <Description/>
   <Dependencies/>
-  <VirtualDirectory Name="src">
-    <File Name="tasks/Mapper.cpp"/>
+  <VirtualDirectory Name="tasks">
+    <File Name="tasks/convert_scan.cpp"/>
+    <File Name="tasks/convert_scan.hpp"/>
     <File Name="tasks/dump_pcl.cpp"/>
-  </VirtualDirectory>
-  <VirtualDirectory Name="include">
-    <File Name="tasks/Mapper.hpp"/>
-    <File Name="tasks/rock-common.hpp"/>
     <File Name="tasks/dump_pcl.hpp"/>
+    <File Name="tasks/indoor_filter.cpp"/>
+    <File Name="tasks/indoor_filter.hpp"/>
+    <File Name="tasks/Mapper.cpp"/>
+    <File Name="tasks/Mapper.hpp"/>
+    <File Name="tasks/PointcloudMapper.cpp"/>
+    <File Name="tasks/PointcloudMapper.hpp"/>
+    <File Name="tasks/rock-common.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
@@ -37,6 +41,9 @@
     <File Name="scripts/map_test.rb"/>
     <File Name="scripts/transforms.rb"/>
     <File Name="scripts/dump_pcl.rb"/>
+    <File Name="scripts/map_coyote.rb"/>
+    <File Name="scripts/dump_coyote.rb"/>
+    <File Name="scripts/map_spacebot.rb"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>

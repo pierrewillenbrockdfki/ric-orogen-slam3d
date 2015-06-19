@@ -1,36 +1,29 @@
 require 'orocos'
 require 'orocos/log'
 require 'vizkit'
-require 'transformer/runtime'
 
 include Orocos
 
-log = Orocos::Log::Replay.open("/home/dfki.uni-bremen.de/skasperski/Robotics/samples/20130709_velodyne_seekurjr_outdoor_track")
+log = Orocos::Log::Replay.open("/home/dfki.uni-bremen.de/skasperski/Robotics/samples/20150612_coyote3_rh5")
 log.use_sample_time = false
 
 ## Initialize orocos ##
 Orocos.initialize
-Orocos.transformer.load_conf('transforms.rb')
 
 # track only needed ports
-velodyne_ports = log.find_all_output_ports("/velodyne_lidar/MultilevelLaserScan", "laser_scans")
-log.transformer_broadcaster.track(false)
-log.transformer_broadcaster.rename("foo")
-velodyne_ports.each do |port|
+pcl_ports = log.find_all_output_ports("/base/samples/Pointcloud_m", "pointcloud")
+pcl_ports.each do |port|
     port.tracked = true
 end
 
 ## Execute the task 'message_producer::Task' ##
-Orocos.run 'slam3d::Mapper' => 'mapper' do
+Orocos.run 'slam3d::PointcloudMapper' => 'mapper' do
   ## Get the task context##
   mapper = Orocos.name_service.get 'mapper'
   # connect ports with the task
-  velodyne_ports.each do |port|
+  pcl_ports.each do |port|
       port.connect_to mapper.scan, :type => :buffer, :size => 100
   end
-
-  ## Start transformer (should not be necessary?)
-#  Orocos.transformer.setup(mapper)
 
   ## Start the tasks ##
   mapper.configure
@@ -45,5 +38,4 @@ Orocos.run 'slam3d::Mapper' => 'mapper' do
     mapper.cleanup
   end
   
-#  Orocos.watch(mapper)
 end

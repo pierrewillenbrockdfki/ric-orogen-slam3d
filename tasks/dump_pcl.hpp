@@ -26,7 +26,8 @@ namespace slam3d {
 	friend class dump_pclBase;
     protected:
 
-		 int mScanNumber;
+		void handlePointcloud(const std::vector<Eigen::Vector3d>& points, std::vector<float> remission);
+		int mScanNumber;
 
     public:
         /** TaskContext constructor for dump_pcl
