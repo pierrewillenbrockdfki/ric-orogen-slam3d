@@ -26,8 +26,6 @@
     <File Name="tasks/dump_pcl.hpp"/>
     <File Name="tasks/indoor_filter.cpp"/>
     <File Name="tasks/indoor_filter.hpp"/>
-    <File Name="tasks/Mapper.cpp"/>
-    <File Name="tasks/Mapper.hpp"/>
     <File Name="tasks/PointcloudMapper.cpp"/>
     <File Name="tasks/PointcloudMapper.hpp"/>
     <File Name="tasks/rock-common.hpp"/>
