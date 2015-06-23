@@ -26,6 +26,8 @@ namespace slam3d
 
 		int mScansReceived;
 		int mScansAdded;
+		
+		double mScanResolution;
 
 	public:
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");

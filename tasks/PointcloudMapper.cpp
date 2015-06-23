@@ -34,21 +34,21 @@ bool PointcloudMapper::configureHook()
 	mLogger = new BaseLogger();
 	mLogger->setLogLevel(slam::DEBUG);
 
-	mMapper = new slam::GraphMapper(mLogger);
 	mPclSensor = new slam::PointCloudSensor("pointcloud", mLogger);
-	slam::GICPConfiguration conf;
-	conf.max_correspondence_distance = 4.0;
-	conf.max_fitness_score = 20;
-	conf.maximum_iterations = 200;
-	mPclSensor->setConfiguaration(conf);
-	mMapper->registerSensor(mPclSensor);
-	mMapper->setNeighborRadius(2.0);
-	
+	mPclSensor->setConfiguaration(_gicp_config.get());
+
 	mSolver = new slam::G2oSolver(mLogger);
+
+	mMapper = new slam::GraphMapper(mLogger);
+	mMapper->setNeighborRadius(_neighbor_radius.get());
+	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
 	mScansReceived = 0;
 	mScansAdded = 0;
+	
+	// Get parameters
+	mScanResolution = _scan_resolution.get();
 	
 	return true;
 }
@@ -77,8 +77,8 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 	// Downsample and add to map
 	try
 	{
-//		slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, 0.25);
-//		LOG_DEBUG("Downsampled cloud has %d points.", downsampled_cloud->size());
+		slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
+		LOG_DEBUG("Downsampled cloud has %d points.", downsampled_cloud->size());
 		slam::PointCloudMeasurement* measurement = new slam::PointCloudMeasurement(cloud, mPclSensor->getName());
 		mMapper->addReading(measurement);
 	}catch(std::exception& e)
@@ -129,7 +129,7 @@ void PointcloudMapper::updateHook()
 
 	// Publish accumulated cloud
 	slam::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
-	slam::PointCloud::Ptr accCloud = mPclSensor->getAccumulatedCloud(vertices, 0.1);
+	slam::PointCloud::Ptr accCloud = mPclSensor->getAccumulatedCloud(vertices, 0.05);
 	
 	base::samples::Pointcloud mapCloud;
 	for(slam::PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)

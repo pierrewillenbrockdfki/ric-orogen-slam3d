@@ -4,35 +4,47 @@ using_library 'velodyne_lidar'
 using_library 'slam3d'
 using_library 'transformer'
 
-import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
 import_types_from 'base'
+import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
+import_types_from 'slam3d/include/GICPConfiguration.hpp'
+
 
 ## Mapper using Pointclouds
 task_context "PointcloudMapper" do
 	needs_configuration
-	input_port "scan", "/base/samples/Pointcloud"
-	output_port "cloud", "/base/samples/Pointcloud"
-	output_port "map2robot", "base/samples/RigidBodyState"
-	port_driven "scan"	
+	
+	input_port 'scan', '/base/samples/Pointcloud'
+	output_port 'cloud', '/base/samples/Pointcloud'
+	output_port 'map2robot', 'base/samples/RigidBodyState'
+	port_driven 'scan'
+	
+	property('scan_resolution', '/double')
+	 .doc("Pointclouds are downsampled to this resolution before being added to the map.")
+	
+	property('neighbor_radius', '/double')
+	 .doc("Distance to search for neighbors when adding additional constraints to the graph.")
+	
+	property('gicp_config', '/slam/GICPConfiguration')
+	 .doc("Parameters for Generalized ICP.")
 end
 
 ## Task to dump velodyne-Scans to KITTI-Format
 task_context "dump_pcl" do
-	input_port "scan", "/velodyne_lidar/MultilevelLaserScan"
-	input_port "pcl", "/base/samples/Pointcloud"
-	port_driven "scan", "pcl"
+	input_port 'scan', '/velodyne_lidar/MultilevelLaserScan'
+	input_port 'pcl', '/base/samples/Pointcloud'
+	port_driven 'scan', 'pcl'
 end
 
 ## Filter to reduce velodyne-scans taking indoor
 task_context "indoor_filter" do
-	input_port "cloud_in", "/base/samples/Pointcloud"
-	output_port "cloud_out", "/base/samples/Pointcloud"
-	port_driven "cloud_in"
+	input_port 'cloud_in', '/base/samples/Pointcloud'
+	output_port 'cloud_out', '/base/samples/Pointcloud'
+	port_driven 'cloud_in'
 end
 
 ## Convert MultilevelLaserScan to Pointcloud
 task_context "convert_scan" do
-	input_port "scan", "/velodyne_lidar/MultilevelLaserScan"
-	output_port "cloud", "/base/samples/Pointcloud"
-	port_driven "scan"
+	input_port 'scan', '/velodyne_lidar/MultilevelLaserScan'
+	output_port 'cloud', '/base/samples/Pointcloud'
+	port_driven 'scan'
 end

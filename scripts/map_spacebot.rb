@@ -23,23 +23,30 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 			'slam3d::indoor_filter' => 'filter',
 			'slam3d::PointcloudMapper' => 'mapper' do
 
-	## Get the task context ##
+	## Configure the scan converter ##
 	converter = Orocos.name_service.get 'converter'
+	converter.configure
+		
+	## Configure the pointcloud filter ##
 	filter = Orocos.name_service.get 'filter'
+	filter.configure
+
+	## Configure the mapper ##
 	mapper = Orocos.name_service.get 'mapper'
+	mapper.scan_resolution = 0.1
+	mapper.neighbor_radius = 1.0
+	mapper.gicp_config.max_correspondence_distance = 1.0
+	mapper.gicp_config.max_fitness_score = 20
+	mapper.configure
 
 	## Connect ports with the task ##
 	velodyne_ports.each do |port|
-	port.connect_to converter.scan, :type => :buffer, :size => 100
+		port.connect_to converter.scan, :type => :buffer, :size => 100
 	end
 	converter.cloud.connect_to    filter.cloud_in,  :type => :buffer, :size => 100
 	filter.cloud_out.connect_to   mapper.scan,      :type => :buffer, :size => 100
 
 	## Start the tasks ##
-	converter.configure
-	filter.configure
-	mapper.configure
-
 	mapper.start
 	filter.start
 	converter.start
