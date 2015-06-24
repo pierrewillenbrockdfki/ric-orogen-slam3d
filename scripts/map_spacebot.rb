@@ -35,16 +35,22 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	mapper = Orocos.name_service.get 'mapper'
 	mapper.scan_resolution = 0.1
 	mapper.neighbor_radius = 1.0
-	mapper.gicp_config.max_correspondence_distance = 1.0
-	mapper.gicp_config.max_fitness_score = 20
+	mapper.min_translation = 0.5;
+	mapper.min_rotation = 0.1
+	
+	mapper.gicp_config do |c|
+		c.max_correspondence_distance = 1.0
+		c.max_fitness_score = 20
+	end
+	
 	mapper.configure
 
 	## Connect ports with the task ##
 	velodyne_ports.each do |port|
-		port.connect_to converter.scan, :type => :buffer, :size => 100
+		port.connect_to converter.scan, :type => :buffer, :size => 10
 	end
-	converter.cloud.connect_to    filter.cloud_in,  :type => :buffer, :size => 100
-	filter.cloud_out.connect_to   mapper.scan,      :type => :buffer, :size => 100
+	converter.cloud.connect_to    filter.cloud_in,  :type => :buffer, :size => 10
+	filter.cloud_out.connect_to   mapper.scan,      :type => :buffer, :size => 10
 
 	## Start the tasks ##
 	mapper.start
@@ -52,8 +58,9 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	converter.start
 
 	Vizkit.control log
-	Vizkit.display filter.cloud_out
+#	Vizkit.display filter.cloud_out
 	Vizkit.display mapper.cloud
+	Vizkit.display mapper.map2robot
 	begin
 		Vizkit.exec
 	rescue Interrupt => e

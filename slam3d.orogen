@@ -24,6 +24,12 @@ task_context "PointcloudMapper" do
 	property('neighbor_radius', '/double')
 	 .doc("Distance to search for neighbors when adding additional constraints to the graph.")
 	
+	property('min_translation', '/double')
+	 .doc("Minimum distance between two subsequent nodes.")
+	
+	property('min_rotation', '/double')
+	 .doc("Minimum rotation difference between two subsequent nodes.")
+
 	property('gicp_config', '/slam/GICPConfiguration')
 	 .doc("Parameters for Generalized ICP.")
 end

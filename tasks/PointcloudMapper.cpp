@@ -9,6 +9,8 @@
 #include <slam3d/include/FileLogger.hpp>
 #include <slam3d/include/G2oSolver.hpp>
 
+#include <boost/format.hpp>
+
 using namespace slam3d;
 
 PointcloudMapper::PointcloudMapper(std::string const& name)
@@ -26,29 +28,53 @@ PointcloudMapper::~PointcloudMapper()
 }
 
 bool PointcloudMapper::configureHook()
-{
+{	
 	if (! PointcloudMapperBase::configureHook())
 		return false;
 		
 	mClock = new slam::Clock();
-	mLogger = new BaseLogger();
+	mLogger = new slam::Logger(*mClock);
 	mLogger->setLogLevel(slam::DEBUG);
+	mLogger->message(slam::DEBUG, "=== Configure PointCloudMapper ===");
 
 	mPclSensor = new slam::PointCloudSensor("pointcloud", mLogger);
-	mPclSensor->setConfiguaration(_gicp_config.get());
+	slam::GICPConfiguration conf = _gicp_config.get();
+	mPclSensor->setConfiguaration(conf);
+	mLogger->message(slam::INFO, " = GICP - Parameters =");
+	mLogger->message(slam::INFO, (boost::format("correspondence_randomness:    %1%") % conf.correspondence_randomness).str());
+	mLogger->message(slam::INFO, (boost::format("euclidean_fitness_epsilon:    %1%") % conf.euclidean_fitness_epsilon).str());
+	mLogger->message(slam::INFO, (boost::format("max_correspondence_distance:  %1%") % conf.max_correspondence_distance).str());
+	mLogger->message(slam::INFO, (boost::format("max_fitness_score:            %1%") % conf.max_fitness_score).str());
+	mLogger->message(slam::INFO, (boost::format("max_sensor_distance:          %1%") % conf.max_sensor_distance).str());
+	mLogger->message(slam::INFO, (boost::format("maximum_iterations:           %1%") % conf.maximum_iterations).str());
+	mLogger->message(slam::INFO, (boost::format("maximum_optimizer_iterations: %1%") % conf.maximum_optimizer_iterations).str());
+	mLogger->message(slam::INFO, (boost::format("orientation_sigma:            %1%") % conf.orientation_sigma).str());
+	mLogger->message(slam::INFO, (boost::format("point_cloud_density:          %1%") % conf.point_cloud_density).str());
+	mLogger->message(slam::INFO, (boost::format("position_sigma:               %1%") % conf.position_sigma).str());
+	mLogger->message(slam::INFO, (boost::format("rotation_epsilon:             %1%") % conf.rotation_epsilon).str());
+	mLogger->message(slam::INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());
 
 	mSolver = new slam::G2oSolver(mLogger);
-
 	mMapper = new slam::GraphMapper(mLogger);
-	mMapper->setNeighborRadius(_neighbor_radius.get());
+	
+	mLogger->message(slam::INFO, " = GraphMapper - Parameters =");
+	double min_translation = _min_translation.get();
+	double min_rotation = _min_rotation.get();
+	mLogger->message(slam::INFO, (boost::format("min_pose_distance:  %1% / %2%") % min_translation % min_rotation).str());
+	mMapper->setMinPoseDistance(min_translation, min_rotation);
+	
+	double neighbor_radius = _neighbor_radius.get();
+	mLogger->message(slam::INFO, (boost::format("neighbor_radius:    %1%") % neighbor_radius).str());
+	mMapper->setNeighborRadius(neighbor_radius);
+	
+	mScanResolution = _scan_resolution.get();
+	mLogger->message(slam::INFO, (boost::format("scan_resolution:    %1%") % mScanResolution).str());
+	
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
 	mScansReceived = 0;
 	mScansAdded = 0;
-	
-	// Get parameters
-	mScanResolution = _scan_resolution.get();
 	
 	return true;
 }
@@ -78,12 +104,12 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 	try
 	{
 		slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
-		LOG_DEBUG("Downsampled cloud has %d points.", downsampled_cloud->size());
+		mLogger->message(slam::DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
 		slam::PointCloudMeasurement* measurement = new slam::PointCloudMeasurement(cloud, mPclSensor->getName());
 		mMapper->addReading(measurement);
 	}catch(std::exception& e)
 	{
-		LOG_ERROR("Downsampling failed: %s", e.what());
+		mLogger->message(slam::ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());
 		return false;
 	}
 	return true;
@@ -91,7 +117,7 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 
 void PointcloudMapper::updateHook()
 {
-	LOG_DEBUG("=== updateHook ===");
+	mLogger->message(slam::DEBUG, "=== updateHook ===");
     PointcloudMapperBase::updateHook();
 	
 	// Read the scan from the port
@@ -106,11 +132,11 @@ void PointcloudMapper::updateHook()
 				mScansAdded++;
 			}else
 			{
-				LOG_WARN("Scan was not added to map!");
+				mLogger->message(slam::WARNING, "Scan was not added to map!");
 			}
 		}catch (std::exception &e)
 		{
-			LOG_ERROR("Could not add scan: %s", e.what());
+			mLogger->message(slam::ERROR, (boost::format("Could not add scan: %1%") % e.what()).str());
 		}
 	}
 	
