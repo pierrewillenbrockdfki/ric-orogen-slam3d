@@ -5,6 +5,8 @@
 
 #include "slam3d/dump_pclBase.hpp"
 
+#include <stdio.h>
+
 namespace slam3d {
 
     /*! \class dump_pcl 
@@ -28,6 +30,8 @@ namespace slam3d {
 
 		void handlePointcloud(const std::vector<Eigen::Vector3d>& points, std::vector<float> remission);
 		int mScanNumber;
+		FILE* mTransformLog;
+		FILE* mPointcloudLog;
 
     public:
         /** TaskContext constructor for dump_pcl

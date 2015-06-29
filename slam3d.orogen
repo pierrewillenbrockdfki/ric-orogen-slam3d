@@ -38,6 +38,7 @@ end
 task_context "dump_pcl" do
 	input_port 'scan', '/velodyne_lidar/MultilevelLaserScan'
 	input_port 'pcl', '/base/samples/Pointcloud'
+	input_port 'odometry', '/base/samples/RigidBodyState'
 	port_driven 'scan', 'pcl'
 end
 

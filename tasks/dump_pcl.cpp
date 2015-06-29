@@ -3,10 +3,9 @@
 #include "dump_pcl.hpp"
 
 #include <base/Logging.hpp>
+#include <base/samples/RigidBodyState.hpp>
 #include <velodyne_lidar/MultilevelLaserScan.h>
 #include <velodyne_lidar/pointcloudConvertHelper.hpp>
-
-#include <stdio.h>
 
 using namespace slam3d;
 
@@ -42,6 +41,8 @@ bool dump_pcl::startHook()
         return false;
 		
     mScanNumber = 0;
+	mTransformLog = fopen("transforms.log", "wb");
+	mPointcloudLog = fopen("pcl.log", "wb");
     return true;
 }
 
@@ -78,10 +79,34 @@ void dump_pcl::updateHook()
 {
     dump_pclBase::updateHook();
 	
+	// Read odometry data
+	base::samples::RigidBodyState rbs;
+	double* pose_data = new double[7];
+	while(_odometry.read(rbs, false) == RTT::NewData)
+	{
+		int64_t stamp = rbs.time.microseconds;
+		pose_data[0] = rbs.position[0];
+		pose_data[1] = rbs.position[1];
+		pose_data[2] = rbs.position[2];
+		pose_data[3] = rbs.orientation.x();
+		pose_data[4] = rbs.orientation.y();
+		pose_data[5] = rbs.orientation.z();
+		pose_data[6] = rbs.orientation.w();
+		fwrite(&stamp, sizeof(int64_t), 1, mTransformLog);
+		fwrite(pose_data, sizeof(double), 7, mTransformLog);
+//		fwrite("\n", sizeof(char), 1, stream);	
+	}
+
+	
 	// Read the scan from the port
 	velodyne_lidar::MultilevelLaserScan scan;
 	while(_scan.read(scan, false) == RTT::NewData)
 	{
+		// Write timestamp to log file
+		int64_t stamp = scan.time.microseconds;
+		fwrite(&stamp, sizeof(int64_t), 1, mPointcloudLog);
+		fwrite(&mScanNumber, sizeof(int), 1, mPointcloudLog);
+/*		
 		// Convert to PointCloud
 		std::vector<Eigen::Vector3d> points;
 		std::vector<float> remission;
@@ -102,8 +127,10 @@ void dump_pcl::updateHook()
 		}
 		
 		handlePointcloud(points, remission);
+*/
 	}
-	
+/*	
+	// Read pointcloud from the port
 	base::samples::Pointcloud cloud;
 	while(_pcl.read(cloud, false) == RTT::NewData)
 	{
@@ -120,15 +147,21 @@ void dump_pcl::updateHook()
 		}
 		handlePointcloud(points, remission);
 	}
+*/
 }
+
 void dump_pcl::errorHook()
 {
     dump_pclBase::errorHook();
 }
+
 void dump_pcl::stopHook()
 {
     dump_pclBase::stopHook();
+	fclose(mTransformLog);
+	fclose(mPointcloudLog);
 }
+
 void dump_pcl::cleanupHook()
 {
     dump_pclBase::cleanupHook();

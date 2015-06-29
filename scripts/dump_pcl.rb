@@ -18,11 +18,18 @@ Orocos.initialize
 
 # track only needed ports
 velodyne_ports = log.find_all_output_ports("/velodyne_lidar/MultilevelLaserScan", "laser_scans")
-log.transformer_broadcaster.track(false)
-log.transformer_broadcaster.rename("foo")
 velodyne_ports.each do |port|
     port.tracked = true
 end
+
+odometry_ports = log.find_all_output_ports("/base/samples/RigidBodyState_m", "odometry_samples")
+odometry_ports.each do |port|
+    port.tracked = true
+end
+
+log.transformer_broadcaster.track(false)
+log.transformer_broadcaster.rename("foo")
+
 
 ## Execute the PCL-Dump Task ##
 Orocos.run 'slam3d::dump_pcl' => 'dump' do
@@ -31,6 +38,10 @@ Orocos.run 'slam3d::dump_pcl' => 'dump' do
   # connect ports with the task
   velodyne_ports.each do |port|
       port.connect_to dump.scan, :type => :buffer, :size => 10
+  end
+
+  odometry_ports.each do |port|
+      port.connect_to dump.odometry, :type => :buffer, :size => 10
   end
 
   ## Start the tasks ##

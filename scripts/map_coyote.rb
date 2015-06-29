@@ -22,7 +22,7 @@ Orocos.run 'slam3d::PointcloudMapper' => 'mapper' do
   mapper = Orocos.name_service.get 'mapper'
   # connect ports with the task
   pcl_ports.each do |port|
-      port.connect_to mapper.scan, :type => :buffer, :size => 100
+      port.connect_to mapper.scan, :type => :buffer, :size => 10
   end
 
   ## Start the tasks ##
