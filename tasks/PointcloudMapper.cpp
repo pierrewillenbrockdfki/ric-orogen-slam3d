@@ -37,7 +37,7 @@ bool PointcloudMapper::configureHook()
 	mLogger->setLogLevel(slam::DEBUG);
 	mLogger->message(slam::DEBUG, "=== Configure PointCloudMapper ===");
 
-	mPclSensor = new slam::PointCloudSensor("pointcloud", mLogger);
+	mPclSensor = new slam::PointCloudSensor("pointcloud", mLogger, slam::Transform::Identity());
 	slam::GICPConfiguration conf = _gicp_config.get();
 	mPclSensor->setConfiguaration(conf);
 	mLogger->message(slam::INFO, " = GICP - Parameters =");
