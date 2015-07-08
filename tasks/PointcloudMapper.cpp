@@ -32,9 +32,11 @@ bool PointcloudMapper::configureHook()
 	if (! PointcloudMapperBase::configureHook())
 		return false;
 		
-	mClock = new slam::Clock();
-	mLogger = new slam::Logger(*mClock);
-	mLogger->setLogLevel(slam::DEBUG);
+//	mClock = new slam::Clock();
+//	mLogger = new slam::Logger(*mClock);
+
+	mLogger = new BaseLogger();
+//	mLogger->setLogLevel(slam::DEBUG);
 	mLogger->message(slam::DEBUG, "=== Configure PointCloudMapper ===");
 
 	mPclSensor = new slam::PointCloudSensor("pointcloud", mLogger, slam::Transform::Identity());
@@ -103,10 +105,21 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 	// Downsample and add to map
 	try
 	{
-		slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
-		mLogger->message(slam::DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
-		slam::PointCloudMeasurement* measurement = new slam::PointCloudMeasurement(cloud, mPclSensor->getName());
-		mMapper->addReading(measurement);
+		slam::PointCloudMeasurement* measurement;
+		if(mScanResolution > 0)
+		{
+			slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
+			mLogger->message(slam::DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
+			measurement = new slam::PointCloudMeasurement(downsampled_cloud, mPclSensor->getName());
+		}else
+		{
+			measurement = new slam::PointCloudMeasurement(cloud, mPclSensor->getName());
+		}
+		
+		if(!mMapper->addReading(measurement))
+		{
+			delete measurement;
+		}
 	}catch(std::exception& e)
 	{
 		mLogger->message(slam::ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());

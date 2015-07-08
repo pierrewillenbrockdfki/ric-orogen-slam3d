@@ -12,8 +12,8 @@ Orocos.initialize
 
 # track only needed ports
 velodyne_ports = log.find_all_output_ports("/velodyne_lidar/MultilevelLaserScan", "laser_scans")
-#log.transformer_broadcaster.track(false)
-#log.transformer_broadcaster.rename("foo")
+log.transformer_broadcaster.track(false)
+log.transformer_broadcaster.rename("foo")
 velodyne_ports.each do |port|
     port.tracked = true
 end
@@ -33,8 +33,8 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 
 	## Configure the mapper ##
 	mapper = Orocos.name_service.get 'mapper'
-	mapper.scan_resolution = 0.1
-	mapper.neighbor_radius = 1.0
+	mapper.scan_resolution = 0
+	mapper.neighbor_radius = 2.0
 	mapper.min_translation = 0.5;
 	mapper.min_rotation = 0.1
 	
@@ -58,9 +58,9 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	converter.start
 
 	Vizkit.control log
-#	Vizkit.display filter.cloud_out
+	Vizkit.display filter.cloud_out
 	Vizkit.display mapper.cloud
-	Vizkit.display mapper.map2robot
+#	Vizkit.display mapper.map2robot
 	begin
 		Vizkit.exec
 	rescue Interrupt => e
