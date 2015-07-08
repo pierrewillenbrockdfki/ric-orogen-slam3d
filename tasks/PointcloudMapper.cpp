@@ -59,6 +59,15 @@ bool PointcloudMapper::configureHook()
 	mSolver = new slam::G2oSolver(mLogger);
 	mMapper = new slam::GraphMapper(mLogger);
 	
+	if(_use_odometry.get())
+	{
+		mOdometry = new RockOdometry();
+		mMapper->setOdometry(mOdometry);
+	}else
+	{
+		mOdometry = NULL;
+	}
+	
 	mLogger->message(slam::INFO, " = GraphMapper - Parameters =");
 	double min_translation = _min_translation.get();
 	double min_rotation = _min_rotation.get();
@@ -71,6 +80,8 @@ bool PointcloudMapper::configureHook()
 	
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(slam::INFO, (boost::format("scan_resolution:    %1%") % mScanResolution).str());
+	
+	mLogger->message(slam::INFO, (boost::format("use_odometry:       %1%") % _use_odometry.get()).str());
 	
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
@@ -133,6 +144,24 @@ void PointcloudMapper::updateHook()
 	mLogger->message(slam::DEBUG, "=== updateHook ===");
     PointcloudMapperBase::updateHook();
 	
+	// Read odometry data
+	if(mOdometry)
+	{
+		base::samples::RigidBodyState odom;
+		slam::Transform odom_tf;
+
+		while(_odometry.read(odom, false) == RTT::NewData)
+		{
+			Eigen::Affine3d odom_aff = odom.getTransform();
+			if((odom_aff.matrix().array() == odom_aff.matrix().array()).all())
+			{
+				odom_tf.linear() = odom_aff.linear();
+				odom_tf.translation() = odom_aff.translation();
+				mOdometry->setCurrentPose(odom_tf);
+			}
+		}
+	}
+	
 	// Read the scan from the port
 	base::samples::Pointcloud cloud;
 	while(_scan.read(cloud, false) == RTT::NewData)
@@ -163,8 +192,13 @@ void PointcloudMapper::updateHook()
 	rbs.time = cloud.time;
 	_map2robot.write(rbs);
 	
+	if(mScansAdded < 5)
+		return;
+		
+	mScansAdded = 0;
+	
 	// Optimize
-//	mMapper->optimize();
+	mMapper->optimize();
 
 	// Publish accumulated cloud
 	slam::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
@@ -191,6 +225,7 @@ void PointcloudMapper::errorHook()
 void PointcloudMapper::stopHook()
 {
     PointcloudMapperBase::stopHook();
+	mMapper->writeGraphToFile("final_graph");
 }
 
 void PointcloudMapper::cleanupHook()

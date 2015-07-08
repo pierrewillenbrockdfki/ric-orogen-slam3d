@@ -11,6 +11,8 @@
 
 namespace slam3d
 {
+	class RockOdometry;
+	
 	class PointcloudMapper : public PointcloudMapperBase
 	{
 	friend class PointcloudMapperBase;
@@ -23,6 +25,7 @@ namespace slam3d
 		slam::GraphMapper* mMapper;
 		slam::PointCloudSensor* mPclSensor;
 		slam::Solver* mSolver;
+		RockOdometry* mOdometry;
 
 		int mScansReceived;
 		int mScansAdded;

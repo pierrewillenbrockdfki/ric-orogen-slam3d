@@ -12,11 +12,17 @@ Orocos.initialize
 
 # track only needed ports
 velodyne_ports = log.find_all_output_ports("/velodyne_lidar/MultilevelLaserScan", "laser_scans")
-log.transformer_broadcaster.track(false)
-log.transformer_broadcaster.rename("foo")
 velodyne_ports.each do |port|
     port.tracked = true
 end
+
+odometry_ports = log.find_all_output_ports("/base/samples/RigidBodyState_m", "odometry_samples")
+odometry_ports.each do |port|
+    port.tracked = true
+end
+
+log.transformer_broadcaster.track(false)
+log.transformer_broadcaster.rename("foo")
 
 ## Execute the task 'message_producer::Task' ##
 Orocos.run	'slam3d::convert_scan' => 'converter',
@@ -34,9 +40,10 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	## Configure the mapper ##
 	mapper = Orocos.name_service.get 'mapper'
 	mapper.scan_resolution = 0
-	mapper.neighbor_radius = 2.0
+	mapper.neighbor_radius = 3.0
 	mapper.min_translation = 0.5;
 	mapper.min_rotation = 0.1
+	mapper.use_odometry = true;
 	
 	mapper.gicp_config do |c|
 		c.max_correspondence_distance = 1.0
@@ -51,6 +58,9 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	end
 	converter.cloud.connect_to    filter.cloud_in,  :type => :buffer, :size => 10
 	filter.cloud_out.connect_to   mapper.scan,      :type => :buffer, :size => 10
+	odometry_ports.each do |port|
+		port.connect_to mapper.odometry, :type => :buffer, :size => 10
+	end
 
 	## Start the tasks ##
 	mapper.start
@@ -58,7 +68,7 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	converter.start
 
 	Vizkit.control log
-	Vizkit.display filter.cloud_out
+#	Vizkit.display filter.cloud_out
 	Vizkit.display mapper.cloud
 #	Vizkit.display mapper.map2robot
 	begin
