@@ -3,10 +3,12 @@ name "slam3d"
 using_library 'velodyne_lidar'
 using_library 'slam3d'
 using_library 'transformer'
+using_library 'envire'
 
 import_types_from 'base'
 import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
 import_types_from 'slam3d/include/GICPConfiguration.hpp'
+import_types_from 'envire'
 
 
 ## Mapper using Pointclouds
@@ -58,4 +60,11 @@ task_context "convert_scan" do
 	input_port 'scan', '/velodyne_lidar/MultilevelLaserScan'
 	output_port 'cloud', '/base/samples/Pointcloud'
 	port_driven 'scan'
+end
+
+## Task to create Multi-Layer-Surface-map
+task_context "mls_renderer" do
+	input_port 'cloud', '/base/samples/Pointcloud'
+	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
+	port_driven 'cloud'
 end

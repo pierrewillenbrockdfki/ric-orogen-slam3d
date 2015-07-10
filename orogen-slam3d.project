@@ -29,6 +29,8 @@
     <File Name="tasks/PointcloudMapper.cpp"/>
     <File Name="tasks/PointcloudMapper.hpp"/>
     <File Name="tasks/rock-common.hpp"/>
+    <File Name="tasks/mls_renderer.cpp"/>
+    <File Name="tasks/mls_renderer.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
@@ -130,4 +132,6 @@
       </Completion>
     </Configuration>
   </Settings>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>

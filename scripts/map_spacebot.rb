@@ -27,7 +27,8 @@ log.transformer_broadcaster.rename("foo")
 ## Execute the task 'message_producer::Task' ##
 Orocos.run	'slam3d::convert_scan' => 'converter',
 			'slam3d::indoor_filter' => 'filter',
-			'slam3d::PointcloudMapper' => 'mapper' do
+			'slam3d::PointcloudMapper' => 'mapper',
+			'slam3d::mls_renderer' => 'projector' do
 
 	## Configure the scan converter ##
 	converter = Orocos.name_service.get 'converter'
@@ -37,9 +38,13 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	filter = Orocos.name_service.get 'filter'
 	filter.configure
 
+	## Configure the projector
+	projector = Orocos.name_service.get 'projector'
+	projector.configure
+
 	## Configure the mapper ##
 	mapper = Orocos.name_service.get 'mapper'
-	mapper.scan_resolution = 0
+	mapper.scan_resolution = 0.1
 	mapper.neighbor_radius = 3.0
 	mapper.min_translation = 0.5;
 	mapper.min_rotation = 0.1
@@ -61,26 +66,30 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	odometry_ports.each do |port|
 		port.connect_to mapper.odometry, :type => :buffer, :size => 10
 	end
+	mapper.cloud.connect_to projector.cloud, :type => :buffer, :size => 10
 
 	## Start the tasks ##
 	mapper.start
 	filter.start
 	converter.start
+	projector.start
 
 	Vizkit.control log
 #	Vizkit.display filter.cloud_out
-	Vizkit.display mapper.cloud
-#	Vizkit.display mapper.map2robot
+#	Vizkit.display mapper.cloud
+	Vizkit.display projector.envire_map
 	begin
 		Vizkit.exec
 	rescue Interrupt => e
 		mapper.stop
 		filter.stop
 		converter.stop
+		projector.stop
 		
 		mapper.cleanup
 		filter.cleanup
 		converter.cleanup
+		projector.cleanup
 	end
   
 #  Orocos.watch(converter)
