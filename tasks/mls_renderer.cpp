@@ -26,7 +26,16 @@ bool mls_renderer::configureHook()
 	if (! mls_rendererBase::configureHook())
 		return false;
 
-	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(200, 200, 0.1, 0.1, -10, -10);
+	// Read parameters
+	mSizeX = _size_x.get();
+	mSizeY = _size_y.get();
+	mOffsetX = _offset_x.get();
+	mOffsetY = _offset_y.get();
+	mResolution = _resolution.get();
+	
+	size_t x_size = mSizeX / mResolution;
+	size_t y_size = mSizeY / mResolution;
+	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(x_size, y_size, mResolution, mResolution, mOffsetX, mOffsetY);
 	mMultiLayerMap->setUniqueId("/slam3d-mls");
 	mPointcloud = new envire::Pointcloud();
 	mProjection = new envire::MLSProjection();
@@ -66,7 +75,6 @@ bool mls_renderer::startHook()
 
 void mls_renderer::updateHook()
 {
-	std::cout << "MLS-Projector: updateHook" << std::endl;
     mls_rendererBase::updateHook();
 	
 	// Read point cloud from the port

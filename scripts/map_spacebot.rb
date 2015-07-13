@@ -40,6 +40,11 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 
 	## Configure the projector
 	projector = Orocos.name_service.get 'projector'
+	projector.size_x = 50
+	projector.size_y = 50
+	projector.offset_x = -25
+	projector.offset_y = -25
+	projector.resolution = 0.05
 	projector.configure
 
 	## Configure the mapper ##

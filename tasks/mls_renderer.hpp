@@ -24,6 +24,12 @@ namespace slam3d
 		envire::MultiLevelSurfaceGrid* mMultiLayerMap;
 		envire::MLSProjection* mProjection;
 		envire::BinarySerialization mBinarySerialization;
+		
+		double mSizeX;
+		double mSizeY;
+		double mOffsetX;
+		double mOffsetY;
+		double mResolution;
 
 	public:
 		mls_renderer(std::string const& name = "slam3d::mls_renderer", TaskCore::TaskState initial_state = Stopped);
