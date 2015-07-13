@@ -31,6 +31,8 @@ bool mls_renderer::configureHook()
 	mSizeY = _size_y.get();
 	mOffsetX = _offset_x.get();
 	mOffsetY = _offset_y.get();
+	mMinZ = _min_z.get();
+	mMaxZ = _max_z.get();
 	mResolution = _resolution.get();
 	
 	size_t x_size = mSizeX / mResolution;
@@ -50,7 +52,7 @@ bool mls_renderer::configureHook()
 	mEnvironment.addChild(mEnvironment.getRootNode(), mls_node);
 	mEnvironment.setFrameNode(mMultiLayerMap, mls_node);
 	
-	mProjection->setAreaOfInterest(-10, 10, -10, 10, -2, 3);
+	mProjection->setAreaOfInterest(mOffsetX, mOffsetX+mSizeX, mOffsetY, mOffsetY+mSizeY, mMinZ, mMaxZ);
 	if(!mEnvironment.addInput(mProjection, mPointcloud))
 	{
 		std::cerr << "Failed to add Input!" << std::endl;

@@ -29,6 +29,8 @@ namespace slam3d
 		double mSizeY;
 		double mOffsetX;
 		double mOffsetY;
+		double mMinZ;
+		double mMaxZ;
 		double mResolution;
 
 	public:

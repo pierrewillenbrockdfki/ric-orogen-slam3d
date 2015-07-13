@@ -80,6 +80,12 @@ task_context "mls_renderer" do
 	 property('offset_y', '/double')
 	 .doc("Position  of grid origin in y-direction (meter).")
 	
+	property('min_z', '/double')
+	.doc("Minimum z-value for grid cells (meter).")
+	
+	property('max_z', 'double')
+	.doc("Maximum z-value for grid cells (meter).")
+	
 	property('resolution', '/double')
 	 .doc("Resolution (size of grid-cell) of the map (meter).")
 end
