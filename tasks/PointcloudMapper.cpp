@@ -81,6 +81,9 @@ bool PointcloudMapper::configureHook()
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(slam::INFO, (boost::format("scan_resolution:    %1%") % mScanResolution).str());
 	
+	mMapResolution = _map_resolution.get();
+	mLogger->message(slam::INFO, (boost::format("map_resolution:     %1%") % mMapResolution).str());
+	
 	mLogger->message(slam::INFO, (boost::format("use_odometry:       %1%") % _use_odometry.get()).str());
 	
 	mMapper->registerSensor(mPclSensor);
@@ -200,7 +203,7 @@ void PointcloudMapper::updateHook()
 
 	// Publish accumulated cloud
 	slam::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
-	slam::PointCloud::Ptr accCloud = mPclSensor->getAccumulatedCloud(vertices, 0.05);
+	slam::PointCloud::Ptr accCloud = mPclSensor->getAccumulatedCloud(vertices, mMapResolution);
 	
 	base::samples::Pointcloud mapCloud;
 	for(slam::PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)

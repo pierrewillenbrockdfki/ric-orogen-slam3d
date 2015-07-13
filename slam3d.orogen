@@ -23,6 +23,9 @@ task_context "PointcloudMapper" do
 	
 	property('scan_resolution', '/double')
 	 .doc("Pointclouds are downsampled to this resolution before being added to the map.")
+	 
+	property('map_resolution', '/double')
+	 .doc("Map-Pointcloud is downsampled to this resolution before being published.")
 	
 	property('neighbor_radius', '/double')
 	 .doc("Distance to search for neighbors when adding additional constraints to the graph.")
