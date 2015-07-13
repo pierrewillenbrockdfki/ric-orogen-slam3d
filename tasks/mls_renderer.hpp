@@ -22,7 +22,7 @@ namespace slam3d
 		envire::Environment mEnvironment;
 		envire::Pointcloud* mPointcloud;
 		envire::MultiLevelSurfaceGrid* mMultiLayerMap;
-		envire::MLSProjection mProjection;
+		envire::MLSProjection* mProjection;
 		envire::BinarySerialization mBinarySerialization;
 
 	public:

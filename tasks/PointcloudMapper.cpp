@@ -130,6 +130,7 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 		if(!mMapper->addReading(measurement))
 		{
 			delete measurement;
+			return false;
 		}
 	}catch(std::exception& e)
 	{
@@ -172,9 +173,6 @@ void PointcloudMapper::updateHook()
 			if(processPointcloud(cloud))
 			{
 				mScansAdded++;
-			}else
-			{
-				mLogger->message(slam::WARNING, "Scan was not added to map!");
 			}
 		}catch (std::exception &e)
 		{
@@ -192,7 +190,7 @@ void PointcloudMapper::updateHook()
 	rbs.time = cloud.time;
 	_map2robot.write(rbs);
 	
-	if(mScansAdded < 5)
+	if(mScansAdded < 1)
 		return;
 		
 	mScansAdded = 0;

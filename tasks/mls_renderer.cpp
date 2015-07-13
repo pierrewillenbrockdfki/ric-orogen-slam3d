@@ -29,6 +29,7 @@ bool mls_renderer::configureHook()
 	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(200, 200, 0.1, 0.1, -10, -10);
 	mMultiLayerMap->setUniqueId("/slam3d-mls");
 	mPointcloud = new envire::Pointcloud();
+	mProjection = new envire::MLSProjection();
 
 	// add pointcloud to environment
 	envire::FrameNode* cloud_node = new envire::FrameNode();
@@ -40,13 +41,13 @@ bool mls_renderer::configureHook()
 	mEnvironment.addChild(mEnvironment.getRootNode(), mls_node);
 	mEnvironment.setFrameNode(mMultiLayerMap, mls_node);
 	
-	mProjection.setAreaOfInterest(-10, 10, -10, 10, -2, 3);
-	if(!mEnvironment.addInput(&mProjection, mPointcloud))
+	mProjection->setAreaOfInterest(-10, 10, -10, 10, -2, 3);
+	if(!mEnvironment.addInput(mProjection, mPointcloud))
 	{
 		std::cerr << "Failed to add Input!" << std::endl;
 		return false;
 	}
-	if(!mEnvironment.addOutput(&mProjection, mMultiLayerMap))
+	if(!mEnvironment.addOutput(mProjection, mMultiLayerMap))
 	{
 		std::cerr << "Failed to add Output!" << std::endl;
 		return false;
@@ -77,7 +78,7 @@ void mls_renderer::updateHook()
 		{
 			mPointcloud->vertices.push_back(*it);
 		}
-		mProjection.updateAll();
+		mProjection->updateAll();
 	}
 	
 	// TEST
