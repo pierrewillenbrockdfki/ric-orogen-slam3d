@@ -23,6 +23,11 @@ bool indoor_filter::configureHook()
 {
 	if (! indoor_filterBase::configureHook())
 		return false;
+	
+	mMinHeight = _min_height.get();
+	mMaxHeight = _max_height.get();
+	mSqMinDistance = _min_distance.get() * _min_distance.get();
+	mSqMaxDistance = _max_distance.get() * _max_distance.get();
 	return true;
 }
 
@@ -45,7 +50,7 @@ void indoor_filter::updateHook()
 		for(std::vector<base::Vector3d>::const_iterator it = cloud.points.begin(); it < cloud.points.end(); ++it)
 		{
 			double sq_dist = ((*it)[0] * (*it)[0]) + ((*it)[1] * (*it)[1]) + ((*it)[2] * (*it)[2]);
-			if((*it)[2] < 0.5 && sq_dist < 100)
+			if((*it)[2] < mMaxHeight && (*it)[2] > mMinHeight && sq_dist < mSqMaxDistance && sq_dist > mSqMinDistance)
 				filtered_cloud.points.push_back(*it);
 		}
 		filtered_cloud.time = cloud.time;

@@ -56,6 +56,18 @@ task_context "indoor_filter" do
 	input_port 'cloud_in', '/base/samples/Pointcloud'
 	output_port 'cloud_out', '/base/samples/Pointcloud'
 	port_driven 'cloud_in'
+	
+	property('min_height', '/double')
+	.doc("Remove all points below this height.")
+	
+	property('max_height', '/double')
+	.doc("Remove all points above this height.")
+	
+	property('min_distance', '/double')
+	.doc("Remove all points within this radius of the sensor.")
+
+	property('max_distance', '/double')
+	.doc("Remove all points beyond this radius of the sensor.")
 end
 
 ## Convert MultilevelLaserScan to Pointcloud

@@ -36,6 +36,10 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 		
 	## Configure the pointcloud filter ##
 	filter = Orocos.name_service.get 'filter'
+	filter.min_distance = 0
+	filter.max_distance = 10
+	filter.min_height = -2.0
+	filter.max_height = 0.5
 	filter.configure
 
 	## Configure the projector
@@ -56,7 +60,7 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	mapper.neighbor_radius = 3.0
 	mapper.min_translation = 0.5;
 	mapper.min_rotation = 0.1
-	mapper.use_odometry = true;
+	mapper.use_odometry = false;
 	
 	mapper.gicp_config do |c|
 		c.max_correspondence_distance = 1.0
