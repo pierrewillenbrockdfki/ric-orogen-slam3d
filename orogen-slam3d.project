@@ -44,6 +44,7 @@
     <File Name="scripts/map_coyote.rb"/>
     <File Name="scripts/dump_coyote.rb"/>
     <File Name="scripts/map_spacebot.rb"/>
+    <File Name="scripts/map_seekur.rb"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
