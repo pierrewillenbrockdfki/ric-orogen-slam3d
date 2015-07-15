@@ -87,9 +87,22 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	projector.start
 
 	Vizkit.control log
-#	Vizkit.display filter.cloud_out
-#	Vizkit.display mapper.cloud
-	Vizkit.display projector.envire_map
+	
+	# Show robot pose
+	rbsViz = Vizkit.default_loader.RigidBodyStateVisualization
+	async_rbs = Orocos::Async.proxy('mapper')
+	async_rbs.port('map2robot').connect_to do |data,_|
+		rbsViz.updateData(data)
+	end
+
+	envireViz = Vizkit.display projector.envire_map
+	mlsviz = envireViz.getVisualizer("envire::MLSVisualization")
+	mlsviz.cycle_height_color = 1
+	mlsviz.cycle_color_interval = 3
+	
+	pclviz = envireViz.getVisualizer("envire::PointcloudVisualization")
+	pclviz.enabled = 0
+
 	begin
 		Vizkit.exec
 	rescue Interrupt => e
@@ -103,6 +116,4 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 		converter.cleanup
 		projector.cleanup
 	end
-  
-#  Orocos.watch(converter)
 end
