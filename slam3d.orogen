@@ -21,26 +21,34 @@ task_context "PointcloudMapper" do
 	output_port 'map2robot', 'base/samples/RigidBodyState'
 	port_driven 'scan'
 	
+	operation('generate_map')
+	.returns('/bool')
+	.doc("Generates and sends the environment map.")
+	 
+	operation('optimize')
+	.returns('/bool')
+	.doc("Starts the global optimization using the current SLAM backend.")
+	
 	property('scan_resolution', '/double')
-	 .doc("Pointclouds are downsampled to this resolution before being added to the map.")
+	.doc("Pointclouds are downsampled to this resolution before being added to the map.")
 	 
 	property('map_resolution', '/double')
-	 .doc("Map-Pointcloud is downsampled to this resolution before being published.")
+	.doc("Map-Pointcloud is downsampled to this resolution before being published.")
 	
 	property('neighbor_radius', '/double')
-	 .doc("Distance to search for neighbors when adding additional constraints to the graph.")
+	.doc("Distance to search for neighbors when adding additional constraints to the graph.")
 	
 	property('min_translation', '/double')
-	 .doc("Minimum distance between two subsequent nodes.")
+	.doc("Minimum distance between two subsequent nodes.")
 	
 	property('min_rotation', '/double')
-	 .doc("Minimum rotation difference between two subsequent nodes.")
+	.doc("Minimum rotation difference between two subsequent nodes.")
 	 
-	 property('use_odometry', '/bool')
-	 .doc("Whether to add odometry edges to the graph.")
+	property('use_odometry', '/bool')
+	.doc("Whether to add odometry edges to the graph.")
 
 	property('gicp_config', '/slam/GICPConfiguration')
-	 .doc("Parameters for Generalized ICP.")
+	.doc("Parameters for Generalized ICP.")
 end
 
 ## Task to dump velodyne-Scans to KITTI-Format
@@ -84,16 +92,16 @@ task_context "mls_renderer" do
 	port_driven 'cloud'
 	
 	property('size_x', '/double')
-	 .doc("Map size in x-direction (meter).")
+	.doc("Map size in x-direction (meter).")
 	 
-	 property('size_y', '/double')
-	 .doc("Map size in y-direction (meter).")
+	property('size_y', '/double')
+	.doc("Map size in y-direction (meter).")
 	
 	property('offset_x', '/double')
-	 .doc("Position of grid origin in x-direction (meter).")
+	.doc("Position of grid origin in x-direction (meter).")
 	 
-	 property('offset_y', '/double')
-	 .doc("Position  of grid origin in y-direction (meter).")
+	property('offset_y', '/double')
+	.doc("Position  of grid origin in y-direction (meter).")
 	
 	property('min_z', '/double')
 	.doc("Minimum z-value for grid cells (meter).")

@@ -17,7 +17,12 @@ namespace slam3d
 	{
 	friend class PointcloudMapperBase;
 	protected:
-	
+
+		// Operations
+		virtual bool optimize();
+		virtual bool generate_map();
+
+		// Internal methods
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
 	
 		slam::Clock* mClock;

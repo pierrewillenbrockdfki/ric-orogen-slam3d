@@ -27,17 +27,43 @@ PointcloudMapper::~PointcloudMapper()
 {
 }
 
+bool PointcloudMapper::optimize()
+{
+	mLogger->message(slam::INFO, "Requested global optimization.");
+	return mMapper->optimize();
+}
+
+bool PointcloudMapper::generate_map()
+{
+	// Publish accumulated cloud
+	mLogger->message(slam::INFO, "Requested map generation.");
+	slam::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
+	slam::PointCloud::Ptr accCloud = mPclSensor->getAccumulatedCloud(vertices, mMapResolution);
+	
+	base::samples::Pointcloud mapCloud;
+	for(slam::PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
+	{
+		base::Vector3d vec;
+		vec[0] = it->x;
+		vec[1] = it->y;
+		vec[2] = it->z;
+		mapCloud.points.push_back(vec);
+	}
+	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
+	_cloud.write(mapCloud);
+}
+
 bool PointcloudMapper::configureHook()
 {	
 	if (! PointcloudMapperBase::configureHook())
 		return false;
 		
-//	mClock = new slam::Clock();
-//	mLogger = new slam::Logger(*mClock);
+	mClock = new slam::Clock();
+	mLogger = new slam::Logger(*mClock);
 
-	mLogger = new BaseLogger();
-//	mLogger->setLogLevel(slam::DEBUG);
-	mLogger->message(slam::DEBUG, "=== Configure PointCloudMapper ===");
+//	mLogger = new BaseLogger();
+	mLogger->setLogLevel(slam::INFO);
+	mLogger->message(slam::INFO, "=== Configure PointCloudMapper ===");
 
 	mPclSensor = new slam::PointCloudSensor("pointcloud", mLogger, slam::Transform::Identity());
 	slam::GICPConfiguration conf = _gicp_config.get();
@@ -192,30 +218,6 @@ void PointcloudMapper::updateHook()
 	rbs.targetFrame = "robot";
 	rbs.time = cloud.time;
 	_map2robot.write(rbs);
-	
-	if(mScansAdded < 1)
-		return;
-		
-	mScansAdded = 0;
-	
-	// Optimize
-	mMapper->optimize();
-
-	// Publish accumulated cloud
-	slam::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
-	slam::PointCloud::Ptr accCloud = mPclSensor->getAccumulatedCloud(vertices, mMapResolution);
-	
-	base::samples::Pointcloud mapCloud;
-	for(slam::PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
-	{
-		base::Vector3d vec;
-		vec[0] = it->x;
-		vec[1] = it->y;
-		vec[2] = it->z;
-		mapCloud.points.push_back(vec);
-	}
-	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
-	_cloud.write(mapCloud);
 }
 
 void PointcloudMapper::errorHook()
