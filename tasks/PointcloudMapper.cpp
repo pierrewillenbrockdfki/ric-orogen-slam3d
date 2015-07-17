@@ -105,7 +105,7 @@ bool PointcloudMapper::configureHook()
 	
 	if(_use_odometry.get())
 	{
-		mOdometry = new RockOdometry();
+		mOdometry = new RockOdometry(mLogger);
 		mMapper->setOdometry(mOdometry);
 	}else
 	{
@@ -196,22 +196,11 @@ void PointcloudMapper::updateHook()
 	if(mOdometry)
 	{
 		base::samples::RigidBodyState odom;
-		slam::Transform odom_tf;
-
 		int samples_read = 0;
 		while(_odometry.read(odom, false) == RTT::NewData)
 		{
 			++samples_read;
-			Eigen::Affine3d odom_aff = odom.getTransform();
-			if((odom_aff.matrix().array() == odom_aff.matrix().array()).all())
-			{
-				odom_tf.linear() = odom_aff.linear();
-				odom_tf.translation() = odom_aff.translation();
-				mOdometry->setCurrentPose(odom_tf);
-			}else
-			{
-				mLogger->message(slam::ERROR, "Odometry sample contained invalid data!");
-			}
+			mOdometry->setCurrentPose(odom);
 		}
 		mLogger->message(slam::DEBUG, (boost::format("Received %1% odometry samples.") % samples_read).str());
 	}

@@ -2,6 +2,7 @@
 #include <slam3d/include/Clock.hpp>
 #include <slam3d/include/Odometry.hpp>
 
+#include <base/samples/RigidBodyState.hpp>
 #include <base/Logging.hpp>
 
 namespace slam3d
@@ -38,7 +39,7 @@ namespace slam3d
 	class RockOdometry : public slam::Odometry
 	{
 	public:
-		RockOdometry() : slam::Odometry() {}
+		RockOdometry(slam::Logger* logger) : slam::Odometry(logger) {}
 		~RockOdometry() {}
 		
 		// Rock transformer cannot be queried for a specific timestamp.
@@ -56,9 +57,18 @@ namespace slam3d
 			return twc;
 		}
 		
-		void setCurrentPose(const slam::Transform& pose)
+		void setCurrentPose(const base::samples::RigidBodyState& pose)
 		{
-			mCurrentPose = pose;
+			Eigen::Affine3d odom_aff = pose.getTransform();
+			if((odom_aff.matrix().array() == odom_aff.matrix().array()).all())
+			{
+				mCurrentPose.linear() = odom_aff.linear();
+				mCurrentPose.translation() = odom_aff.translation();
+			}else
+			{
+				mLogger->message(slam::ERROR, "Odometry sample contained invalid data!");
+				throw slam::OdometryException();
+			}
 		}
 		
 	private:
