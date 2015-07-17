@@ -51,6 +51,7 @@ bool PointcloudMapper::generate_map()
 	}
 	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
 	_cloud.write(mapCloud);
+	return true;
 }
 
 bool PointcloudMapper::configureHook()
@@ -62,7 +63,24 @@ bool PointcloudMapper::configureHook()
 	mLogger = new slam::Logger(*mClock);
 
 //	mLogger = new BaseLogger();
-	mLogger->setLogLevel(slam::INFO);
+	switch(_log_level.get())
+	{
+	case 4:
+		mLogger->setLogLevel(slam::FATAL);
+		break;
+	case 3:
+		mLogger->setLogLevel(slam::ERROR);
+		break;
+	case 2:
+		mLogger->setLogLevel(slam::WARNING);
+		break;
+	case 0:
+		mLogger->setLogLevel(slam::DEBUG);
+		break;
+	default:
+		mLogger->setLogLevel(slam::INFO);
+	}
+
 	mLogger->message(slam::INFO, "=== Configure PointCloudMapper ===");
 
 	mPclSensor = new slam::PointCloudSensor("pointcloud", mLogger, slam::Transform::Identity());
@@ -180,16 +198,22 @@ void PointcloudMapper::updateHook()
 		base::samples::RigidBodyState odom;
 		slam::Transform odom_tf;
 
+		int samples_read = 0;
 		while(_odometry.read(odom, false) == RTT::NewData)
 		{
+			++samples_read;
 			Eigen::Affine3d odom_aff = odom.getTransform();
 			if((odom_aff.matrix().array() == odom_aff.matrix().array()).all())
 			{
 				odom_tf.linear() = odom_aff.linear();
 				odom_tf.translation() = odom_aff.translation();
 				mOdometry->setCurrentPose(odom_tf);
+			}else
+			{
+				mLogger->message(slam::ERROR, "Odometry sample contained invalid data!");
 			}
 		}
+		mLogger->message(slam::DEBUG, (boost::format("Received %1% odometry samples.") % samples_read).str());
 	}
 	
 	// Read the scan from the port
