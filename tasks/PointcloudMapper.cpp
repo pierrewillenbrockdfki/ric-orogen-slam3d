@@ -193,9 +193,9 @@ void PointcloudMapper::updateHook()
     PointcloudMapperBase::updateHook();
 	
 	// Read odometry data
+	base::samples::RigidBodyState odom;
 	if(mOdometry)
 	{
-		base::samples::RigidBodyState odom;
 		int samples_read = 0;
 		while(_odometry.read(odom, false) == RTT::NewData)
 		{
@@ -203,6 +203,9 @@ void PointcloudMapper::updateHook()
 			mOdometry->setCurrentPose(odom);
 		}
 		mLogger->message(slam::DEBUG, (boost::format("Received %1% odometry samples.") % samples_read).str());
+	}else
+	{
+		odom.setTransform(Eigen::Affine3d::Identity());
 	}
 	
 	// Read the scan from the port
@@ -224,13 +227,19 @@ void PointcloudMapper::updateHook()
 	
 	// Publish the robot pose in map
 	base::samples::RigidBodyState rbs;
-	Eigen::Affine3d aff = mMapper->getCurrentPose();
-	rbs.setTransform(aff);
+	Eigen::Affine3d current = mMapper->getCurrentPose();
+	rbs.setTransform(current);
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = "map";
 	rbs.targetFrame = "robot";
 	rbs.time = cloud.time;
 	_map2robot.write(rbs);
+	
+	// Publish the odometry drift
+	Eigen::Affine3d drift = current * odom.getTransform().inverse();
+	rbs.setTransform(drift);
+	rbs.targetFrame = "odometry";
+	_map2odometry.write(rbs);
 }
 
 void PointcloudMapper::errorHook()

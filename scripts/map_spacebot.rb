@@ -24,7 +24,7 @@ end
 log.transformer_broadcaster.track(false)
 log.transformer_broadcaster.rename("foo")
 
-## Execute the task 'message_producer::Task' ##
+## Execute the tasks ##
 Orocos.run	'slam3d::convert_scan' => 'converter',
 			'slam3d::indoor_filter' => 'filter',
 			'slam3d::PointcloudMapper' => 'mapper',
@@ -58,9 +58,10 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	mapper.scan_resolution = 0.1
 	mapper.map_resolution = 0.05
 	mapper.neighbor_radius = 3.0
-	mapper.min_translation = 0.5;
+	mapper.min_translation = 0.5
 	mapper.min_rotation = 0.1
-	mapper.use_odometry = false;
+	mapper.use_odometry = true
+	mapper.log_level = 1
 	
 	mapper.gicp_config do |c|
 		c.max_correspondence_distance = 1.0
@@ -91,7 +92,7 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	# Show robot pose
 	rbsViz = Vizkit.default_loader.RigidBodyStateVisualization
 	async_rbs = Orocos::Async.proxy('mapper')
-	async_rbs.port('map2robot').connect_to do |data,_|
+	async_rbs.port('map2odometry').connect_to do |data,_|
 		rbsViz.updateData(data)
 	end
 
