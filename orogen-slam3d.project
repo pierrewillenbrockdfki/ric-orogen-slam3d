@@ -45,6 +45,7 @@
     <File Name="scripts/map_spacebot.rb"/>
     <File Name="scripts/map_seekur.rb"/>
     <File Name="scripts/generate_map.rb"/>
+    <File Name="scripts/optimize.rb"/>
   </VirtualDirectory>
   <Dependencies Name="Debug"/>
   <Dependencies Name="Release"/>
