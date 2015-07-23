@@ -58,9 +58,10 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	mapper.scan_resolution = 0.1
 	mapper.map_resolution = 0.05
 	mapper.neighbor_radius = 3.0
-	mapper.min_translation = 0.5
-	mapper.min_rotation = 0.1
+	mapper.min_translation = 0.25
+	mapper.min_rotation = 0.05
 	mapper.use_odometry = true
+	mapper.add_odometry_edges = true
 	mapper.log_level = 1
 	
 	mapper.gicp_config do |c|
@@ -90,10 +91,17 @@ Orocos.run	'slam3d::convert_scan' => 'converter',
 	Vizkit.control log
 	
 	# Show robot pose
-	rbsViz = Vizkit.default_loader.RigidBodyStateVisualization
-	async_rbs = Orocos::Async.proxy('mapper')
-	async_rbs.port('map2odometry').connect_to do |data,_|
-		rbsViz.updateData(data)
+	rbsPoseViz = Vizkit.default_loader.RigidBodyStateVisualization
+	rbs_pose = Orocos::Async.proxy('mapper')
+	rbs_pose.port('map2robot').connect_to do |data,_|
+		rbsPoseViz.updateData(data)
+	end
+
+	# Show odometry drift
+	rbsDriftViz = Vizkit.default_loader.RigidBodyStateVisualization
+	rbs_drift = Orocos::Async.proxy('mapper')
+	rbs_drift.port('map2odometry').connect_to do |data,_|
+		rbsDriftViz.updateData(data)
 	end
 
 	envireViz = Vizkit.display projector.envire_map

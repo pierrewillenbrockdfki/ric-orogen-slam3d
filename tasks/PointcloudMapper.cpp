@@ -106,7 +106,7 @@ bool PointcloudMapper::configureHook()
 	if(_use_odometry.get())
 	{
 		mOdometry = new RockOdometry(mLogger);
-		mMapper->setOdometry(mOdometry);
+		mMapper->setOdometry(mOdometry, _add_odometry_edges.get());
 	}else
 	{
 		mOdometry = NULL;
@@ -129,6 +129,7 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(slam::INFO, (boost::format("map_resolution:     %1%") % mMapResolution).str());
 	
 	mLogger->message(slam::INFO, (boost::format("use_odometry:       %1%") % _use_odometry.get()).str());
+	mLogger->message(slam::INFO, (boost::format("add_odometry_edges: %1%") % _add_odometry_edges.get()).str());
 	
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
@@ -218,6 +219,17 @@ void PointcloudMapper::updateHook()
 			if(processPointcloud(cloud))
 			{
 				mScansAdded++;
+				
+				// Publish the odometry drift
+				base::samples::RigidBodyState rbs;
+				Eigen::Affine3d current = mMapper->getCurrentPose();
+				Eigen::Affine3d drift = current * odom.getTransform().inverse();
+				rbs.setTransform(drift);
+				rbs.invalidateCovariances();
+				rbs.sourceFrame = "map";
+				rbs.targetFrame = "odometry";
+				rbs.time = cloud.time;
+				_map2odometry.write(rbs);
 			}
 		}catch (std::exception &e)
 		{
@@ -234,12 +246,6 @@ void PointcloudMapper::updateHook()
 	rbs.targetFrame = "robot";
 	rbs.time = cloud.time;
 	_map2robot.write(rbs);
-	
-	// Publish the odometry drift
-	Eigen::Affine3d drift = current * odom.getTransform().inverse();
-	rbs.setTransform(drift);
-	rbs.targetFrame = "odometry";
-	_map2odometry.write(rbs);
 }
 
 void PointcloudMapper::errorHook()

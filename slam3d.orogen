@@ -46,6 +46,9 @@ task_context "PointcloudMapper" do
 	.doc("Minimum rotation difference between two subsequent nodes.")
 	 
 	property('use_odometry', '/bool')
+	.doc("Whether to use odometry port.")
+	
+	property('add_odometry_edges', '/bool')
 	.doc("Whether to add odometry edges to the graph.")
 
 	property('gicp_config', '/slam/GICPConfiguration')
