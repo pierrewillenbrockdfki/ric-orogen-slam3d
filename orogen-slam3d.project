@@ -20,17 +20,17 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="tasks">
-    <File Name="tasks/convert_scan.cpp"/>
-    <File Name="tasks/convert_scan.hpp"/>
     <File Name="tasks/dump_pcl.cpp"/>
     <File Name="tasks/dump_pcl.hpp"/>
-    <File Name="tasks/indoor_filter.cpp"/>
-    <File Name="tasks/indoor_filter.hpp"/>
     <File Name="tasks/PointcloudMapper.cpp"/>
     <File Name="tasks/PointcloudMapper.hpp"/>
     <File Name="tasks/rock-common.hpp"/>
-    <File Name="tasks/mls_renderer.cpp"/>
-    <File Name="tasks/mls_renderer.hpp"/>
+    <File Name="tasks/PointcloudFilter.cpp"/>
+    <File Name="tasks/PointcloudFilter.hpp"/>
+    <File Name="tasks/ScanConverter.hpp"/>
+    <File Name="tasks/ScanConverter.cpp"/>
+    <File Name="tasks/MLSMapProjector.hpp"/>
+    <File Name="tasks/MLSMapProjector.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
@@ -46,6 +46,7 @@
     <File Name="scripts/map_seekur.rb"/>
     <File Name="scripts/generate_map.rb"/>
     <File Name="scripts/optimize.rb"/>
+    <File Name="scripts/visualize.rb"/>
   </VirtualDirectory>
   <Dependencies Name="Debug"/>
   <Dependencies Name="Release"/>

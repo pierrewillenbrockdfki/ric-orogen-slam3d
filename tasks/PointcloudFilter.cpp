@@ -1,27 +1,27 @@
-#include "indoor_filter.hpp"
+#include "PointcloudFilter.hpp"
 
 #include <base/Logging.hpp>
 #include <base/samples/Pointcloud.hpp>
 
 using namespace slam3d;
 
-indoor_filter::indoor_filter(std::string const& name, TaskCore::TaskState initial_state)
- : indoor_filterBase(name, initial_state)
+PointcloudFilter::PointcloudFilter(std::string const& name, TaskCore::TaskState initial_state)
+ : PointcloudFilterBase(name, initial_state)
 {
 }
 
-indoor_filter::indoor_filter(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
- : indoor_filterBase(name, engine, initial_state)
+PointcloudFilter::PointcloudFilter(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
+ : PointcloudFilterBase(name, engine, initial_state)
 {
 }
 
-indoor_filter::~indoor_filter()
+PointcloudFilter::~PointcloudFilter()
 {
 }
 
-bool indoor_filter::configureHook()
+bool PointcloudFilter::configureHook()
 {
-	if (! indoor_filterBase::configureHook())
+	if (! PointcloudFilterBase::configureHook())
 		return false;
 	
 	mMinHeight = _min_height.get();
@@ -31,16 +31,16 @@ bool indoor_filter::configureHook()
 	return true;
 }
 
-bool indoor_filter::startHook()
+bool PointcloudFilter::startHook()
 {
-	if (! indoor_filterBase::startHook())
+	if (! PointcloudFilterBase::startHook())
 		return false;
 	return true;
 }
 
-void indoor_filter::updateHook()
+void PointcloudFilter::updateHook()
 {
-	indoor_filterBase::updateHook();
+	PointcloudFilterBase::updateHook();
 	
 	// Read the scan from the port
 	base::samples::Pointcloud cloud;
@@ -58,17 +58,17 @@ void indoor_filter::updateHook()
 	}
 }
 
-void indoor_filter::errorHook()
+void PointcloudFilter::errorHook()
 {
-	indoor_filterBase::errorHook();
+	PointcloudFilterBase::errorHook();
 }
 
-void indoor_filter::stopHook()
+void PointcloudFilter::stopHook()
 {
-	indoor_filterBase::stopHook();
+	PointcloudFilterBase::stopHook();
 }
 
-void indoor_filter::cleanupHook()
+void PointcloudFilter::cleanupHook()
 {
-	indoor_filterBase::cleanupHook();
+	PointcloudFilterBase::cleanupHook();
 }

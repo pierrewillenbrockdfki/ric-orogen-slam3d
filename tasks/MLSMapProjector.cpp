@@ -1,29 +1,29 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
 
-#include "mls_renderer.hpp"
+#include "MLSMapProjector.hpp"
 
 #include <base/Logging.hpp>
 #include <envire/core/Serialization.hpp>
 
 using namespace slam3d;
 
-mls_renderer::mls_renderer(std::string const& name, TaskCore::TaskState initial_state)
-    : mls_rendererBase(name, initial_state)
+MLSMapProjector::MLSMapProjector(std::string const& name, TaskCore::TaskState initial_state)
+    : MLSMapProjectorBase(name, initial_state)
 {
 }
 
-mls_renderer::mls_renderer(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
-    : mls_rendererBase(name, engine, initial_state)
+MLSMapProjector::MLSMapProjector(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state)
+    : MLSMapProjectorBase(name, engine, initial_state)
 {
 }
 
-mls_renderer::~mls_renderer()
+MLSMapProjector::~MLSMapProjector()
 {
 }
 
-bool mls_renderer::configureHook()
+bool MLSMapProjector::configureHook()
 {
-	if (! mls_rendererBase::configureHook())
+	if (! MLSMapProjectorBase::configureHook())
 		return false;
 
 	// Read parameters
@@ -68,16 +68,16 @@ bool mls_renderer::configureHook()
 	return true;
 }
 
-bool mls_renderer::startHook()
+bool MLSMapProjector::startHook()
 {
-    if (! mls_rendererBase::startHook())
+    if (! MLSMapProjectorBase::startHook())
         return false;
     return true;
 }
 
-void mls_renderer::updateHook()
+void MLSMapProjector::updateHook()
 {
-    mls_rendererBase::updateHook();
+    MLSMapProjectorBase::updateHook();
 	
 	// Read point cloud from the port
 	base::samples::Pointcloud cloud;
@@ -110,17 +110,17 @@ void mls_renderer::updateHook()
 	}*/
 }
 
-void mls_renderer::errorHook()
+void MLSMapProjector::errorHook()
 {
-    mls_rendererBase::errorHook();
+    MLSMapProjectorBase::errorHook();
 }
 
-void mls_renderer::stopHook()
+void MLSMapProjector::stopHook()
 {
-    mls_rendererBase::stopHook();
+    MLSMapProjectorBase::stopHook();
 }
 
-void mls_renderer::cleanupHook()
+void MLSMapProjector::cleanupHook()
 {
-    mls_rendererBase::cleanupHook();
+    MLSMapProjectorBase::cleanupHook();
 }

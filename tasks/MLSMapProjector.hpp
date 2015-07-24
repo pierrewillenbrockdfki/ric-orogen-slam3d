@@ -3,16 +3,16 @@
 #ifndef SLAM3D_MLS_RENDERER_TASK_HPP
 #define SLAM3D_MLS_RENDERER_TASK_HPP
 
-#include "slam3d/mls_rendererBase.hpp"
+#include "slam3d/MLSMapProjectorBase.hpp"
 
 #include <envire/Orocos.hpp>
 #include <envire/operators/MLSProjection.hpp>
 
 namespace slam3d
 {
-	class mls_renderer : public mls_rendererBase
+	class MLSMapProjector : public MLSMapProjectorBase
 	{
-	friend class mls_rendererBase;
+	friend class MLSMapProjectorBase;
 	
 	protected:
 		typedef std::vector<envire::BinaryEvent> EnvireEvents;
@@ -34,9 +34,9 @@ namespace slam3d
 		double mResolution;
 
 	public:
-		mls_renderer(std::string const& name = "slam3d::mls_renderer", TaskCore::TaskState initial_state = Stopped);
-		mls_renderer(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state = Stopped);
-		~mls_renderer();
+		MLSMapProjector(std::string const& name = "slam3d::MLSMapProjector", TaskCore::TaskState initial_state = Stopped);
+		MLSMapProjector(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state = Stopped);
+		~MLSMapProjector();
 		
 		bool configureHook();
 		bool startHook();

@@ -67,7 +67,7 @@ task_context "dump_pcl" do
 end
 
 ## Filter to reduce velodyne-scans taking indoor
-task_context "indoor_filter" do
+task_context "PointcloudFilter" do
 	input_port 'cloud_in', '/base/samples/Pointcloud'
 	output_port 'cloud_out', '/base/samples/Pointcloud'
 	port_driven 'cloud_in'
@@ -86,14 +86,14 @@ task_context "indoor_filter" do
 end
 
 ## Convert MultilevelLaserScan to Pointcloud
-task_context "convert_scan" do
+task_context "ScanConverter" do
 	input_port 'scan', '/velodyne_lidar/MultilevelLaserScan'
 	output_port 'cloud', '/base/samples/Pointcloud'
 	port_driven 'scan'
 end
 
 ## Task to create Multi-Layer-Surface-map
-task_context "mls_renderer" do
+task_context "MLSMapProjector" do
 	input_port 'cloud', '/base/samples/Pointcloud'
 	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
 	port_driven 'cloud'

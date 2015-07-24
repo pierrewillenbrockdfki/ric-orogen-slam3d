@@ -1,6 +1,7 @@
 require 'orocos'
 require 'orocos/log'
 require 'vizkit'
+require_relative 'visualize'
 
 include Orocos
 
@@ -23,8 +24,8 @@ end
 
 ## Execute the task 'message_producer::Task' ##
 Orocos.run	'slam3d::PointcloudMapper' => 'mapper',
-           'slam3d::convert_scan' => 'converter',
-			'slam3d::mls_renderer' => 'projector' do
+           'slam3d::ScanConverter' => 'converter',
+			'slam3d::MLSMapProjector' => 'projector' do
 
 ############################################################################
 	## Configure the scan converter ##
@@ -43,7 +44,9 @@ Orocos.run	'slam3d::PointcloudMapper' => 'mapper',
 	mapper.neighbor_radius = 1.0
 	mapper.min_translation = 0.3
 	mapper.min_rotation = 0.1
-	mapper.use_odometry = false
+	mapper.use_odometry = true
+	mapper.add_odometry_edges = false
+	mapper.log_level = 1
 	
 	mapper.gicp_config do |c|
 		c.max_correspondence_distance = 1.0
@@ -76,8 +79,9 @@ Orocos.run	'slam3d::PointcloudMapper' => 'mapper',
 
 ############################################################################
 	Vizkit.control log
-##	Vizkit.display mapper.cloud
-	Vizkit.display projector.envire_map
+
+	visualize()
+
 	begin
 		Vizkit.exec
 	rescue Interrupt => e
