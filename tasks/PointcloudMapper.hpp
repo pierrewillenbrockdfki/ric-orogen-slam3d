@@ -24,13 +24,18 @@ namespace slam3d
 
 		// Internal methods
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
+		void sendRobotPose();
+		void sendOdometryDrift();
 	
+		// Members
 		slam::Clock* mClock;
 		slam::Logger* mLogger;
 		slam::GraphMapper* mMapper;
 		slam::PointCloudSensor* mPclSensor;
 		slam::Solver* mSolver;
 		RockOdometry* mOdometry;
+		
+		base::samples::RigidBodyState mOdometryPose;
 
 		int mScansReceived;
 		int mScansAdded;
