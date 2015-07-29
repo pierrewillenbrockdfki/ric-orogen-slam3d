@@ -151,9 +151,9 @@ bool PointcloudMapper::configureHook()
 
 bool PointcloudMapper::startHook()
 {
-    if (! PointcloudMapperBase::startHook())
-        return false;
-    return true;
+	if(!PointcloudMapperBase::startHook())
+		return false;
+	return true;
 }
 
 bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_in)
@@ -227,7 +227,7 @@ void PointcloudMapper::sendOdometryDrift()
 void PointcloudMapper::updateHook()
 {
 	mLogger->message(slam::DEBUG, "=== updateHook ===");
-    PointcloudMapperBase::updateHook();
+	PointcloudMapperBase::updateHook();
 	
 	// Read odometry data
 	if(mOdometry)
@@ -263,18 +263,17 @@ void PointcloudMapper::updateHook()
 
 void PointcloudMapper::errorHook()
 {
-    PointcloudMapperBase::errorHook();
+	PointcloudMapperBase::errorHook();
 }
 
 void PointcloudMapper::stopHook()
 {
-    PointcloudMapperBase::stopHook();
-	mMapper->writeGraphToFile("final_graph");
+	PointcloudMapperBase::stopHook();
 }
 
 void PointcloudMapper::cleanupHook()
 {
-    PointcloudMapperBase::cleanupHook();
+	PointcloudMapperBase::cleanupHook();
 	delete mMapper;
 	delete mPclSensor;
 	delete mSolver;
