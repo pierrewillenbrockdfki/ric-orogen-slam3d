@@ -39,6 +39,12 @@ task_context "PointcloudMapper" do
 	property('neighbor_radius', '/double')
 	.doc("Distance to search for neighbors when adding additional constraints to the graph.")
 	
+	property('map_outlier_radius', '/double')
+	.doc("Map-Pointcloud outlier rejection radius.")
+	
+	property('map_outlier_neighbors', '/unsigned')
+	.doc("Map-Pointcloud outlier rejection minimum neighbors within radius.")
+	
 	property('min_translation', '/double')
 	.doc("Minimum distance between two subsequent nodes.")
 	

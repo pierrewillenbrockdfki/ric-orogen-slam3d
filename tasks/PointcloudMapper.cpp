@@ -46,7 +46,9 @@ bool PointcloudMapper::generate_map()
 	// Publish accumulated cloud
 	mLogger->message(slam::INFO, "Requested map generation.");
 	slam::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
-	slam::PointCloud::Ptr accCloud = mPclSensor->getAccumulatedCloud(vertices, mMapResolution);
+	slam::PointCloud::Ptr accumulated = mPclSensor->getAccumulatedCloud(vertices);
+	slam::PointCloud::Ptr downsampled = mPclSensor->downsample(accumulated, mMapResolution);
+	slam::PointCloud::Ptr accCloud = mPclSensor->removeOutliers(downsampled, mMapOutlierRadius, mMapOutlierNeighbors);
 	
 	base::samples::Pointcloud mapCloud;
 	for(slam::PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
@@ -124,21 +126,27 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(slam::INFO, " = GraphMapper - Parameters =");
 	double min_translation = _min_translation.get();
 	double min_rotation = _min_rotation.get();
-	mLogger->message(slam::INFO, (boost::format("min_pose_distance:  %1% / %2%") % min_translation % min_rotation).str());
+	mLogger->message(slam::INFO, (boost::format("min_pose_distance:      %1% / %2%") % min_translation % min_rotation).str());
 	mMapper->setMinPoseDistance(min_translation, min_rotation);
 	
 	double neighbor_radius = _neighbor_radius.get();
-	mLogger->message(slam::INFO, (boost::format("neighbor_radius:    %1%") % neighbor_radius).str());
+	mLogger->message(slam::INFO, (boost::format("neighbor_radius:        %1%") % neighbor_radius).str());
 	mMapper->setNeighborRadius(neighbor_radius);
 	
 	mScanResolution = _scan_resolution.get();
-	mLogger->message(slam::INFO, (boost::format("scan_resolution:    %1%") % mScanResolution).str());
+	mLogger->message(slam::INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
 	
 	mMapResolution = _map_resolution.get();
-	mLogger->message(slam::INFO, (boost::format("map_resolution:     %1%") % mMapResolution).str());
+	mLogger->message(slam::INFO, (boost::format("map_resolution:         %1%") % mMapResolution).str());
 	
-	mLogger->message(slam::INFO, (boost::format("use_odometry:       %1%") % _use_odometry.get()).str());
-	mLogger->message(slam::INFO, (boost::format("add_odometry_edges: %1%") % _add_odometry_edges.get()).str());
+	mMapOutlierRadius = _map_outlier_radius.get();
+	mLogger->message(slam::INFO, (boost::format("map_outlier_radius:     %1%") % mMapOutlierRadius).str());
+	
+	mMapOutlierNeighbors = _map_outlier_neighbors.get();
+	mLogger->message(slam::INFO, (boost::format("map_outlier_neighbors:  %1%") % mMapOutlierNeighbors).str());
+	
+	mLogger->message(slam::INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());
+	mLogger->message(slam::INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges.get()).str());
 	
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);

@@ -40,8 +40,13 @@ namespace slam3d
 		int mScansReceived;
 		int mScansAdded;
 		
+		// Parameters for creation of map-pcl
 		double mScanResolution;
 		double mMapResolution;
+		
+		// Parameters for outlier rejection in map-pcl
+		double   mMapOutlierRadius;
+		unsigned mMapOutlierNeighbors;
 
 	public:
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");
