@@ -233,24 +233,27 @@ void PointcloudMapper::sendOdometryDrift()
 	_map2odometry.write(rbs);
 }
 
-void PointcloudMapper::updateHook()
+void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
 {
-	mLogger->message(slam::DEBUG, "=== updateHook ===");
-	PointcloudMapperBase::updateHook();
-	
 	// Read odometry data
 	if(mOdometry)
 	{
-		int samples_read = 0;
-		while(_odometry.read(mOdometryPose, false) == RTT::NewData)
+		// Rock calls "odometry -> robot" [robot2odometry]
+		Eigen::Affine3d odom;
+		if(!_robot2odometry.get(ts, odom, true))
 		{
-			++samples_read;
-			mOdometry->setCurrentPose(mOdometryPose);
+			mLogger->message(slam::ERROR, "Odometry not available!");
+			return;
 		}
-		mLogger->message(slam::DEBUG, (boost::format("Received %1% odometry samples.") % samples_read).str());
+		mOdometryPose.setTransform(odom);
+		mOdometryPose.time = ts;
+		mOdometry->setCurrentPose(mOdometryPose);
 	}
-	
-	// Read the scan from the port
+}
+
+void PointcloudMapper::updateHook()
+{
+	PointcloudMapperBase::updateHook();
 	base::samples::Pointcloud cloud;
 	while(_scan.read(cloud, false) == RTT::NewData)
 	{
@@ -266,8 +269,8 @@ void PointcloudMapper::updateHook()
 		{
 			mLogger->message(slam::ERROR, (boost::format("Could not add scan: %1%") % e.what()).str());
 		}
+		sendRobotPose();
 	}
-	sendRobotPose();
 }
 
 void PointcloudMapper::errorHook()

@@ -48,6 +48,7 @@
     <File Name="scripts/optimize.rb"/>
     <File Name="scripts/visualize.rb"/>
     <File Name="scripts/map_asguard.rb"/>
+    <File Name="scripts/asguard_tf.rb"/>
   </VirtualDirectory>
   <Dependencies Name="Debug"/>
   <Dependencies Name="Release"/>

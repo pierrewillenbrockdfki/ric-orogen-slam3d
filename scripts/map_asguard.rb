@@ -1,11 +1,12 @@
 require 'orocos'
 require 'orocos/log'
 require 'vizkit'
+require 'transformer/runtime'
 require_relative 'visualize'
 
 include Orocos
 
-log = Orocos::Log::Replay.open("/media/data/replays/asguard")
+log = Orocos::Log::Replay.open("/media/data/replays/asguard_01")
 log.use_sample_time = false
 
 ## Initialize orocos ##
@@ -61,22 +62,22 @@ Orocos.run 'slam3d::PointcloudFilter' => 'filter',
 	mapper.log_level = 1
 	mapper.gicp_config do |c|
 		c.max_correspondence_distance = 1.0
-		c.max_fitness_score = 20
+		c.max_fitness_score = 50
 	end
 	mapper.configure
   
-	# connect ports with the task
+	## Connect ports with the task ##
 	pcl_ports.each do |port|
 		port.connect_to filter.cloud_in, :type => :buffer, :size => 10
 	end
 	filter.cloud_out.connect_to   mapper.scan,      :type => :buffer, :size => 10
-	odometry_ports.each do |port|
-		port.connect_to mapper.odometry, :type => :buffer, :size => 10
-	end
 	mapper.cloud.connect_to projector.cloud, :type => :buffer, :size => 10
 
+	## Setup the transformer ##
+	Orocos.transformer.load_conf("asguard_tf.rb")
+	Orocos.transformer.setup(mapper)
+
 	## Start the tasks ##
-	
 	filter.start
 	mapper.start
 	projector.start
