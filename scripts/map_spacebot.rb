@@ -1,11 +1,12 @@
 require 'orocos'
 require 'orocos/log'
 require 'vizkit'
+require 'transformer/runtime'
 require_relative 'visualize'
 
 include Orocos
 
-log = Orocos::Log::Replay.open("/home/dfki.uni-bremen.de/skasperski/Robotics/samples/sb_rh1")
+log = Orocos::Log::Replay.open("/media/data/replays/sb_rh1")
 log.use_sample_time = false
 
 ## Initialize orocos ##
@@ -16,14 +17,6 @@ velodyne_ports = log.find_all_output_ports("/velodyne_lidar/MultilevelLaserScan"
 velodyne_ports.each do |port|
     port.tracked = true
 end
-
-odometry_ports = log.find_all_output_ports("/base/samples/RigidBodyState_m", "odometry_samples")
-odometry_ports.each do |port|
-    port.tracked = true
-end
-
-log.transformer_broadcaster.track(false)
-log.transformer_broadcaster.rename("foo")
 
 ## Execute the tasks ##
 Orocos.run	'slam3d::ScanConverter' => 'converter',
@@ -58,11 +51,13 @@ Orocos.run	'slam3d::ScanConverter' => 'converter',
 	mapper = Orocos.name_service.get 'mapper'
 	mapper.scan_resolution = 0.1
 	mapper.map_resolution = 0.05
+	mapper.map_outlier_radius = 0.1
+	mapper.map_outlier_neighbors = 5
 	mapper.neighbor_radius = 2.0
 	mapper.min_translation = 0.25
 	mapper.min_rotation = 0.05
 	mapper.use_odometry = true
-	mapper.add_odometry_edges = false
+	mapper.add_odometry_edges = true
 	mapper.log_level = 1
 	
 	mapper.gicp_config do |c|
@@ -70,6 +65,8 @@ Orocos.run	'slam3d::ScanConverter' => 'converter',
 		c.max_fitness_score = 20
 	end
 	
+	mapper.scan_period = 0.1
+	mapper.robot_frame = "body"
 	mapper.configure
 
 	## Connect ports with the task ##
@@ -78,10 +75,11 @@ Orocos.run	'slam3d::ScanConverter' => 'converter',
 	end
 	converter.cloud.connect_to    filter.cloud_in,  :type => :buffer, :size => 10
 	filter.cloud_out.connect_to   mapper.scan,      :type => :buffer, :size => 10
-	odometry_ports.each do |port|
-		port.connect_to mapper.odometry, :type => :buffer, :size => 10
-	end
 	mapper.cloud.connect_to projector.cloud, :type => :buffer, :size => 10
+
+	## Setup the transformer ##
+	Orocos.transformer.load_conf("transforms.rb")
+	Orocos.transformer.setup(mapper)
 
 	## Start the tasks ##
 	mapper.start

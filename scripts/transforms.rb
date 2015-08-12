@@ -1,2 +1,2 @@
-dynamic_transform "mapper.map2robot",
-  "map" => "robot"
+dynamic_transform "odometry.odometry_samples",
+  "body" => "odometry"
