@@ -235,6 +235,8 @@ void PointcloudMapper::sendOdometryDrift()
 
 void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
 {
+	++mScansReceived;
+	
 	// Read odometry data
 	if(mOdometry)
 	{
@@ -249,28 +251,24 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		mOdometryPose.time = ts;
 		mOdometry->setCurrentPose(mOdometryPose);
 	}
+
+	try
+	{
+		if(processPointcloud(scan_sample))
+		{
+			mScansAdded++;
+			sendOdometryDrift();
+		}
+	}catch (std::exception &e)
+	{
+		mLogger->message(slam::ERROR, (boost::format("Could not add scan: %1%") % e.what()).str());
+	}
+	sendRobotPose();
 }
 
 void PointcloudMapper::updateHook()
 {
 	PointcloudMapperBase::updateHook();
-	base::samples::Pointcloud cloud;
-	while(_scan.read(cloud, false) == RTT::NewData)
-	{
-		++mScansReceived;
-		try
-		{
-			if(processPointcloud(cloud))
-			{
-				mScansAdded++;
-				sendOdometryDrift();
-			}
-		}catch (std::exception &e)
-		{
-			mLogger->message(slam::ERROR, (boost::format("Could not add scan: %1%") % e.what()).str());
-		}
-		sendRobotPose();
-	}
 }
 
 void PointcloudMapper::errorHook()

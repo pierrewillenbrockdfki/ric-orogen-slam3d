@@ -64,6 +64,9 @@ Orocos.run 'slam3d::PointcloudFilter' => 'filter',
 		c.max_correspondence_distance = 1.0
 		c.max_fitness_score = 50
 	end
+	mapper.transformer_max_latency = 10
+	mapper.scan_period = 2
+	mapper.robot_frame = "body"
 	mapper.configure
   
 	## Connect ports with the task ##
