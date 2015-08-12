@@ -112,18 +112,21 @@ bool PointcloudMapper::configureHook()
 
 	mSolver = new slam::G2oSolver(mLogger);
 	mMapper = new slam::GraphMapper(mLogger);
-	
+
+	mLogger->message(slam::INFO, " = GraphMapper - Parameters =");
+	mLogger->message(slam::INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());	
 	if(_use_odometry.get())
 	{
 		mOdometry = new RockOdometry(mLogger, _odometry_time_tolerance.get());
 		mMapper->setOdometry(mOdometry, _add_odometry_edges.get());
 		mOdometryPose.setTransform(Eigen::Affine3d::Identity());
+		mLogger->message(slam::INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges.get()).str());
+		mLogger->message(slam::INFO, (boost::format("odometry_time_tolerance:%1%") % _odometry_time_tolerance.get()).str());
 	}else
 	{
 		mOdometry = NULL;
 	}
 	
-	mLogger->message(slam::INFO, " = GraphMapper - Parameters =");
 	double min_translation = _min_translation.get();
 	double min_rotation = _min_rotation.get();
 	mLogger->message(slam::INFO, (boost::format("min_pose_distance:      %1% / %2%") % min_translation % min_rotation).str());
@@ -145,9 +148,6 @@ bool PointcloudMapper::configureHook()
 	mMapOutlierNeighbors = _map_outlier_neighbors.get();
 	mLogger->message(slam::INFO, (boost::format("map_outlier_neighbors:  %1%") % mMapOutlierNeighbors).str());
 	
-	mLogger->message(slam::INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());
-	mLogger->message(slam::INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges.get()).str());
-	mLogger->message(slam::INFO, (boost::format("odometry_time_tolerance:%1%") % _odometry_time_tolerance.get()).str());
 	
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
