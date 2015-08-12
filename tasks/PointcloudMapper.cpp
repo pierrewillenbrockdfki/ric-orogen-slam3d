@@ -115,7 +115,7 @@ bool PointcloudMapper::configureHook()
 	
 	if(_use_odometry.get())
 	{
-		mOdometry = new RockOdometry(mLogger);
+		mOdometry = new RockOdometry(mLogger, _odometry_time_tolerance.get());
 		mMapper->setOdometry(mOdometry, _add_odometry_edges.get());
 		mOdometryPose.setTransform(Eigen::Affine3d::Identity());
 	}else
@@ -147,6 +147,7 @@ bool PointcloudMapper::configureHook()
 	
 	mLogger->message(slam::INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());
 	mLogger->message(slam::INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges.get()).str());
+	mLogger->message(slam::INFO, (boost::format("odometry_time_tolerance:%1%") % _odometry_time_tolerance.get()).str());
 	
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);

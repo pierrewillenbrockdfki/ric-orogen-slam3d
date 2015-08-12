@@ -50,10 +50,10 @@ namespace slam3d
 	class RockOdometry : public slam::Odometry
 	{
 	public:
-		RockOdometry(slam::Logger* logger) : slam::Odometry(logger)
+		RockOdometry(slam::Logger* logger, double tolerance = 100) : slam::Odometry(logger)
 		{
 			mCurrentPose = slam::Transform::Identity();
-			mTolerance = 100; // milliseconds
+			mTolerance = tolerance; // milliseconds
 
 		}
 		~RockOdometry() {}
@@ -62,8 +62,10 @@ namespace slam3d
 		// So we have to rely on current pose to match last received measurement.
 		slam::Transform getOdometricPose(timeval stamp)
 		{
-			if(timevaldiff(stamp, mCurrentTime) > mTolerance)
+			long diff = timevaldiff(stamp, mCurrentTime);
+			if(diff > mTolerance)
 			{
+				mLogger->message(slam::ERROR, (boost::format("Odometry data stamp differs from requested stamp by %1% ms.")%diff).str());
 				throw slam::OdometryException();
 			}
 			return mCurrentPose;
