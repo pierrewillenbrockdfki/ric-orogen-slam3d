@@ -47,6 +47,7 @@
     <File Name="scripts/generate_map.rb"/>
     <File Name="scripts/optimize.rb"/>
     <File Name="scripts/visualize.rb"/>
+    <File Name="scripts/map_asguard.rb"/>
   </VirtualDirectory>
   <Dependencies Name="Debug"/>
   <Dependencies Name="Release"/>
