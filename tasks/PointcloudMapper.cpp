@@ -152,6 +152,7 @@ bool PointcloudMapper::configureHook()
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
+	mRobotName = "Robot";
 	mScansReceived = 0;
 	mScansAdded = 0;
 	
@@ -187,10 +188,10 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 		{
 			slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
 			mLogger->message(slam::DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
-			measurement = new slam::PointCloudMeasurement(downsampled_cloud, mPclSensor->getName());
+			measurement = new slam::PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
 		}else
 		{
-			measurement = new slam::PointCloudMeasurement(cloud, mPclSensor->getName());
+			measurement = new slam::PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
 		}
 		
 		if(!mMapper->addReading(measurement))

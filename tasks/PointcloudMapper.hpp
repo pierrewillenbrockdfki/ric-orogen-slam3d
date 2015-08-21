@@ -40,6 +40,7 @@ namespace slam3d
 		
 		base::samples::RigidBodyState mOdometryPose;
 
+		std::string mRobotName;
 		int mScansReceived;
 		int mScansAdded;
 		
