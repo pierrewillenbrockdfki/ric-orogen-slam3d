@@ -72,6 +72,10 @@ task_context "PointcloudMapper" do
 	.doc("Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
 end
 
+task_context "DistributedPointcloudMapper" do
+	subclasses "PointcloudMapper"
+end
+
 ## Task to dump velodyne-Scans to KITTI-Format
 task_context "dump_pcl" do
 	input_port 'scan', '/velodyne_lidar/MultilevelLaserScan'

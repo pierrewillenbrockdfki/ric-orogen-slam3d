@@ -31,6 +31,8 @@
     <File Name="tasks/ScanConverter.cpp"/>
     <File Name="tasks/MLSMapProjector.hpp"/>
     <File Name="tasks/MLSMapProjector.cpp"/>
+    <File Name="tasks/DistributedPointcloudMapper.cpp"/>
+    <File Name="tasks/DistributedPointcloudMapper.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
