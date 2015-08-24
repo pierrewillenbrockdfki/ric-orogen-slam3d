@@ -73,11 +73,14 @@ task_context "PointcloudMapper" do
 	.doc("Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
 end
 
+## Distributed Mapper using Pointclouds
 task_context "DistributedPointcloudMapper" do
 	subclasses "PointcloudMapper"
 	
 	input_port 'external_in', '/slam3d/LocalizedPointcloud'
 	output_port 'external_out', '/slam3d/LocalizedPointcloud'
+	
+	periodic 1.0
 end
 
 ## Task to dump velodyne-Scans to KITTI-Format

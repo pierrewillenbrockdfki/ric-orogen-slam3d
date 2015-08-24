@@ -166,19 +166,25 @@ bool PointcloudMapper::startHook()
 	return true;
 }
 
-bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_in)
+slam::PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Pointcloud& cloud_in)
 {
-	// Transform base::samples::Pointcloud --> slam::Pointcloud
-	slam::PointCloud::Ptr cloud(new slam::PointCloud);
-	cloud->header.stamp = cloud_in.time.toMicroseconds();
+	slam::PointCloud::Ptr cloud_out(new slam::PointCloud);
+	cloud_out->header.stamp = cloud_in.time.toMicroseconds();
 	for(std::vector<base::Vector3d>::const_iterator it = cloud_in.points.begin(); it < cloud_in.points.end(); ++it)
 	{
 		slam::PointType p;
 		p.x = (*it)[0];
 		p.y = (*it)[1];
 		p.z = (*it)[2];
-		cloud->push_back(p);
+		cloud_out->push_back(p);
 	}
+	return cloud_out;
+}
+
+bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_in)
+{
+	// Transform base::samples::Pointcloud --> slam::Pointcloud
+	slam::PointCloud::Ptr cloud = createFromRockMessage(cloud_in);
 	
 	// Downsample and add to map
 	try

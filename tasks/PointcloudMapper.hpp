@@ -26,6 +26,7 @@ namespace slam3d
 		virtual void scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);
 
 		// Internal methods
+		slam::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
 		void sendRobotPose();
 		void sendOdometryDrift();
