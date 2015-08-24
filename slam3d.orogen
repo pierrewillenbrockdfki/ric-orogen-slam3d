@@ -9,6 +9,7 @@ import_types_from 'base'
 import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
 import_types_from 'slam3d/include/GICPConfiguration.hpp'
 import_types_from 'envire'
+import_types_from 'tasks/rock-types.hpp'
 
 
 ## Mapper using Pointclouds
@@ -74,6 +75,9 @@ end
 
 task_context "DistributedPointcloudMapper" do
 	subclasses "PointcloudMapper"
+	
+	input_port 'external_in', '/slam3d/LocalizedPointcloud'
+	output_port 'external_out', '/slam3d/LocalizedPointcloud'
 end
 
 ## Task to dump velodyne-Scans to KITTI-Format
