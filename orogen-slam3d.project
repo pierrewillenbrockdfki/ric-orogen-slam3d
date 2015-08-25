@@ -51,8 +51,6 @@
     <File Name="scripts/dump_coyote.rb"/>
     <File Name="scripts/map_spacebot.rb"/>
     <File Name="scripts/map_seekur.rb"/>
-    <File Name="scripts/generate_map.rb"/>
-    <File Name="scripts/optimize.rb"/>
     <File Name="scripts/visualize.rb"/>
     <File Name="scripts/map_asguard.rb"/>
     <File Name="scripts/asguard_tf.rb"/>

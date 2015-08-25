@@ -114,7 +114,6 @@ Orocos.run	'slam3d::ScanConverter' => 'converter',
 	publisher.start
 	subscriber.start
 
-# /slam3d/LocalizedPointcloud
 	if(!multiplexer.createTelemetryInputPort('vertices', '/slam3d/LocalizedPointcloud'))
 		raise "multiplexer.createTelemetryPort returned false on [/slam3d/LocalizedPointcloud]!"
 	end
