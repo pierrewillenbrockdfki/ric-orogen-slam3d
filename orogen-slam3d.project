@@ -34,6 +34,10 @@
     <File Name="tasks/DistributedPointcloudMapper.cpp"/>
     <File Name="tasks/DistributedPointcloudMapper.hpp"/>
     <File Name="tasks/rock-types.hpp"/>
+    <File Name="tasks/Demultiplexer.cpp"/>
+    <File Name="tasks/Demultiplexer.hpp"/>
+    <File Name="tasks/Multiplexer.cpp"/>
+    <File Name="tasks/Multiplexer.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
@@ -52,6 +56,7 @@
     <File Name="scripts/visualize.rb"/>
     <File Name="scripts/map_asguard.rb"/>
     <File Name="scripts/asguard_tf.rb"/>
+    <File Name="scripts/service.rb"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>

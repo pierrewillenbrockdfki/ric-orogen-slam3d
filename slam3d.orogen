@@ -11,6 +11,8 @@ import_types_from 'slam3d/include/GICPConfiguration.hpp'
 import_types_from 'envire'
 import_types_from 'tasks/rock-types.hpp'
 
+using_task_library 'telemetry_provider'
+
 
 ## Mapper using Pointclouds
 task_context "PointcloudMapper" do
@@ -143,4 +145,12 @@ task_context "MLSMapProjector" do
 	
 	property('resolution', '/double')
 	 .doc("Resolution (size of grid-cell) of the map (meter).")
+end
+
+task_context "Multiplexer" do
+	subclasses "telemetry_provider::Multiplexer"
+end
+
+task_context "Demultiplexer" do
+	subclasses "telemetry_provider::Demultiplexer"
 end
