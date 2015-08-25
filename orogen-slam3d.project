@@ -55,7 +55,8 @@
     <File Name="scripts/map_asguard.rb"/>
     <File Name="scripts/asguard_tf.rb"/>
     <File Name="scripts/service.rb"/>
-    <File Name="scripts/map_distributed.rb"/>
+    <File Name="scripts/map_distributed_pub.rb"/>
+    <File Name="scripts/map_distributed_sub.rb"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
