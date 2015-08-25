@@ -67,6 +67,7 @@ Orocos.run	'slam3d::ScanConverter' => 'converter',
 	
 	mapper.scan_period = 0.1
 	mapper.robot_frame = "body"
+	mapper.robot_name = "Robot"
 	mapper.configure
 
 	## Connect ports with the task ##

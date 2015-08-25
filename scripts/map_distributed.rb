@@ -65,7 +65,7 @@ Orocos.run	'slam3d::ScanConverter' => 'converter',
 		mapper.min_rotation = 0.05
 		mapper.use_odometry = true
 		mapper.add_odometry_edges = true
-		mapper.log_level = 0
+		mapper.log_level = 1
 		
 		mapper.gicp_config do |c|
 			c.max_correspondence_distance = 1.0
@@ -74,8 +74,12 @@ Orocos.run	'slam3d::ScanConverter' => 'converter',
 		
 		mapper.scan_period = 0.1
 		mapper.robot_frame = "body"
-		mapper.configure
 	end
+	
+	mapper1.robot_name = "R1"
+	mapper2.robot_name = "R2"
+	mapper1.configure
+	mapper2.configure
 
 	## Connect ports with the task ##
 	velodyne_ports.each do |port|
@@ -136,6 +140,8 @@ Orocos.run	'slam3d::ScanConverter' => 'converter',
 	filter.start
 	converter.start
 	projector.start
+	mapper1.start
+	mapper2.start
 
 	Vizkit.control log
 	
@@ -155,9 +161,13 @@ Orocos.run	'slam3d::ScanConverter' => 'converter',
 		filter.stop
 		converter.stop
 		projector.stop
+		mapper1.stop
+		mapper2.stop
 		
 		filter.cleanup
 		converter.cleanup
 		projector.cleanup
+		mapper1.cleanup
+		mapper2.cleanup
 	end
 end

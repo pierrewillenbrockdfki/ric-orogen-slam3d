@@ -148,11 +148,12 @@ bool PointcloudMapper::configureHook()
 	mMapOutlierNeighbors = _map_outlier_neighbors.get();
 	mLogger->message(slam::INFO, (boost::format("map_outlier_neighbors:  %1%") % mMapOutlierNeighbors).str());
 	
+	mRobotName = _robot_name.get();
+	mLogger->message(slam::INFO, (boost::format("robot_name:             %1%") % mRobotName).str());
 	
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
-	mRobotName = "Robot";
 	mScansReceived = 0;
 	mScansAdded = 0;
 	
