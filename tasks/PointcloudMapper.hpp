@@ -9,6 +9,8 @@
 #include <slam3d/include/PointCloudSensor.hpp>
 #include <slam3d/include/Solver.hpp>
 
+#include <queue>
+
 namespace slam3d
 {
 	class RockOdometry;
@@ -27,6 +29,7 @@ namespace slam3d
 
 		// Internal methods
 		slam::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
+		void createFromPcl(slam::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
 		void sendRobotPose();
 		void sendOdometryDrift();
@@ -40,6 +43,7 @@ namespace slam3d
 		RockOdometry* mOdometry;
 		
 		base::samples::RigidBodyState mOdometryPose;
+		std::queue<slam::VertexObject::ConstPtr> mNewVertices;
 
 		std::string mRobotName;
 		int mScansReceived;

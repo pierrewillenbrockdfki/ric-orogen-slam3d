@@ -181,6 +181,19 @@ slam::PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::sample
 	return cloud_out;
 }
 
+void PointcloudMapper::createFromPcl(slam::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud)
+{
+	base_cloud.time.fromMicroseconds(pcl_cloud->header.stamp);
+	for(slam::PointCloud::const_iterator it = pcl_cloud->begin(); it < pcl_cloud->end(); it++)
+	{
+		base::Point p;
+		p[0] = it->x;
+		p[1] = it->y;
+		p[2] = it->z;
+		base_cloud.points.push_back(p);
+	}
+}
+
 bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_in)
 {
 	// Transform base::samples::Pointcloud --> slam::Pointcloud
@@ -205,6 +218,7 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 			delete measurement;
 			return false;
 		}
+		mNewVertices.push(mMapper->getLastVertex());
 	}catch(std::exception& e)
 	{
 		mLogger->message(slam::ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());

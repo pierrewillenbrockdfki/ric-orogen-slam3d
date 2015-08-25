@@ -5,9 +5,11 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <base/Logging.hpp>
+
 using namespace slam3d;
 
-slam::Transform pose2eigen(base::Pose pose)
+slam::Transform pose2eigen(const base::Pose& pose)
 {
 	Eigen::Affine3d tmp = pose.toTransform();
 	slam::Transform tf;
@@ -49,6 +51,21 @@ void DistributedPointcloudMapper::updateHook()
 	DistributedPointcloudMapperBase::updateHook();
 	
 	// Send all new nodes to other robots
+	while(!mNewVertices.empty())
+	{
+		slam::VertexObject::ConstPtr v = mNewVertices.front();
+		mNewVertices.pop();
+		slam::PointCloudMeasurement* m = dynamic_cast<slam::PointCloudMeasurement*>(v->measurement);
+		slam3d::LocalizedPointcloud loc_cloud;
+		loc_cloud.robot_name = mRobotName;
+		loc_cloud.sensor_name = mPclSensor->getName();
+		loc_cloud.stamp.fromMicroseconds(m->getPointCloud()->header.stamp);
+		loc_cloud.sensor_pose = base::Pose(m->getSensorPose());
+		loc_cloud.corrected_pose = base::Pose(v->corrected_pose);
+		loc_cloud.unique_id = boost::uuids::to_string(m->getUniqueId());
+		createFromPcl(m->getPointCloud(), loc_cloud.point_cloud);
+		_external_out.write(loc_cloud);
+	}
 	
 	// Add readings from other robots to own map
 	slam3d::LocalizedPointcloud lc;
