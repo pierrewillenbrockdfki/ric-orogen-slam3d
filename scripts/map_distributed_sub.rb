@@ -7,12 +7,21 @@ include Orocos
 ## Initialize orocos ##
 Orocos.initialize
 
+robot_name = "crex"
+port_name = "#{robot_name}-sensors"
+
 ## Execute the tasks ##
 Orocos.run	'slam3d::DistributedPointcloudMapper' => 'mapper2',
 			'slam3d::MLSMapProjector' => 'projector',
 			'slam3d::Demultiplexer' => 'demultiplexer',
+                        'fipa_services::MessageTransportTask' => 'mts',
 			'telemetry_provider::FIPASubscriber' => 'fipa_subscriber' do
-	
+
+        fipa_message_transport = Orocos.get 'mts'	
+	fipa_message_transport.configure
+	fipa_message_transport.start
+	fipa_message_transport.addReceiver(port_name, true)
+
 	## Configure the projector
 	projector = Orocos.name_service.get 'projector'
 	projector.size_x = 50
@@ -53,10 +62,9 @@ Orocos.run	'slam3d::DistributedPointcloudMapper' => 'mapper2',
 
 	subscriber = TaskContext.get 'fipa_subscriber'
 	subscriber.configure
-	
-	publisher = TaskContext.get 'fipa_publisher'
-	publisher.fipa_message.connect_to subscriber.fipa_message
 	subscriber.telemetry_package.connect_to demultiplexer.telemetry_package
+
+        fipa_message_transport.port(port_name).connect_to subscriber.fipa_message
 	
 	demultiplexer.start
 	subscriber.start
