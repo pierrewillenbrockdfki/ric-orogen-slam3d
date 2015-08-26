@@ -7,20 +7,15 @@ include Orocos
 ## Initialize orocos ##
 Orocos.initialize
 
-robot_name = "crex"
+robot_name = "R2"
 port_name = "#{robot_name}-sensors"
 
 ## Execute the tasks ##
 Orocos.run	'slam3d::DistributedPointcloudMapper' => 'mapper2',
 			'slam3d::MLSMapProjector' => 'projector',
 			'slam3d::Demultiplexer' => 'demultiplexer',
-                        'fipa_services::MessageTransportTask' => 'mts',
+			'fipa_services::MessageTransportTask' => 'transport2',
 			'telemetry_provider::FIPASubscriber' => 'fipa_subscriber' do
-
-        fipa_message_transport = Orocos.get 'mts'	
-	fipa_message_transport.configure
-	fipa_message_transport.start
-	fipa_message_transport.addReceiver(port_name, true)
 
 	## Configure the projector
 	projector = Orocos.name_service.get 'projector'
@@ -53,22 +48,25 @@ Orocos.run	'slam3d::DistributedPointcloudMapper' => 'mapper2',
 	
 	mapper.scan_period = 0.1
 	mapper.robot_frame = "body"
-	mapper.robot_name = "R2"
+	mapper.robot_name = "#{robot_name}"
 	mapper.configure
 	
 	## Use multiagent communication from mapper1 to mapper2 ##
+	transport = Orocos.get 'transport2'
+	transport.configure
+	transport.start
+	transport.addReceiver(port_name, true)
+	
 	demultiplexer = TaskContext.get 'demultiplexer'
 	demultiplexer.configure
+	demultiplexer.start
 
 	subscriber = TaskContext.get 'fipa_subscriber'
 	subscriber.configure
-	subscriber.telemetry_package.connect_to demultiplexer.telemetry_package
-
-        fipa_message_transport.port(port_name).connect_to subscriber.fipa_message
-	
-	demultiplexer.start
 	subscriber.start
 
+	transport.port(port_name).connect_to subscriber.fipa_message
+	subscriber.telemetry_package.connect_to demultiplexer.telemetry_package
 	
 	if(!demultiplexer.createTelemetryOutputPort('vertices', '/slam3d/LocalizedPointcloud'))
 		raise "telemetry.createTelemetryPort returned false on [/slam3d/LocalizedPointcloud]!"
