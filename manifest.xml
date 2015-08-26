@@ -17,6 +17,7 @@
 	<depend package="base/orogen/types" />
 	<depend package="tools/orocos.rb" />
 	<depend package="gui/vizkit" />
+	<depend package="communication/orogen/telemetry_provider" />
 	
 	<tags>stable</tags>
 	
