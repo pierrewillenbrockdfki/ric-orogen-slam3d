@@ -57,6 +57,8 @@
     <File Name="scripts/service.rb"/>
     <File Name="scripts/map_distributed_pub.rb"/>
     <File Name="scripts/map_distributed_sub.rb"/>
+    <File Name="scripts/map_eo.rb"/>
+    <File Name="scripts/eo2_tf.rb"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
