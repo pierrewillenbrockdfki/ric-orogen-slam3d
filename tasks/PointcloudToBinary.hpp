@@ -1,15 +1,15 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef SLAM3D_DUMP_PCL_TASK_HPP
-#define SLAM3D_DUMP_PCL_TASK_HPP
+#ifndef SLAM3D_POINTCLOUD_TO_BINARY_TASK_HPP
+#define SLAM3D_POINTCLOUD_TO_BINARY_TASK_HPP
 
-#include "slam3d/dump_pclBase.hpp"
+#include "slam3d/PointcloudToBinaryBase.hpp"
 
 #include <stdio.h>
 
 namespace slam3d {
 
-    /*! \class dump_pcl 
+    /*! \class PointcloudToBinary 
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
@@ -18,14 +18,14 @@ namespace slam3d {
      * The name of a TaskContext is primarily defined via:
      \verbatim
      deployment 'deployment_name'
-         task('custom_task_name','slam3d::dump_pcl')
+         task('custom_task_name','slam3d::PointcloudToBinary')
      end
      \endverbatim
      *  It can be dynamically adapted when the deployment is called with a prefix argument. 
      */
-    class dump_pcl : public dump_pclBase
+    class PointcloudToBinary : public PointcloudToBinaryBase
     {
-	friend class dump_pclBase;
+	friend class PointcloudToBinaryBase;
     protected:
 
 		void handlePointcloud(const std::vector<Eigen::Vector3d>& points, std::vector<float> remission);
@@ -34,22 +34,22 @@ namespace slam3d {
 		FILE* mPointcloudLog;
 
     public:
-        /** TaskContext constructor for dump_pcl
+        /** TaskContext constructor for PointcloudToBinary
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        dump_pcl(std::string const& name = "slam3d::dump_pcl", TaskCore::TaskState initial_state = Stopped);
+        PointcloudToBinary(std::string const& name = "slam3d::PointcloudToBinary", TaskCore::TaskState initial_state = Stopped);
 
-        /** TaskContext constructor for dump_pcl 
+        /** TaskContext constructor for PointcloudToBinary 
          * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
          * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        dump_pcl(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state = Stopped);
+        PointcloudToBinary(std::string const& name, RTT::ExecutionEngine* engine, TaskCore::TaskState initial_state = Stopped);
 
-        /** Default deconstructor of dump_pcl
+        /** Default deconstructor of PointcloudToBinary
          */
-	~dump_pcl();
+	~PointcloudToBinary();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the

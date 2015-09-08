@@ -18,9 +18,17 @@ Orocos.initialize
 
 # track only needed ports
 pcl_ports = log.find_all_output_ports("/base/samples/Pointcloud_m", "pointcloud")
+pcl_ports.each do |port|
+    port.tracked = true
+end
+
+odometry_ports = log.find_all_output_ports("/base/samples/RigidBodyState_m", "odometry_samples")
+odometry_ports.each do |port|
+    port.tracked = true
+end
 
 ## Execute the PCL-Dump Task ##
-Orocos.run 'slam3d::dump_pcl' => 'dump' do
+Orocos.run 'slam3d::PointcloudToBinary' => 'dump' do
   ## Get the task context##
   dump = Orocos.name_service.get 'dump'
   # connect ports with the task

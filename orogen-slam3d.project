@@ -20,8 +20,6 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="tasks">
-    <File Name="tasks/dump_pcl.cpp"/>
-    <File Name="tasks/dump_pcl.hpp"/>
     <File Name="tasks/PointcloudMapper.cpp"/>
     <File Name="tasks/PointcloudMapper.hpp"/>
     <File Name="tasks/rock-common.hpp"/>
@@ -38,6 +36,8 @@
     <File Name="tasks/Demultiplexer.hpp"/>
     <File Name="tasks/Multiplexer.cpp"/>
     <File Name="tasks/Multiplexer.hpp"/>
+    <File Name="tasks/PointcloudToBinary.cpp"/>
+    <File Name="tasks/PointcloudToBinary.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
