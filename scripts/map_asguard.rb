@@ -20,7 +20,7 @@ end
 
 odometry_ports = log.find_all_output_ports("/base/samples/RigidBodyState_m", "odometry_samples")
 odometry_ports.each do |port|
-    port.tracked = true
+	port.tracked = true
 end
 
 ## Execute the task 'message_producer::Task' ##

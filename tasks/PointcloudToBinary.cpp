@@ -93,6 +93,12 @@ void PointcloudToBinary::updateHook()
 	base::samples::Pointcloud cloud;
 	while(_pcl.read(cloud, false) == RTT::NewData)
 	{
+		// Write timestamp to log file
+		int64_t stamp = cloud.time.microseconds;
+		fwrite(&stamp, sizeof(int64_t), 1, mPointcloudLog);
+		fwrite(&mScanNumber, sizeof(int), 1, mPointcloudLog);
+		
+		// Write pointcloud to vector
 		std::vector<Eigen::Vector3d> points;
 		std::vector<float> remission;
 		for(std::vector<base::Vector3d>::const_iterator it = cloud.points.begin(); it < cloud.points.end(); ++it)
