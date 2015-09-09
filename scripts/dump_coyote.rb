@@ -38,7 +38,7 @@ Orocos.run 'slam3d::PointcloudToBinary' => 'dump' do
   end
 
   odometry_ports.each do |port|
-    port.connect_to dump.odometry, :type => :buffer, :size => 10
+    port.connect_to dump.odometry, :type => :buffer, :size => 50
   end
 
   ## Start the tasks ##

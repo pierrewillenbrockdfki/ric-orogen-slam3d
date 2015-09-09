@@ -92,7 +92,7 @@ end
 task_context "PointcloudToBinary" do
 	input_port 'pcl', '/base/samples/Pointcloud'
 	input_port 'odometry', '/base/samples/RigidBodyState'
-	port_driven 'pcl'
+	periodic 0.1
 end
 
 ## Filter to reduce velodyne-scans taking indoor
