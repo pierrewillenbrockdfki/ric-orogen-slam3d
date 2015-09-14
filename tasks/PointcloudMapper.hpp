@@ -46,6 +46,10 @@ namespace slam3d
 		std::queue<slam::VertexObject::ConstPtr> mNewVertices;
 
 		std::string mRobotName;
+		std::string mRobotFrame;
+		std::string mOdometryFrame;
+		std::string mMapFrame;
+		
 		int mScansReceived;
 		int mScansAdded;
 		

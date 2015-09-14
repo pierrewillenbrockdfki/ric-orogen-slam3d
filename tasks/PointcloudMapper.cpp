@@ -151,6 +151,15 @@ bool PointcloudMapper::configureHook()
 	mRobotName = _robot_name.get();
 	mLogger->message(slam::INFO, (boost::format("robot_name:             %1%") % mRobotName).str());
 	
+	mRobotFrame = _robot_frame.get();
+	mLogger->message(slam::INFO, (boost::format("robot_frame:            %1%") % mRobotFrame).str());
+	
+	mOdometryFrame = _odometry_frame.get();
+	mLogger->message(slam::INFO, (boost::format("odometry_frame:         %1%") % mOdometryFrame).str());
+
+	mMapFrame = _map_frame.get();
+	mLogger->message(slam::INFO, (boost::format("map_frame:              %1%") % mMapFrame).str());
+
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
@@ -235,8 +244,8 @@ void PointcloudMapper::sendRobotPose()
 	Eigen::Affine3d current = mMapper->getCurrentPose();
 	rbs.setTransform(current);
 	rbs.invalidateCovariances();
-	rbs.sourceFrame = "map";
-	rbs.targetFrame = "robot";
+	rbs.sourceFrame = mRobotFrame;
+	rbs.targetFrame = mMapFrame;
 	rbs.time = mOdometryPose.time;
 	_map2robot.write(rbs);
 }
@@ -249,8 +258,8 @@ void PointcloudMapper::sendOdometryDrift()
 	Eigen::Affine3d drift = current * mOdometryPose.getTransform().inverse();
 	rbs.setTransform(drift);
 	rbs.invalidateCovariances();
-	rbs.sourceFrame = "map";
-	rbs.targetFrame = "odometry";
+	rbs.sourceFrame = mOdometryFrame;
+	rbs.targetFrame = mMapFrame;
 	rbs.time = mOdometryPose.time;
 	_map2odometry.write(rbs);
 }

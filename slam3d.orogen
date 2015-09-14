@@ -76,6 +76,9 @@ task_context "PointcloudMapper" do
 	
 	property('robot_name', '/std/string')
 	.doc("This robot's name.")
+
+	property('map_frame', '/std/string')
+	.doc("The frame that the map is represented in.")
 end
 
 ## Distributed Mapper using Pointclouds
