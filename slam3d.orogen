@@ -124,6 +124,13 @@ task_context "ScanConverter" do
 	port_driven 'scan'
 end
 
+## Convert LaserScan to Pointcloud
+task_context "LineScanConverter" do
+	input_port 'scan', '/base/samples/LaserScan'
+	output_port 'cloud', '/base/samples/Pointcloud'
+	port_driven 'scan'
+end
+
 ## Task to create Multi-Layer-Surface-map
 task_context "MLSMapProjector" do
 	input_port 'cloud', '/base/samples/Pointcloud'
@@ -152,10 +159,12 @@ task_context "MLSMapProjector" do
 	 .doc("Resolution (size of grid-cell) of the map (meter).")
 end
 
+# Multiplexer for sending data to other robots
 task_context "Multiplexer" do
 	subclasses "telemetry_provider::Multiplexer"
 end
 
+# Demultiplexer for receiving data from other robots
 task_context "Demultiplexer" do
 	subclasses "telemetry_provider::Demultiplexer"
 end
