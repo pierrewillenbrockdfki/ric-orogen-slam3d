@@ -5,7 +5,7 @@ require_relative 'visualize'
 
 include Orocos
 
-log = Orocos::Log::Replay.open("/media/data/samples/20150612_coyote3_rh5")
+log = Orocos::Log::Replay.open("/media/data/replays/coyote_dist_1")
 log.use_sample_time = false
 
 ## Initialize orocos ##
@@ -45,6 +45,8 @@ Orocos.run 'slam3d::PointcloudFilter' => 'filter',
 	mapper = Orocos.name_service.get 'mapper'
 	mapper.scan_resolution = 0
 	mapper.map_resolution = 0.05
+	mapper.map_outlier_radius = 0.1
+	mapper.map_outlier_neighbors = 5
 	mapper.neighbor_radius = 1.0
 	mapper.min_translation = 0.05
 	mapper.min_rotation = 0.05

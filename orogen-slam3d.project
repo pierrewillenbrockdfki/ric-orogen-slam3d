@@ -62,6 +62,7 @@
     <File Name="scripts/eo2_tf.rb"/>
     <File Name="scripts/aila.rb"/>
     <File Name="scripts/map_coyote.rb"/>
+    <File Name="scripts/aila_tf.rb"/>
   </VirtualDirectory>
   <Settings Type="Dynamic Library">
     <GlobalSettings>
