@@ -288,12 +288,12 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		if(processPointcloud(scan_sample))
 		{
 			mScansAdded++;
-			sendOdometryDrift();
 		}
 	}catch (std::exception &e)
 	{
 		mLogger->message(slam::ERROR, (boost::format("Could not add scan: %1%") % e.what()).str());
 	}
+	sendOdometryDrift();
 	sendRobotPose();
 }
 
