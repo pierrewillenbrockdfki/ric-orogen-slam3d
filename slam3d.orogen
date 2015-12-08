@@ -43,6 +43,9 @@ task_context "PointcloudMapper" do
 	 
 	property('map_resolution', '/double')
 	.doc("Map-Pointcloud is downsampled to this resolution before being published.")
+
+	property('map_publish_rate', '/int')
+	.doc("Publish Map-Pointcloud every X scans, that are added to the map.")
 	
 	property('neighbor_radius', '/double')
 	.doc("Distance to search for neighbors when adding additional constraints to the graph.")

@@ -142,6 +142,9 @@ bool PointcloudMapper::configureHook()
 	mMapResolution = _map_resolution.get();
 	mLogger->message(slam::INFO, (boost::format("map_resolution:         %1%") % mMapResolution).str());
 	
+	mMapPublishRate = _map_publish_rate.get();
+	mLogger->message(slam::INFO, (boost::format("map_publish_rate:       %1%") % mMapPublishRate).str());
+	
 	mMapOutlierRadius = _map_outlier_radius.get();
 	mLogger->message(slam::INFO, (boost::format("map_outlier_radius:     %1%") % mMapOutlierRadius).str());
 	
@@ -288,6 +291,10 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		if(processPointcloud(scan_sample))
 		{
 			mScansAdded++;
+			if(mMapPublishRate > 0 && mScansAdded % mMapPublishRate == 0)
+			{
+				generate_map();
+			}
 		}
 	}catch (std::exception &e)
 	{
