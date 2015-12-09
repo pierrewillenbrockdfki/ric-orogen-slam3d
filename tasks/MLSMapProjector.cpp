@@ -35,6 +35,19 @@ bool MLSMapProjector::configureHook()
 	mMaxZ = _max_z.get();
 	mResolution = _resolution.get();
 	
+	// Do some input validation
+	if(mSizeX <= 0 || mSizeY <= 0 || mMaxZ <= mMinZ)
+	{
+		LOG_ERROR("Invalid map dimension! (Size: %.2f, %.2f, Height: %.2f - %.2f)!", mSizeX, mSizeY, mMinZ, mMaxZ);
+		return false;
+	}
+	if(mResolution <= 0)
+	{
+		LOG_ERROR("Invalid map resolution: %.2f", mResolution);
+		return false;
+	}
+	
+	// Initialize MLS-Map
 	size_t x_size = mSizeX / mResolution;
 	size_t y_size = mSizeY / mResolution;
 	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(x_size, y_size, mResolution, mResolution, mOffsetX, mOffsetY);
