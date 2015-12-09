@@ -1,5 +1,3 @@
-/* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
-
 #include "MLSMapProjector.hpp"
 
 #include <base/Logging.hpp>
@@ -68,15 +66,14 @@ bool MLSMapProjector::configureHook()
 	mProjection->setAreaOfInterest(mOffsetX, mOffsetX+mSizeX, mOffsetY, mOffsetY+mSizeY, mMinZ, mMaxZ);
 	if(!mEnvironment.addInput(mProjection, mPointcloud))
 	{
-		std::cerr << "Failed to add Input!" << std::endl;
+		LOG_ERROR("Failed to add Input to Envire!");
 		return false;
 	}
 	if(!mEnvironment.addOutput(mProjection, mMultiLayerMap))
 	{
-		std::cerr << "Failed to add Output!" << std::endl;
+		LOG_ERROR("Failed to add Output to Envire!");
 		return false;
 	}
-
 
 	return true;
 }
@@ -104,23 +101,10 @@ void MLSMapProjector::updateHook()
 		mProjection->updateAll();
 	}
 	
-	// TEST
+	// Publish the MLS-Map
 	EnvireEvents* events = new EnvireEvents;
 	mEnvironment.pullEvents(*events, true);
 	_envire_map.write(EnvirePointer(events));
-	
-	// Publish the MLS-Map
-/*	envire::BinaryEvent bin_event;
-	if(mBinarySerialization.serializeBinaryEvent(mMultiLayerMap, bin_event))
-	{
-		std::cout << "Created event of type " << bin_event.type << std::endl;
-		EnvireEvents* events = new EnvireEvents;
-		events->push_back(bin_event);
-		_envire_map.write(EnvirePointer(events));
-	}else
-	{
-		std::cerr << "Serialization failed!" << std::endl;
-	}*/
 }
 
 void MLSMapProjector::errorHook()

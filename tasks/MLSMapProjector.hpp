@@ -1,5 +1,3 @@
-/* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
-
 #ifndef SLAM3D_MLS_RENDERER_TASK_HPP
 #define SLAM3D_MLS_RENDERER_TASK_HPP
 
@@ -48,4 +46,3 @@ namespace slam3d
 }
 
 #endif
-
