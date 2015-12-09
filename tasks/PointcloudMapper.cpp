@@ -293,6 +293,7 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 			mScansAdded++;
 			if(mMapPublishRate > 0 && mScansAdded % mMapPublishRate == 0)
 			{
+				optimize();
 				generate_map();
 			}
 		}
