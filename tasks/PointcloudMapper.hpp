@@ -5,9 +5,9 @@
 
 #include "slam3d/PointcloudMapperBase.hpp"
 
-#include <slam3d/include/GraphMapper.hpp>
-#include <slam3d/include/PointCloudSensor.hpp>
-#include <slam3d/include/Solver.hpp>
+#include <slam3d/GraphMapper.hpp>
+#include <slam3d/PointCloudSensor.hpp>
+#include <slam3d/Solver.hpp>
 
 #include <queue>
 
@@ -28,22 +28,22 @@ namespace slam3d
 		virtual void scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);
 
 		// Internal methods
-		slam::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
-		void createFromPcl(slam::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
+		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
+		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
 		void sendRobotPose();
 		void sendOdometryDrift();
 	
 		// Members
-		slam::Clock* mClock;
-		slam::Logger* mLogger;
-		slam::GraphMapper* mMapper;
-		slam::PointCloudSensor* mPclSensor;
-		slam::Solver* mSolver;
+		slam3d::Clock* mClock;
+		slam3d::Logger* mLogger;
+		slam3d::GraphMapper* mMapper;
+		slam3d::PointCloudSensor* mPclSensor;
+		slam3d::Solver* mSolver;
 		RockOdometry* mOdometry;
 		
 		base::samples::RigidBodyState mOdometryPose;
-		std::queue<slam::VertexObject::ConstPtr> mNewVertices;
+		std::queue<slam3d::VertexObject::ConstPtr> mNewVertices;
 
 		std::string mRobotName;
 		std::string mRobotFrame;

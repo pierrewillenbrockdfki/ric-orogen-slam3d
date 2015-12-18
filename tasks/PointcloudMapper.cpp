@@ -6,8 +6,8 @@
 #include <base/samples/Pointcloud.hpp>
 #include <base/samples/RigidBodyState.hpp>
 
-#include <slam3d/include/FileLogger.hpp>
-#include <slam3d/include/G2oSolver.hpp>
+#include <slam3d/FileLogger.hpp>
+#include <slam3d/G2oSolver.hpp>
 
 #include <boost/format.hpp>
 
@@ -29,7 +29,7 @@ PointcloudMapper::~PointcloudMapper()
 
 bool PointcloudMapper::optimize()
 {
-	mLogger->message(slam::INFO, "Requested global optimization.");
+	mLogger->message(slam3d::INFO, "Requested global optimization.");
 	if(mMapper->optimize())
 	{
 		sendOdometryDrift();
@@ -44,14 +44,14 @@ bool PointcloudMapper::optimize()
 bool PointcloudMapper::generate_map()
 {
 	// Publish accumulated cloud
-	mLogger->message(slam::INFO, "Requested map generation.");
-	slam::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
-	slam::PointCloud::Ptr accumulated = mPclSensor->getAccumulatedCloud(vertices);
-	slam::PointCloud::Ptr downsampled = mPclSensor->downsample(accumulated, mMapResolution);
-	slam::PointCloud::Ptr accCloud = mPclSensor->removeOutliers(downsampled, mMapOutlierRadius, mMapOutlierNeighbors);
+	mLogger->message(slam3d::INFO, "Requested map generation.");
+	slam3d::VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
+	slam3d::PointCloud::Ptr accumulated = mPclSensor->getAccumulatedCloud(vertices);
+	slam3d::PointCloud::Ptr downsampled = mPclSensor->downsample(accumulated, mMapResolution);
+	slam3d::PointCloud::Ptr accCloud = mPclSensor->removeOutliers(downsampled, mMapOutlierRadius, mMapOutlierNeighbors);
 	
 	base::samples::Pointcloud mapCloud;
-	for(slam::PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
+	for(slam3d::PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
 	{
 		base::Vector3d vec;
 		vec[0] = it->x;
@@ -69,59 +69,59 @@ bool PointcloudMapper::configureHook()
 	if (! PointcloudMapperBase::configureHook())
 		return false;
 		
-	mClock = new slam::Clock();
-	mLogger = new slam::Logger(*mClock);
+	mClock = new slam3d::Clock();
+	mLogger = new slam3d::Logger(*mClock);
 
 //	mLogger = new BaseLogger();
 	switch(_log_level.get())
 	{
 	case 4:
-		mLogger->setLogLevel(slam::FATAL);
+		mLogger->setLogLevel(slam3d::FATAL);
 		break;
 	case 3:
-		mLogger->setLogLevel(slam::ERROR);
+		mLogger->setLogLevel(slam3d::ERROR);
 		break;
 	case 2:
-		mLogger->setLogLevel(slam::WARNING);
+		mLogger->setLogLevel(slam3d::WARNING);
 		break;
 	case 0:
-		mLogger->setLogLevel(slam::DEBUG);
+		mLogger->setLogLevel(slam3d::DEBUG);
 		break;
 	default:
-		mLogger->setLogLevel(slam::INFO);
+		mLogger->setLogLevel(slam3d::INFO);
 	}
 
-	mLogger->message(slam::INFO, "=== Configure PointCloudMapper ===");
+	mLogger->message(slam3d::INFO, "=== Configure PointCloudMapper ===");
 
-	mPclSensor = new slam::PointCloudSensor("pointcloud", mLogger, slam::Transform::Identity());
-	slam::GICPConfiguration conf = _gicp_config.get();
+	mPclSensor = new slam3d::PointCloudSensor("pointcloud", mLogger, slam3d::Transform::Identity());
+	slam3d::GICPConfiguration conf = _gicp_config.get();
 	mPclSensor->setConfiguaration(conf);
-	mLogger->message(slam::INFO, " = GICP - Parameters =");
-	mLogger->message(slam::INFO, (boost::format("correspondence_randomness:    %1%") % conf.correspondence_randomness).str());
-	mLogger->message(slam::INFO, (boost::format("euclidean_fitness_epsilon:    %1%") % conf.euclidean_fitness_epsilon).str());
-	mLogger->message(slam::INFO, (boost::format("max_correspondence_distance:  %1%") % conf.max_correspondence_distance).str());
-	mLogger->message(slam::INFO, (boost::format("max_fitness_score:            %1%") % conf.max_fitness_score).str());
-	mLogger->message(slam::INFO, (boost::format("max_sensor_distance:          %1%") % conf.max_sensor_distance).str());
-	mLogger->message(slam::INFO, (boost::format("maximum_iterations:           %1%") % conf.maximum_iterations).str());
-	mLogger->message(slam::INFO, (boost::format("maximum_optimizer_iterations: %1%") % conf.maximum_optimizer_iterations).str());
-	mLogger->message(slam::INFO, (boost::format("orientation_sigma:            %1%") % conf.orientation_sigma).str());
-	mLogger->message(slam::INFO, (boost::format("point_cloud_density:          %1%") % conf.point_cloud_density).str());
-	mLogger->message(slam::INFO, (boost::format("position_sigma:               %1%") % conf.position_sigma).str());
-	mLogger->message(slam::INFO, (boost::format("rotation_epsilon:             %1%") % conf.rotation_epsilon).str());
-	mLogger->message(slam::INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());
+	mLogger->message(slam3d::INFO, " = GICP - Parameters =");
+	mLogger->message(slam3d::INFO, (boost::format("correspondence_randomness:    %1%") % conf.correspondence_randomness).str());
+	mLogger->message(slam3d::INFO, (boost::format("euclidean_fitness_epsilon:    %1%") % conf.euclidean_fitness_epsilon).str());
+	mLogger->message(slam3d::INFO, (boost::format("max_correspondence_distance:  %1%") % conf.max_correspondence_distance).str());
+	mLogger->message(slam3d::INFO, (boost::format("max_fitness_score:            %1%") % conf.max_fitness_score).str());
+	mLogger->message(slam3d::INFO, (boost::format("max_sensor_distance:          %1%") % conf.max_sensor_distance).str());
+	mLogger->message(slam3d::INFO, (boost::format("maximum_iterations:           %1%") % conf.maximum_iterations).str());
+	mLogger->message(slam3d::INFO, (boost::format("maximum_optimizer_iterations: %1%") % conf.maximum_optimizer_iterations).str());
+	mLogger->message(slam3d::INFO, (boost::format("orientation_sigma:            %1%") % conf.orientation_sigma).str());
+	mLogger->message(slam3d::INFO, (boost::format("point_cloud_density:          %1%") % conf.point_cloud_density).str());
+	mLogger->message(slam3d::INFO, (boost::format("position_sigma:               %1%") % conf.position_sigma).str());
+	mLogger->message(slam3d::INFO, (boost::format("rotation_epsilon:             %1%") % conf.rotation_epsilon).str());
+	mLogger->message(slam3d::INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());
 
-	mSolver = new slam::G2oSolver(mLogger);
-	mMapper = new slam::GraphMapper(mLogger);
+	mSolver = new slam3d::G2oSolver(mLogger);
+	mMapper = new slam3d::GraphMapper(mLogger);
 
-	mLogger->message(slam::INFO, " = GraphMapper - Parameters =");
-	mLogger->message(slam::INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());	
+	mLogger->message(slam3d::INFO, " = GraphMapper - Parameters =");
+	mLogger->message(slam3d::INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());	
 	if(_use_odometry.get())
 	{
 		mOdometry = new RockOdometry(mLogger, _odometry_time_tolerance.get());
 		mMapper->setOdometry(mOdometry, _add_odometry_edges.get());
 		mOdometryPose.setTransform(Eigen::Affine3d::Identity());
-		mLogger->message(slam::INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges.get()).str());
-		mLogger->message(slam::INFO, (boost::format("odometry_time_tolerance:%1%") % _odometry_time_tolerance.get()).str());
+		mLogger->message(slam3d::INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges.get()).str());
+		mLogger->message(slam3d::INFO, (boost::format("odometry_time_tolerance:%1%") % _odometry_time_tolerance.get()).str());
 	}else
 	{
 		mOdometry = NULL;
@@ -129,39 +129,39 @@ bool PointcloudMapper::configureHook()
 	
 	double min_translation = _min_translation.get();
 	double min_rotation = _min_rotation.get();
-	mLogger->message(slam::INFO, (boost::format("min_pose_distance:      %1% / %2%") % min_translation % min_rotation).str());
+	mLogger->message(slam3d::INFO, (boost::format("min_pose_distance:      %1% / %2%") % min_translation % min_rotation).str());
 	mMapper->setMinPoseDistance(min_translation, min_rotation);
 	
 	double neighbor_radius = _neighbor_radius.get();
-	mLogger->message(slam::INFO, (boost::format("neighbor_radius:        %1%") % neighbor_radius).str());
+	mLogger->message(slam3d::INFO, (boost::format("neighbor_radius:        %1%") % neighbor_radius).str());
 	mMapper->setNeighborRadius(neighbor_radius);
 	
 	mScanResolution = _scan_resolution.get();
-	mLogger->message(slam::INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
+	mLogger->message(slam3d::INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
 	
 	mMapResolution = _map_resolution.get();
-	mLogger->message(slam::INFO, (boost::format("map_resolution:         %1%") % mMapResolution).str());
+	mLogger->message(slam3d::INFO, (boost::format("map_resolution:         %1%") % mMapResolution).str());
 	
 	mMapPublishRate = _map_publish_rate.get();
-	mLogger->message(slam::INFO, (boost::format("map_publish_rate:       %1%") % mMapPublishRate).str());
+	mLogger->message(slam3d::INFO, (boost::format("map_publish_rate:       %1%") % mMapPublishRate).str());
 	
 	mMapOutlierRadius = _map_outlier_radius.get();
-	mLogger->message(slam::INFO, (boost::format("map_outlier_radius:     %1%") % mMapOutlierRadius).str());
+	mLogger->message(slam3d::INFO, (boost::format("map_outlier_radius:     %1%") % mMapOutlierRadius).str());
 	
 	mMapOutlierNeighbors = _map_outlier_neighbors.get();
-	mLogger->message(slam::INFO, (boost::format("map_outlier_neighbors:  %1%") % mMapOutlierNeighbors).str());
+	mLogger->message(slam3d::INFO, (boost::format("map_outlier_neighbors:  %1%") % mMapOutlierNeighbors).str());
 	
 	mRobotName = _robot_name.get();
-	mLogger->message(slam::INFO, (boost::format("robot_name:             %1%") % mRobotName).str());
+	mLogger->message(slam3d::INFO, (boost::format("robot_name:             %1%") % mRobotName).str());
 	
 	mRobotFrame = _robot_frame.get();
-	mLogger->message(slam::INFO, (boost::format("robot_frame:            %1%") % mRobotFrame).str());
+	mLogger->message(slam3d::INFO, (boost::format("robot_frame:            %1%") % mRobotFrame).str());
 	
 	mOdometryFrame = _odometry_frame.get();
-	mLogger->message(slam::INFO, (boost::format("odometry_frame:         %1%") % mOdometryFrame).str());
+	mLogger->message(slam3d::INFO, (boost::format("odometry_frame:         %1%") % mOdometryFrame).str());
 
 	mMapFrame = _map_frame.get();
-	mLogger->message(slam::INFO, (boost::format("map_frame:              %1%") % mMapFrame).str());
+	mLogger->message(slam3d::INFO, (boost::format("map_frame:              %1%") % mMapFrame).str());
 
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
@@ -179,13 +179,13 @@ bool PointcloudMapper::startHook()
 	return true;
 }
 
-slam::PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Pointcloud& cloud_in)
+slam3d::PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Pointcloud& cloud_in)
 {
-	slam::PointCloud::Ptr cloud_out(new slam::PointCloud);
+	slam3d::PointCloud::Ptr cloud_out(new slam3d::PointCloud);
 	cloud_out->header.stamp = cloud_in.time.toMicroseconds();
 	for(std::vector<base::Vector3d>::const_iterator it = cloud_in.points.begin(); it < cloud_in.points.end(); ++it)
 	{
-		slam::PointType p;
+		slam3d::PointType p;
 		p.x = (*it)[0];
 		p.y = (*it)[1];
 		p.z = (*it)[2];
@@ -194,10 +194,10 @@ slam::PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::sample
 	return cloud_out;
 }
 
-void PointcloudMapper::createFromPcl(slam::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud)
+void PointcloudMapper::createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud)
 {
 	base_cloud.time.fromMicroseconds(pcl_cloud->header.stamp);
-	for(slam::PointCloud::const_iterator it = pcl_cloud->begin(); it < pcl_cloud->end(); it++)
+	for(slam3d::PointCloud::const_iterator it = pcl_cloud->begin(); it < pcl_cloud->end(); it++)
 	{
 		base::Point p;
 		p[0] = it->x;
@@ -209,21 +209,21 @@ void PointcloudMapper::createFromPcl(slam::PointCloud::ConstPtr pcl_cloud, base:
 
 bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_in)
 {
-	// Transform base::samples::Pointcloud --> slam::Pointcloud
-	slam::PointCloud::Ptr cloud = createFromRockMessage(cloud_in);
+	// Transform base::samples::Pointcloud --> slam3d::Pointcloud
+	slam3d::PointCloud::Ptr cloud = createFromRockMessage(cloud_in);
 	
 	// Downsample and add to map
 	try
 	{
-		slam::PointCloudMeasurement* measurement;
+		slam3d::PointCloudMeasurement* measurement;
 		if(mScanResolution > 0)
 		{
-			slam::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
-			mLogger->message(slam::DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
-			measurement = new slam::PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
+			slam3d::PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
+			mLogger->message(slam3d::DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
+			measurement = new slam3d::PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
 		}else
 		{
-			measurement = new slam::PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
+			measurement = new slam3d::PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
 		}
 		
 		if(!mMapper->addReading(measurement))
@@ -234,7 +234,7 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 		mNewVertices.push(mMapper->getLastVertex());
 	}catch(std::exception& e)
 	{
-		mLogger->message(slam::ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());
+		mLogger->message(slam3d::ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());
 		return false;
 	}
 	return true;
@@ -278,7 +278,7 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		Eigen::Affine3d odom;
 		if(!_robot2odometry.get(ts, odom, true))
 		{
-			mLogger->message(slam::ERROR, "Odometry not available!");
+			mLogger->message(slam3d::ERROR, "Odometry not available!");
 			return;
 		}
 		mOdometryPose.setTransform(odom);
@@ -299,7 +299,7 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		}
 	}catch (std::exception &e)
 	{
-		mLogger->message(slam::ERROR, (boost::format("Could not add scan: %1%") % e.what()).str());
+		mLogger->message(slam3d::ERROR, (boost::format("Could not add scan: %1%") % e.what()).str());
 	}
 	sendOdometryDrift();
 	sendRobotPose();

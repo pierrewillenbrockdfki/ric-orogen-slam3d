@@ -1,6 +1,6 @@
-#include <slam3d/include/Logger.hpp>
-#include <slam3d/include/Clock.hpp>
-#include <slam3d/include/Odometry.hpp>
+#include <slam3d/Logger.hpp>
+#include <slam3d/Clock.hpp>
+#include <slam3d/Odometry.hpp>
 
 #include <base/samples/RigidBodyState.hpp>
 #include <base/Logging.hpp>
@@ -18,41 +18,41 @@ namespace slam3d
 			return -msec;
 	}
 	
-	class BaseLogger : public slam::Logger
+	class BaseLogger : public slam3d::Logger
 	{
 	public:
-		BaseLogger() : slam::Logger(slam::Clock()){}
+		BaseLogger() : slam3d::Logger(slam3d::Clock()){}
 		~BaseLogger(){}
 		
-		virtual void message(slam::LOG_LEVEL lvl, const std::string& msg)
+		virtual void message(slam3d::LOG_LEVEL lvl, const std::string& msg)
 		{
 			switch(lvl)
 			{
-				case slam::DEBUG:
+				case slam3d::DEBUG:
 					LOG_DEBUG("%s", msg.c_str());
 					break;
-				case slam::INFO:
+				case slam3d::INFO:
 					LOG_INFO("%s", msg.c_str());
 					break;
-				case slam::WARNING:
+				case slam3d::WARNING:
 					LOG_WARN("%s", msg.c_str());
 					break;
-				case slam::ERROR:
+				case slam3d::ERROR:
 					LOG_ERROR("%s", msg.c_str());
 					break;
-				case slam::FATAL:
+				case slam3d::FATAL:
 					LOG_FATAL("%s", msg.c_str());
 					break;
 			}
 		}
 	};
 	
-	class RockOdometry : public slam::Odometry
+	class RockOdometry : public slam3d::Odometry
 	{
 	public:
-		RockOdometry(slam::Logger* logger, double tolerance = 100) : slam::Odometry(logger)
+		RockOdometry(slam3d::Logger* logger, double tolerance = 100) : slam3d::Odometry(logger)
 		{
-			mCurrentPose = slam::Transform::Identity();
+			mCurrentPose = slam3d::Transform::Identity();
 			mTolerance = tolerance; // milliseconds
 
 		}
@@ -60,22 +60,22 @@ namespace slam3d
 		
 		// Rock transformer cannot be queried for a specific timestamp.
 		// So we have to rely on current pose to match last received measurement.
-		slam::Transform getOdometricPose(timeval stamp)
+		slam3d::Transform getOdometricPose(timeval stamp)
 		{
 			long diff = timevaldiff(stamp, mCurrentTime);
 			if(diff > mTolerance)
 			{
-				mLogger->message(slam::ERROR, (boost::format("Odometry data stamp differs from requested stamp by %1% ms.")%diff).str());
-				throw slam::OdometryException();
+				mLogger->message(slam3d::ERROR, (boost::format("Odometry data stamp differs from requested stamp by %1% ms.")%diff).str());
+				throw slam3d::OdometryException();
 			}
 			return mCurrentPose;
 		}
 		
-		slam::TransformWithCovariance getRelativePose(timeval last, timeval next)
+		slam3d::TransformWithCovariance getRelativePose(timeval last, timeval next)
 		{
-			slam::TransformWithCovariance twc;
-			twc.transform = slam::Transform::Identity();
-			twc.covariance = slam::Covariance::Identity();
+			slam3d::TransformWithCovariance twc;
+			twc.transform = slam3d::Transform::Identity();
+			twc.covariance = slam3d::Covariance::Identity();
 			return twc;
 		}
 		
@@ -89,13 +89,13 @@ namespace slam3d
 				mCurrentTime = pose.time.toTimeval();
 			}else
 			{
-				mLogger->message(slam::ERROR, "Odometry sample contained invalid data!");
-				throw slam::OdometryException();
+				mLogger->message(slam3d::ERROR, "Odometry sample contained invalid data!");
+				throw slam3d::OdometryException();
 			}
 		}
 		
 	private:
-		slam::Transform mCurrentPose;
+		slam3d::Transform mCurrentPose;
 		timeval mCurrentTime;
 		long mTolerance;
 	};

@@ -9,10 +9,10 @@
 
 using namespace slam3d;
 
-slam::Transform pose2eigen(const base::Pose& pose)
+slam3d::Transform pose2eigen(const base::Pose& pose)
 {
 	Eigen::Affine3d tmp = pose.toTransform();
-	slam::Transform tf;
+	slam3d::Transform tf;
 	tf.linear() = tmp.linear();
 	tf.translation() = tmp.translation();
 	return tf;
@@ -53,9 +53,9 @@ void DistributedPointcloudMapper::updateHook()
 	// Send all new nodes to other robots
 	while(!mNewVertices.empty())
 	{
-		slam::VertexObject::ConstPtr v = mNewVertices.front();
+		slam3d::VertexObject::ConstPtr v = mNewVertices.front();
 		mNewVertices.pop();
-		slam::PointCloudMeasurement* m = dynamic_cast<slam::PointCloudMeasurement*>(v->measurement);
+		slam3d::PointCloudMeasurement* m = dynamic_cast<slam3d::PointCloudMeasurement*>(v->measurement);
 		slam3d::LocalizedPointcloud loc_cloud;
 		loc_cloud.robot_name = mRobotName;
 		loc_cloud.sensor_name = mPclSensor->getName();
@@ -69,17 +69,17 @@ void DistributedPointcloudMapper::updateHook()
 	
 	// Add readings from other robots to own map
 	slam3d::LocalizedPointcloud lc;
-	slam::PointCloudMeasurement* m;
-	slam::Transform sensor_pose;
-	slam::Transform robot_pose;
+	slam3d::PointCloudMeasurement* m;
+	slam3d::Transform sensor_pose;
+	slam3d::Transform robot_pose;
 	boost::uuids::uuid id;
 	while(_external_in.read(lc, false) == RTT::NewData)
 	{
 		id = boost::lexical_cast<boost::uuids::uuid>(lc.unique_id);
 		sensor_pose = pose2eigen(lc.sensor_pose);
 		robot_pose = pose2eigen(lc.corrected_pose);
-		slam::PointCloud::Ptr cloud = createFromRockMessage(lc.point_cloud);
-		m = new slam::PointCloudMeasurement(cloud, lc.robot_name, lc.sensor_name, sensor_pose, id);
+		slam3d::PointCloud::Ptr cloud = createFromRockMessage(lc.point_cloud);
+		m = new slam3d::PointCloudMeasurement(cloud, lc.robot_name, lc.sensor_name, sensor_pose, id);
 		mMapper->addExternalReading(m, robot_pose);
 	}
 }
