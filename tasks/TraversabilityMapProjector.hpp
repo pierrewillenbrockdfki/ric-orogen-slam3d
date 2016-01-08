@@ -3,6 +3,8 @@
 
 #include "slam3d/TraversabilityMapProjectorBase.hpp"
 
+#include <envire/operators/TraversabilityProjection.hpp>
+
 namespace slam3d
 {
 	class TraversabilityMapProjector : public TraversabilityMapProjectorBase
@@ -15,7 +17,10 @@ namespace slam3d
 
 	private:
 		envire::Environment mEnvironment;
-		envire::TraversabilityGrid* mGrid; 
+		envire::Pointcloud* mPointcloud;
+		envire::TraversabilityGrid* mGrid;
+		envire::TraversabilityProjection* mProjection;
+		envire::BinarySerialization mBinarySerialization;
 
 		double mSizeX;
 		double mSizeY;

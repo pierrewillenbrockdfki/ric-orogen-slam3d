@@ -162,6 +162,34 @@ task_context "MLSMapProjector" do
 	 .doc("Resolution (size of grid-cell) of the map (meter).")
 end
 
+## Task to create Traversability-Map from Pointcloud
+task_context "TraversabilityMapProjector" do
+	input_port 'cloud', '/base/samples/Pointcloud'
+	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
+	port_driven 'cloud'
+	
+	property('size_x', '/double')
+	.doc("Map size in x-direction (meter).")
+	 
+	property('size_y', '/double')
+	.doc("Map size in y-direction (meter).")
+	
+	property('offset_x', '/double')
+	.doc("Position of grid origin in x-direction (meter).")
+	 
+	property('offset_y', '/double')
+	.doc("Position  of grid origin in y-direction (meter).")
+	
+	property('min_z', '/double')
+	.doc("Minimum z-value for grid cells (meter).")
+	
+	property('max_z', 'double')
+	.doc("Maximum z-value for grid cells (meter).")
+	
+	property('resolution', '/double')
+	 .doc("Resolution (size of grid-cell) of the map (meter).")
+end
+
 # Multiplexer for sending data to other robots
 task_context "Multiplexer" do
 	subclasses "telemetry_provider::Multiplexer"

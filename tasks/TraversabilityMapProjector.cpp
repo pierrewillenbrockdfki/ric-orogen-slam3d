@@ -30,12 +30,29 @@ bool TraversabilityMapProjector::configureHook()
 	mMaxZ = _max_z.get();
 	mResolution = _resolution.get();
 
-	mGrid = new envire::TraversabilityGrid(mSizeX, mSizeY, mResolution, mResolution, mOffsetX, mOffsetY, "slam3d-grid");
+	// Initialize envire stuff
+	mPointcloud = new envire::Pointcloud();
+	size_t x_size = mSizeX / mResolution;
+	size_t y_size = mSizeY / mResolution;
+	mGrid = new envire::TraversabilityGrid(x_size, y_size, mResolution, mResolution, mOffsetX, mOffsetY, "slam3d-grid");
+	mProjection = new envire::TraversabilityProjection();
 
 	// Add grid to environment
 	envire::FrameNode* grid_node = new envire::FrameNode();
 	mEnvironment.addChild(mEnvironment.getRootNode(), grid_node);
 	mEnvironment.setFrameNode(mGrid, grid_node);
+	
+	// Add projection operator
+	if(!mEnvironment.addInput(mProjection, mPointcloud))
+	{
+		LOG_ERROR("Failed to add Input to Envire!");
+		return false;
+	}
+	if(!mEnvironment.addOutput(mProjection, mGrid))
+	{
+		LOG_ERROR("Failed to add Output to Envire!");
+		return false;
+	}
 	return true;
 }
 
@@ -54,7 +71,12 @@ void TraversabilityMapProjector::updateHook()
 	base::samples::Pointcloud cloud;
 	while(_cloud.read(cloud, false) == RTT::NewData)
 	{
-		// Project the pointcloud to the grid
+		mPointcloud->vertices.clear();
+		for(std::vector<base::Vector3d>::const_iterator it = cloud.points.begin(); it < cloud.points.end(); ++it)
+		{
+			mPointcloud->vertices.push_back(*it);
+		}
+		mProjection->updateAll();
 	}
 
 	// Publish the Grid-Map
