@@ -26,8 +26,7 @@ end
 
 ## Execute the task 'message_producer::Task' ##
 Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
-           'slam3d::PointcloudMapper' => 'mapper',
-		   'slam3d::TraversabilityMapProjector' => 'projector' do
+           'slam3d::PointcloudMapper2D' => 'mapper' do
 
 	Bundles.transformer.start_broadcaster do
 
@@ -69,29 +68,22 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 			c.point_cloud_density = 0.01
 			c.maximum_iterations = 50
 		end
-		
-		mapper.configure
 	
-		## Configure the projector
-		projector = Orocos.name_service.get 'projector'
-		projector.size_x = 20
-		projector.size_y = 20
-		projector.offset_x = -10
-		projector.offset_y = -10
-		projector.min_z = -5;
-		projector.max_z = 5;
-		projector.resolution = 0.05
-		projector.configure
-
+		mapper.size_x = 20
+		mapper.size_y = 20
+		mapper.offset_x = -10
+		mapper.offset_y = -10
+		mapper.min_z = -5;
+		mapper.max_z = 5;
+		mapper.resolution = 0.05
+		mapper.configure
 
 		fusion.cloud.connect_to mapper.scan,              :type => :buffer, :size => 10
-		mapper.cloud.connect_to projector.cloud,          :type => :buffer, :size => 10
 
 		############################################################################
 	
 		fusion.start
 		mapper.start
-		projector.start
 	
 		############################################################################
 		## Start the replay ##
@@ -99,7 +91,7 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 
 		Vizkit.display fusion.cloud
 		Vizkit.display mapper.cloud
-		Vizkit.display projector.envire_map
+		Vizkit.display mapper.envire_map
 
 		begin
 			Vizkit.exec
@@ -108,8 +100,6 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 			mapper.cleanup
 			fusion.stop
 			fusion.cleanup
-			projector.stop
-			projector.cleanup
 		end
 
 	end

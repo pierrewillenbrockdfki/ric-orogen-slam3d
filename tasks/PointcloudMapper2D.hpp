@@ -3,6 +3,8 @@
 
 #include "slam3d/PointcloudMapper2DBase.hpp"
 
+#include <envire/maps/TraversabilityGrid.hpp>
+
 namespace slam3d
 {
 	class PointcloudMapper2D : public PointcloudMapper2DBase
@@ -10,9 +12,24 @@ namespace slam3d
 	friend class PointcloudMapper2DBase;
 
 	protected:
+		// Operations
+		virtual bool generate_map();
 
+		// Envire stuff for Traversability-Grid
+		typedef std::vector<envire::BinaryEvent> EnvireEvents;
+		typedef RTT::extras::ReadOnlyPointer<EnvireEvents> EnvirePointer;
 
+		envire::Environment mEnvironment;
+		envire::TraversabilityGrid* mGrid;
 
+		double mSizeX;
+		double mSizeY;
+		double mOffsetX;
+		double mOffsetY;
+		double mMinZ;
+		double mMaxZ;
+		double mResolution;
+		
 	public:
 		PointcloudMapper2D(std::string const& name = "slam3d::PointcloudMapper2D");
 		PointcloudMapper2D(std::string const& name, RTT::ExecutionEngine* engine);
