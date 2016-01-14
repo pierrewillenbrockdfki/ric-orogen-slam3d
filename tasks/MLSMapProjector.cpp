@@ -1,7 +1,7 @@
 #include "MLSMapProjector.hpp"
 
 #include <base/Logging.hpp>
-#include <envire/core/Serialization.hpp>
+#include <envire/Orocos.hpp>
 
 using namespace slam3d;
 
@@ -101,10 +101,9 @@ void MLSMapProjector::updateHook()
 		mProjection->updateAll();
 	}
 	
-	// Publish the MLS-Map
-	EnvireEvents* events = new EnvireEvents;
-	mEnvironment.pullEvents(*events, true);
-	_envire_map.write(EnvirePointer(events));
+	// Publish the MLS-Map	
+	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
+	emitter.flush();
 }
 
 void MLSMapProjector::errorHook()
