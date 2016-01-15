@@ -133,7 +133,9 @@ bool PointcloudMapper::configureHook()
 	
 	double neighbor_radius = _neighbor_radius.get();
 	mLogger->message(INFO, (boost::format("neighbor_radius:        %1%") % neighbor_radius).str());
-	mMapper->setNeighborRadius(neighbor_radius);
+	int max_neighbor_links = _max_neighbor_links.get();
+	mLogger->message(INFO, (boost::format("max_neighbor_links:     %1%") % max_neighbor_links).str());
+	mMapper->setNeighborRadius(neighbor_radius, max_neighbor_links);
 	
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
