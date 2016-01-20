@@ -4,6 +4,7 @@ using_library 'velodyne_lidar'
 using_library 'slam3d'
 using_library 'transformer'
 using_library 'envire'
+using_library 'octomap'
 
 import_types_from 'base'
 import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
@@ -33,7 +34,11 @@ task_context "PointcloudMapper" do
 	operation('generate_map')
 	.returns('/bool')
 	.doc("Generates and sends the environment map.")
-	 
+
+	operation('generate_octomap')
+	.returns('/bool')
+	.doc("Generates an octomap and saves it in binary format.")
+
 	operation('optimize')
 	.returns('/bool')
 	.doc("Starts the global optimization using the current SLAM backend.")

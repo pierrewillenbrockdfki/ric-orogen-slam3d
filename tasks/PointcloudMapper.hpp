@@ -9,6 +9,8 @@
 #include <slam3d/PointCloudSensor.hpp>
 #include <slam3d/Solver.hpp>
 
+#include <octomap/OcTree.h>
+
 #include <queue>
 
 namespace slam3d
@@ -23,6 +25,7 @@ namespace slam3d
 		// Operations
 		virtual bool optimize();
 		virtual bool generate_map();
+		virtual bool generate_octomap();
 		
 		// Callbacks
 		virtual void scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);
@@ -41,6 +44,7 @@ namespace slam3d
 		slam3d::PointCloudSensor* mPclSensor;
 		slam3d::Solver* mSolver;
 		RockOdometry* mOdometry;
+		octomap::OcTree* mOcTree;
 		
 		base::samples::RigidBodyState mOdometryPose;
 		std::queue<slam3d::VertexObject::ConstPtr> mNewVertices;

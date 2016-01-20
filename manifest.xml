@@ -17,6 +17,7 @@
 	<depend package="tools/orocos.rb" />
 	<depend package="gui/vizkit" />
 	<depend package="communication/orogen/telemetry_provider" />
+	<depend package="slam/octomap" />
 	
 	<tags>stable</tags>
 	

@@ -64,6 +64,15 @@ bool PointcloudMapper::generate_map()
 	return true;
 }
 
+bool PointcloudMapper::generate_octomap()
+{
+	std::string name("map_");
+	name += mClock->now().tv_sec;
+	name += ".bt";
+	mOcTree->writeBinary(name.c_str());
+	return true;
+}
+
 bool PointcloudMapper::configureHook()
 {	
 	if (! PointcloudMapperBase::configureHook())
@@ -170,6 +179,7 @@ bool PointcloudMapper::configureHook()
 	mScansReceived = 0;
 	mScansAdded = 0;
 	
+	mOcTree = new octomap::OcTree(mMapResolution);
 	return true;
 }
 
@@ -324,6 +334,7 @@ void PointcloudMapper::stopHook()
 void PointcloudMapper::cleanupHook()
 {
 	PointcloudMapperBase::cleanupHook();
+	delete mOcTree;
 	delete mMapper;
 	delete mPclSensor;
 	delete mSolver;
