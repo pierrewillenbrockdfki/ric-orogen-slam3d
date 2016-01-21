@@ -36,6 +36,7 @@ namespace slam3d
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
 		void sendRobotPose();
 		void sendOdometryDrift();
+        void addScanToOctoMap(VertexObject::ConstPtr scan);
 	
 		// Members
 		slam3d::Clock* mClock;

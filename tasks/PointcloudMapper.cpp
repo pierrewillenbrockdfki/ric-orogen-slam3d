@@ -52,7 +52,7 @@ bool PointcloudMapper::generate_map()
 	PointCloud::Ptr accumulated = mPclSensor->getAccumulatedCloud(vertices);
 	PointCloud::Ptr downsampled = mPclSensor->downsample(accumulated, mMapResolution);
 	PointCloud::Ptr accCloud = mPclSensor->removeOutliers(downsampled, mMapOutlierRadius, mMapOutlierNeighbors);
-	
+
 	base::samples::Pointcloud mapCloud;
 	for(PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
 	{
@@ -67,34 +67,43 @@ bool PointcloudMapper::generate_map()
 	return true;
 }
 
+void PointcloudMapper::addScanToOctoMap(VertexObject::ConstPtr scan)
+{
+	PointCloudMeasurement* pcl = dynamic_cast<PointCloudMeasurement*>(scan->measurement);
+	if(!pcl)
+	{
+		mLogger->message(ERROR, "Measurement is not a point cloud!");
+		throw BadMeasurementType();
+	}
+
+	PointCloud::Ptr tempCloud(new PointCloud);
+	pcl::transformPointCloud(*(pcl->getPointCloud()), *tempCloud, (scan->corrected_pose * pcl->getSensorPose()).matrix());
+
+	octomap::Pointcloud octoCloud;
+	for(PointCloud::iterator it = tempCloud->begin(); it < tempCloud->end(); ++it)
+	{
+		octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
+	}
+	Vector3 origin = scan->corrected_pose.translation();
+	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), 5, true, true);
+}
+
 bool PointcloudMapper::generate_octomap()
 {
+	// Reset OctoMap
+	delete mOcTree;
+	mOcTree = new octomap::OcTree(mMapResolution);
+
 	// Project all scans to octomap
 	mLogger->message(INFO, "Requested octomap generation.");
 	VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
-	
+
 	for(VertexList::iterator it = vertices.begin(); it != vertices.end(); it++)
 	{
-		PointCloudMeasurement* pcl = dynamic_cast<PointCloudMeasurement*>((*it)->measurement);
-		if(!pcl)
-		{
-			mLogger->message(ERROR, "Measurement is not a point cloud!");
-			throw BadMeasurementType();
-		}
-		
-		PointCloud::Ptr tempCloud(new PointCloud);
-		pcl::transformPointCloud(*(pcl->getPointCloud()), *tempCloud, ((*it)->corrected_pose * pcl->getSensorPose()).matrix());
-
-		// Project pointcloud into octomap
-		octomap::Pointcloud octoCloud;
-		for(PointCloud::iterator it = tempCloud->begin(); it < tempCloud->end(); ++it)
-		{
-			octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
-		}
-		Vector3 origin = (*it)->corrected_pose.translation();
-		mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)));
+		addScanToOctoMap(*it);
 	}
-	
+
+	mOcTree->updateInnerOccupancy();
 	mOcTree->writeBinary("slam3d_octomap.bt");
 	return true;
 }
