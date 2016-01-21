@@ -47,6 +47,7 @@ namespace slam3d
 		slam3d::Solver* mSolver;
 		RockOdometry* mOdometry;
 		octomap::OcTree* mOcTree;
+		boost::mutex mGraphMutex;
 		
 		base::samples::RigidBodyState mOdometryPose;
 		std::queue<slam3d::VertexObject::ConstPtr> mNewVertices;

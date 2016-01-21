@@ -34,15 +34,20 @@ PointcloudMapper::~PointcloudMapper()
 bool PointcloudMapper::optimize()
 {
 	mLogger->message(INFO, "Requested global optimization.");
-	if(mMapper->optimize())
+	try
 	{
-		sendOdometryDrift();
-		sendRobotPose();
-		return true;
-	}else
+		boost::lock_guard<boost::mutex> guard(mGraphMutex);
+		if(mMapper->optimize())
+		{
+			sendOdometryDrift();
+			sendRobotPose();
+			return true;
+		}
+	}catch (boost::lock_error &e)
 	{
-		return false;
+		mLogger->message(WARNING, "Could not access the pose graph for optimization! Is another operation still running?");
 	}
+	return false;
 }
 
 bool PointcloudMapper::generate_map()
@@ -91,11 +96,18 @@ void PointcloudMapper::addScanToOctoMap(VertexObject::ConstPtr scan)
 
 void PointcloudMapper::buildOcTree(VertexList vertices)
 {
-	for(VertexList::iterator it = vertices.begin(); it != vertices.end(); it++)
+	try
 	{
-		addScanToOctoMap(*it);
+		boost::lock_guard<boost::mutex> guard(mGraphMutex);
+		for(VertexList::iterator it = vertices.begin(); it != vertices.end(); it++)
+		{
+			addScanToOctoMap(*it);
+		}
+	}catch (boost::lock_error &e)
+	{
+		mLogger->message(WARNING, "Could not access the pose graph to build OcTree! Is another operation still running?");
+		return;
 	}
-
 	mOcTree->updateInnerOccupancy();
 	mOcTree->writeBinary("slam3d_octomap.bt");
 }
@@ -110,7 +122,6 @@ bool PointcloudMapper::generate_octomap()
 	mLogger->message(INFO, "Requested octomap generation.");
 	VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
 	boost::thread projThread(&PointcloudMapper::buildOcTree, this, vertices);
-
 	return true;
 }
 
