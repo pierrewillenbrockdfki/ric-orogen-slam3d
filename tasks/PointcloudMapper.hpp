@@ -37,6 +37,7 @@ namespace slam3d
 		void sendRobotPose();
 		void sendOdometryDrift();
         void addScanToOctoMap(VertexObject::ConstPtr scan);
+		void buildOcTree(VertexList vertices);
 	
 		// Members
 		slam3d::Clock* mClock;

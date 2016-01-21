@@ -10,6 +10,7 @@
 #include <slam3d/G2oSolver.hpp>
 
 #include <boost/format.hpp>
+#include <boost/thread.hpp>
 
 #include <octomap/octomap.h>
 #include <pcl/common/transforms.h>
@@ -88,6 +89,17 @@ void PointcloudMapper::addScanToOctoMap(VertexObject::ConstPtr scan)
 	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), 5, true, true);
 }
 
+void PointcloudMapper::buildOcTree(VertexList vertices)
+{
+	for(VertexList::iterator it = vertices.begin(); it != vertices.end(); it++)
+	{
+		addScanToOctoMap(*it);
+	}
+
+	mOcTree->updateInnerOccupancy();
+	mOcTree->writeBinary("slam3d_octomap.bt");
+}
+
 bool PointcloudMapper::generate_octomap()
 {
 	// Reset OctoMap
@@ -97,14 +109,8 @@ bool PointcloudMapper::generate_octomap()
 	// Project all scans to octomap
 	mLogger->message(INFO, "Requested octomap generation.");
 	VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
+	boost::thread projThread(&PointcloudMapper::buildOcTree, this, vertices);
 
-	for(VertexList::iterator it = vertices.begin(); it != vertices.end(); it++)
-	{
-		addScanToOctoMap(*it);
-	}
-
-	mOcTree->updateInnerOccupancy();
-	mOcTree->writeBinary("slam3d_octomap.bt");
 	return true;
 }
 
