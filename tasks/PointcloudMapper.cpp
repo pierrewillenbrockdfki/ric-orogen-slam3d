@@ -96,6 +96,7 @@ void PointcloudMapper::addScanToOctoMap(VertexObject::ConstPtr scan)
 
 void PointcloudMapper::buildOcTree(VertexList vertices)
 {
+	timeval start = mClock->now();
 	try
 	{
 		boost::lock_guard<boost::mutex> guard(mGraphMutex);
@@ -110,6 +111,9 @@ void PointcloudMapper::buildOcTree(VertexList vertices)
 	}
 	mOcTree->updateInnerOccupancy();
 	mOcTree->writeBinary("slam3d_octomap.bt");
+	timeval finish = mClock->now();
+	int duration = finish.tv_sec - start.tv_sec;
+	mLogger->message(INFO, (boost::format("Generated OcTree from %1% scans in %2% seconds.") % vertices.size() % duration).str());
 }
 
 bool PointcloudMapper::generate_octomap()
