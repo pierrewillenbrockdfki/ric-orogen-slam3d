@@ -12,6 +12,7 @@
 #include <octomap/OcTree.h>
 
 #include <queue>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace slam3d
 {
@@ -38,6 +39,7 @@ namespace slam3d
 		void sendOdometryDrift();
         void addScanToOctoMap(VertexObject::ConstPtr scan);
 		void buildOcTree(VertexList vertices);
+		void buildPointcloud(VertexList vertices);
 	
 		// Members
 		slam3d::Clock* mClock;
@@ -47,7 +49,7 @@ namespace slam3d
 		slam3d::Solver* mSolver;
 		RockOdometry* mOdometry;
 		octomap::OcTree* mOcTree;
-		boost::mutex mGraphMutex;
+		boost::shared_mutex mGraphMutex;
 		
 		base::samples::RigidBodyState mOdometryPose;
 		std::queue<slam3d::VertexObject::ConstPtr> mNewVertices;

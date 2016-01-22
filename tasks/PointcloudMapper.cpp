@@ -36,7 +36,7 @@ bool PointcloudMapper::optimize()
 	mLogger->message(INFO, "Requested global optimization.");
 	try
 	{
-		boost::lock_guard<boost::mutex> guard(mGraphMutex);
+		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
 		if(mMapper->optimize())
 		{
 			sendOdometryDrift();
@@ -55,21 +55,20 @@ bool PointcloudMapper::generate_map()
 	// Publish accumulated cloud
 	mLogger->message(INFO, "Requested map generation.");
 	VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
-	PointCloud::Ptr accumulated = mPclSensor->getAccumulatedCloud(vertices);
-	PointCloud::Ptr downsampled = mPclSensor->downsample(accumulated, mMapResolution);
-	PointCloud::Ptr accCloud = mPclSensor->removeOutliers(downsampled, mMapOutlierRadius, mMapOutlierNeighbors);
+	boost::thread projThread(&PointcloudMapper::buildPointcloud, this, vertices);
+	return true;
+}
 
-	base::samples::Pointcloud mapCloud;
-	for(PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
-	{
-		base::Vector3d vec;
-		vec[0] = it->x;
-		vec[1] = it->y;
-		vec[2] = it->z;
-		mapCloud.points.push_back(vec);
-	}
-	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
-	_cloud.write(mapCloud);
+bool PointcloudMapper::generate_octomap()
+{
+	// Reset OctoMap
+	delete mOcTree;
+	mOcTree = new octomap::OcTree(mMapResolution);
+
+	// Project all scans to octomap
+	mLogger->message(INFO, "Requested octomap generation.");
+	VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
+	boost::thread projThread(&PointcloudMapper::buildOcTree, this, vertices);
 	return true;
 }
 
@@ -94,19 +93,51 @@ void PointcloudMapper::addScanToOctoMap(VertexObject::ConstPtr scan)
 	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), 5, true, true);
 }
 
+void PointcloudMapper::buildPointcloud(VertexList vertices)
+{
+	timeval start = mClock->now();
+	PointCloud::Ptr accumulated;
+	try
+	{
+		boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
+		accumulated = mPclSensor->getAccumulatedCloud(vertices);
+	}catch (boost::lock_error &e)
+	{
+		mLogger->message(ERROR, "Could not access the pose graph to build Pointcloud!");
+		return;
+	}
+	PointCloud::Ptr downsampled = mPclSensor->downsample(accumulated, mMapResolution);
+	PointCloud::Ptr accCloud = mPclSensor->removeOutliers(downsampled, mMapOutlierRadius, mMapOutlierNeighbors);
+
+	base::samples::Pointcloud mapCloud;
+	for(PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
+	{
+		base::Vector3d vec;
+		vec[0] = it->x;
+		vec[1] = it->y;
+		vec[2] = it->z;
+		mapCloud.points.push_back(vec);
+	}
+	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
+	_cloud.write(mapCloud);
+	timeval finish = mClock->now();
+	int duration = finish.tv_sec - start.tv_sec;
+	mLogger->message(INFO, (boost::format("Generated Pointcloud from %1% scans in %2% seconds.") % vertices.size() % duration).str());
+}
+
 void PointcloudMapper::buildOcTree(VertexList vertices)
 {
 	timeval start = mClock->now();
 	try
 	{
-		boost::lock_guard<boost::mutex> guard(mGraphMutex);
+		boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
 		for(VertexList::iterator it = vertices.begin(); it != vertices.end(); it++)
 		{
 			addScanToOctoMap(*it);
 		}
 	}catch (boost::lock_error &e)
 	{
-		mLogger->message(WARNING, "Could not access the pose graph to build OcTree! Is another operation still running?");
+		mLogger->message(ERROR, "Could not access the pose graph to build OcTree!");
 		return;
 	}
 	mOcTree->updateInnerOccupancy();
@@ -114,19 +145,6 @@ void PointcloudMapper::buildOcTree(VertexList vertices)
 	timeval finish = mClock->now();
 	int duration = finish.tv_sec - start.tv_sec;
 	mLogger->message(INFO, (boost::format("Generated OcTree from %1% scans in %2% seconds.") % vertices.size() % duration).str());
-}
-
-bool PointcloudMapper::generate_octomap()
-{
-	// Reset OctoMap
-	delete mOcTree;
-	mOcTree = new octomap::OcTree(mMapResolution);
-
-	// Project all scans to octomap
-	mLogger->message(INFO, "Requested octomap generation.");
-	VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
-	boost::thread projThread(&PointcloudMapper::buildOcTree, this, vertices);
-	return true;
 }
 
 bool PointcloudMapper::configureHook()
