@@ -6,6 +6,7 @@
 #include <base/samples/Pointcloud.hpp>
 #include <base/samples/RigidBodyState.hpp>
 
+#include <slam3d/BoostMapper.hpp>
 #include <slam3d/FileLogger.hpp>
 #include <slam3d/G2oSolver.hpp>
 
@@ -54,7 +55,7 @@ bool PointcloudMapper::generate_map()
 {
 	// Publish accumulated cloud
 	mLogger->message(INFO, "Requested map generation.");
-	VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
+	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
 	boost::thread projThread(&PointcloudMapper::buildPointcloud, this, vertices);
 	return true;
 }
@@ -67,14 +68,14 @@ bool PointcloudMapper::generate_octomap()
 
 	// Project all scans to octomap
 	mLogger->message(INFO, "Requested octomap generation.");
-	VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
+	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
 	boost::thread projThread(&PointcloudMapper::buildOcTree, this, vertices);
 	return true;
 }
 
-void PointcloudMapper::addScanToOctoMap(VertexObject::ConstPtr scan)
+void PointcloudMapper::addScanToOctoMap(const VertexObject& scan)
 {
-	PointCloudMeasurement* pcl = dynamic_cast<PointCloudMeasurement*>(scan->measurement);
+	PointCloudMeasurement* pcl = dynamic_cast<PointCloudMeasurement*>(scan.measurement);
 	if(!pcl)
 	{
 		mLogger->message(ERROR, "Measurement is not a point cloud!");
@@ -82,18 +83,18 @@ void PointcloudMapper::addScanToOctoMap(VertexObject::ConstPtr scan)
 	}
 
 	PointCloud::Ptr tempCloud(new PointCloud);
-	pcl::transformPointCloud(*(pcl->getPointCloud()), *tempCloud, (scan->corrected_pose * pcl->getSensorPose()).matrix());
+	pcl::transformPointCloud(*(pcl->getPointCloud()), *tempCloud, (scan.corrected_pose * pcl->getSensorPose()).matrix());
 
 	octomap::Pointcloud octoCloud;
 	for(PointCloud::iterator it = tempCloud->begin(); it < tempCloud->end(); ++it)
 	{
 		octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
 	}
-	Vector3 origin = scan->corrected_pose.translation();
+	Vector3 origin = scan.corrected_pose.translation();
 	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), 5, true, true);
 }
 
-void PointcloudMapper::buildPointcloud(VertexList vertices)
+void PointcloudMapper::buildPointcloud(const VertexObjectList& vertices)
 {
 	timeval start = mClock->now();
 	PointCloud::Ptr accumulated;
@@ -125,13 +126,13 @@ void PointcloudMapper::buildPointcloud(VertexList vertices)
 	mLogger->message(INFO, (boost::format("Generated Pointcloud from %1% scans in %2% seconds.") % vertices.size() % duration).str());
 }
 
-void PointcloudMapper::buildOcTree(VertexList vertices)
+void PointcloudMapper::buildOcTree(const VertexObjectList& vertices)
 {
 	timeval start = mClock->now();
 	try
 	{
 		boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
-		for(VertexList::iterator it = vertices.begin(); it != vertices.end(); it++)
+		for(VertexObjectList::const_iterator it = vertices.begin(); it != vertices.end(); it++)
 		{
 			addScanToOctoMap(*it);
 		}
@@ -193,7 +194,7 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());
 
 	mSolver = new G2oSolver(mLogger);
-	mMapper = new GraphMapper(mLogger);
+	mMapper = new BoostMapper(mLogger);
 
 	mLogger->message(INFO, " = GraphMapper - Parameters =");
 	mLogger->message(INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());	

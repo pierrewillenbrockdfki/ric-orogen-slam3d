@@ -37,9 +37,9 @@ namespace slam3d
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
 		void sendRobotPose();
 		void sendOdometryDrift();
-        void addScanToOctoMap(VertexObject::ConstPtr scan);
-		void buildOcTree(VertexList vertices);
-		void buildPointcloud(VertexList vertices);
+        void addScanToOctoMap(const VertexObject& scan);
+		void buildOcTree(const VertexObjectList& vertices);
+		void buildPointcloud(const VertexObjectList& vertices);
 	
 		// Members
 		slam3d::Clock* mClock;
@@ -52,7 +52,6 @@ namespace slam3d
 		boost::shared_mutex mGraphMutex;
 		
 		base::samples::RigidBodyState mOdometryPose;
-		std::queue<slam3d::VertexObject::ConstPtr> mNewVertices;
 
 		std::string mRobotName;
 		std::string mRobotFrame;
@@ -70,6 +69,8 @@ namespace slam3d
 		// Parameters for outlier rejection in map-pcl
 		double   mMapOutlierRadius;
 		unsigned mMapOutlierNeighbors;
+		
+		std::queue<slam3d::VertexObject> mNewVertices;
 
 	public:
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");

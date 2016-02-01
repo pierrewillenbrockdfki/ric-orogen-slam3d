@@ -53,15 +53,15 @@ void DistributedPointcloudMapper::updateHook()
 	// Send all new nodes to other robots
 	while(!mNewVertices.empty())
 	{
-		slam3d::VertexObject::ConstPtr v = mNewVertices.front();
+		slam3d::VertexObject v = mNewVertices.front();
 		mNewVertices.pop();
-		slam3d::PointCloudMeasurement* m = dynamic_cast<slam3d::PointCloudMeasurement*>(v->measurement);
+		slam3d::PointCloudMeasurement* m = dynamic_cast<slam3d::PointCloudMeasurement*>(v.measurement);
 		slam3d::LocalizedPointcloud loc_cloud;
 		loc_cloud.robot_name = mRobotName;
 		loc_cloud.sensor_name = mPclSensor->getName();
 		loc_cloud.stamp.fromMicroseconds(m->getPointCloud()->header.stamp);
 		loc_cloud.sensor_pose = base::Pose(m->getSensorPose());
-		loc_cloud.corrected_pose = base::Pose(v->corrected_pose);
+		loc_cloud.corrected_pose = base::Pose(v.corrected_pose);
 		loc_cloud.unique_id = boost::uuids::to_string(m->getUniqueId());
 		createFromPcl(m->getPointCloud(), loc_cloud.point_cloud);
 		_external_out.write(loc_cloud);

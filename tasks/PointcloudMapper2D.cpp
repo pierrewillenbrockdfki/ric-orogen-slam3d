@@ -54,12 +54,12 @@ bool PointcloudMapper2D::generate_map()
 	
 	// Project pointclouds to temporary array
 	mLogger->message(INFO, "Requested traversability-grid generation.");
-	VertexList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
+	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
 	int count = 0;
 	int valid = 0;
-	for(VertexList::const_iterator it = vertices.begin(); it < vertices.end(); it++)
+	for(VertexObjectList::const_iterator it = vertices.begin(); it < vertices.end(); it++)
 	{
-		PointCloudMeasurement* pcl = dynamic_cast<PointCloudMeasurement*>((*it)->measurement);
+		PointCloudMeasurement* pcl = dynamic_cast<PointCloudMeasurement*>(it->measurement);
 		if(!pcl)
 		{
 			mLogger->message(ERROR, "Measurement from PCL-Sensor is not a point cloud!");
@@ -67,7 +67,7 @@ bool PointcloudMapper2D::generate_map()
 		}
 		
 		// Get sensor's pose in map coordinates
-		Transform sensorPose = (*it)->corrected_pose * pcl->getSensorPose();
+		Transform sensorPose = it->corrected_pose * pcl->getSensorPose();
 		
 		size_t sensorX, sensorY, pointX, pointY;
 		if(mGrid->toGrid(sensorPose.translation(), sensorX, sensorY))
