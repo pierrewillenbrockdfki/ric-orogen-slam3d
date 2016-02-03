@@ -43,55 +43,55 @@ task_context "PointcloudMapper" do
 	.returns('/bool')
 	.doc("Starts the global optimization using the current SLAM backend.")
 	
-	property('scan_resolution', '/double')
+	property('scan_resolution', '/double', 0.01)
 	.doc("Pointclouds are downsampled to this resolution before being added to the map.")
 	 
-	property('map_resolution', '/double')
+	property('map_resolution', '/double', 0.01)
 	.doc("Map-Pointcloud is downsampled to this resolution before being published.")
 
-	property('map_publish_rate', '/int')
+	property('map_publish_rate', '/int', 0)
 	.doc("Publish Map-Pointcloud every X scans, that are added to the map.")
 	
-	property('neighbor_radius', '/double')
+	property('neighbor_radius', '/double', 1.0)
 	.doc("Distance to search for neighbors when adding additional constraints to the graph.")
 	
-	property('max_neighbor_links', '/int')
+	property('max_neighbor_links', '/int', 5)
 	.doc("Maximum number of additional constraints per node added to the graph.")
 	
-	property('map_outlier_radius', '/double')
+	property('map_outlier_radius', '/double', 0.2)
 	.doc("Map-Pointcloud outlier rejection radius.")
 	
-	property('map_outlier_neighbors', '/unsigned')
+	property('map_outlier_neighbors', '/unsigned', 2)
 	.doc("Map-Pointcloud outlier rejection minimum neighbors within radius.")
 	
-	property('min_translation', '/double')
+	property('min_translation', '/double', 0.1)
 	.doc("Minimum distance between two subsequent nodes.")
 	
-	property('min_rotation', '/double')
+	property('min_rotation', '/double', 0.25)
 	.doc("Minimum rotation difference between two subsequent nodes.")
 	 
-	property('use_odometry', '/bool')
+	property('use_odometry', '/bool', true)
 	.doc("Whether to use odometry port.")
 	
-	property('add_odometry_edges', '/bool')
+	property('add_odometry_edges', '/bool', true)
 	.doc("Whether to add odometry edges to the graph.")
 	
-	property('odometry_time_tolerance', '/double')
+	property('odometry_time_tolerance', '/double', 100)
 	.doc("Tolerance of odometry samples in milliseconds.")
 
 	property('gicp_config', '/slam3d/GICPConfiguration')
 	.doc("Parameters for Generalized ICP.")
 	
-	property('log_level', '/int')
+	property('log_level', '/int', 2)
 	.doc("Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
 	
-	property('robot_name', '/std/string')
+	property('robot_name', '/std/string', "robot")
 	.doc("This robot's name.")
 
-	property('map_frame', '/std/string')
+	property('map_frame', '/std/string', "map")
 	.doc("The frame that the map is represented in.")
 	
-	property('use_colors_as_viewpoints', '/bool')
+	property('use_colors_as_viewpoints', '/bool', false)
 	.doc("Whether to get viewpoints from pointcloud's color vector.")
 end
 
@@ -111,25 +111,25 @@ task_context "PointcloudMapper2D" do
 	
 	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
 	
-	property('size_x', '/double')
+	property('size_x', '/double', 10)
 	.doc("Map size in x-direction (meter).")
 	 
-	property('size_y', '/double')
+	property('size_y', '/double', 10)
 	.doc("Map size in y-direction (meter).")
 	
-	property('offset_x', '/double')
+	property('offset_x', '/double', -5)
 	.doc("Position of grid origin in x-direction (meter).")
 	 
-	property('offset_y', '/double')
+	property('offset_y', '/double', -5)
 	.doc("Position  of grid origin in y-direction (meter).")
 	
-	property('min_z', '/double')
+	property('min_z', '/double', -3)
 	.doc("Minimum z-value for grid cells (meter).")
 	
-	property('max_z', 'double')
+	property('max_z', 'double', 3)
 	.doc("Maximum z-value for grid cells (meter).")
 	
-	property('resolution', '/double')
+	property('resolution', '/double', 0.05)
 	.doc("Resolution (size of grid-cell) of the map (meter).")
 end
 
@@ -146,16 +146,16 @@ task_context "PointcloudFilter" do
 	output_port 'cloud_out', '/base/samples/Pointcloud'
 	port_driven 'cloud_in'
 	
-	property('min_height', '/double')
+	property('min_height', '/double', -1)
 	.doc("Remove all points below this height.")
 	
-	property('max_height', '/double')
+	property('max_height', '/double', 1)
 	.doc("Remove all points above this height.")
 	
-	property('min_distance', '/double')
+	property('min_distance', '/double', 0.5)
 	.doc("Remove all points within this radius of the sensor.")
 
-	property('max_distance', '/double')
+	property('max_distance', '/double', 10)
 	.doc("Remove all points beyond this radius of the sensor.")
 end
 
@@ -179,25 +179,25 @@ task_context "MLSMapProjector" do
 	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
 	port_driven 'cloud'
 	
-	property('size_x', '/double')
+	property('size_x', '/double', 10)
 	.doc("Map size in x-direction (meter).")
 	 
-	property('size_y', '/double')
+	property('size_y', '/double', 10)
 	.doc("Map size in y-direction (meter).")
 	
-	property('offset_x', '/double')
+	property('offset_x', '/double', -5)
 	.doc("Position of grid origin in x-direction (meter).")
 	 
-	property('offset_y', '/double')
+	property('offset_y', '/double', -5)
 	.doc("Position  of grid origin in y-direction (meter).")
 	
-	property('min_z', '/double')
+	property('min_z', '/double', -3)
 	.doc("Minimum z-value for grid cells (meter).")
 	
-	property('max_z', 'double')
+	property('max_z', 'double', 3)
 	.doc("Maximum z-value for grid cells (meter).")
 	
-	property('resolution', '/double')
+	property('resolution', '/double', 0.05)
 	 .doc("Resolution (size of grid-cell) of the map (meter).")
 end
 
