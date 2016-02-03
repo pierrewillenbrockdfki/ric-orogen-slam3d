@@ -61,12 +61,13 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 		mapper.map_frame = "world_osg"
 		mapper.robot_frame = "body"
 		mapper.robot_name = "Aila"
+		mapper.use_colors_as_viewpoints = true
 	
 		mapper.gicp_config do |c|
-			c.max_correspondence_distance = 0.25
+			c.max_correspondence_distance = 0.1
 			c.max_fitness_score = 20
-			c.point_cloud_density = 0.01
-			c.maximum_iterations = 50
+			c.point_cloud_density = 0.1
+			c.maximum_iterations = 20
 		end
 	
 		mapper.size_x = 20

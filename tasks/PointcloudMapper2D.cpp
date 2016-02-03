@@ -70,20 +70,27 @@ bool PointcloudMapper2D::generate_map()
 		Transform sensorPose = it->corrected_pose * pcl->getSensorPose();
 		
 		size_t sensorX, sensorY, pointX, pointY;
-		if(mGrid->toGrid(sensorPose.translation(), sensorX, sensorY))
+
+		PointCloud::Ptr cloud(new PointCloud);
+		pcl::transformPointCloud(*(pcl->getPointCloud()), *cloud, sensorPose.matrix());
+		for(PointCloud::const_iterator point = cloud->begin(); point != cloud->end(); ++point)
 		{
-			PointCloud::Ptr cloud(new PointCloud);
-			pcl::transformPointCloud(*(pcl->getPointCloud()), *cloud, sensorPose.matrix());
-			for(PointCloud::const_iterator it = cloud->begin(); it < cloud->end(); it++)
+			count++;
+			if(!mGrid->toGrid(Eigen::Vector3d(point->x, point->y, 0), pointX, pointY))
+				continue;
+			
+			if(mUseColorsAsViewpoints)
 			{
-				if(mGrid->toGrid(Eigen::Vector3d(it->x, it->y, 0), pointX, pointY))
-				{
-					occ[(pointY * size_x) + pointX] += 1;
-					line(sensorX, sensorY, pointX, pointY, hit, size_x, size_y);
-					valid++;
-				}
-				count++;
-			}
+				if(!mGrid->toGrid(Eigen::Vector3d(point->vp_x, point->vp_y, 0), sensorX, sensorY))
+					continue;
+			}else
+			{
+				if(!mGrid->toGrid(sensorPose.translation(), sensorX, sensorY))
+					continue;
+			}	
+			occ[(pointY * size_x) + pointX] += 1;
+			line(sensorX, sensorY, pointX, pointY, hit, size_x, size_y);
+			valid++;
 		}
 	}
 	mLogger->message(DEBUG, (boost::format("Projected %1% out of %2% points to the grid.") % valid % count).str());

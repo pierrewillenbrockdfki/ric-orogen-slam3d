@@ -58,6 +58,8 @@ namespace slam3d
 		std::string mOdometryFrame;
 		std::string mMapFrame;
 		
+		bool mUseColorsAsViewpoints;
+		
 		int mScansReceived;
 		int mScansAdded;
 		int mMapPublishRate;

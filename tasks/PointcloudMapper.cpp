@@ -248,6 +248,9 @@ bool PointcloudMapper::configureHook()
 	mMapFrame = _map_frame.get();
 	mLogger->message(INFO, (boost::format("map_frame:              %1%") % mMapFrame).str());
 
+	mUseColorsAsViewpoints = _use_colors_as_viewpoints.get();
+	mLogger->message(INFO, (boost::format("use_viewpoints:         %1%") % mUseColorsAsViewpoints).str());
+
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
@@ -269,12 +272,31 @@ PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Poi
 {
 	PointCloud::Ptr cloud_out(new PointCloud);
 	cloud_out->header.stamp = cloud_in.time.toMicroseconds();
-	for(std::vector<base::Vector3d>::const_iterator it = cloud_in.points.begin(); it < cloud_in.points.end(); ++it)
+	
+	if(mUseColorsAsViewpoints)
+	{
+		if(cloud_in.colors.size() != cloud_in.points.size())
+		{
+			mLogger->message(WARNING, "Color vector from pointcloud has invalid size!");
+			mUseColorsAsViewpoints = false;
+		}
+	}
+	
+	unsigned numPoints = cloud_in.points.size();
+	for(unsigned i = 0; i < numPoints; ++i)
 	{
 		PointType p;
-		p.x = (*it)[0];
-		p.y = (*it)[1];
-		p.z = (*it)[2];
+		p.x = cloud_in.points[i][0];
+		p.y = cloud_in.points[i][1];
+		p.z = cloud_in.points[i][2];
+		
+		if(mUseColorsAsViewpoints)
+		{
+			p.vp_x = cloud_in.colors[i][0];
+			p.vp_y = cloud_in.colors[i][1];
+			p.vp_z = cloud_in.colors[i][2];
+		}
+		
 		cloud_out->push_back(p);
 	}
 	return cloud_out;

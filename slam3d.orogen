@@ -90,6 +90,9 @@ task_context "PointcloudMapper" do
 
 	property('map_frame', '/std/string')
 	.doc("The frame that the map is represented in.")
+	
+	property('use_colors_as_viewpoints', '/bool')
+	.doc("Whether to get viewpoints from pointcloud's color vector.")
 end
 
 ## Distributed Mapper using Pointclouds
