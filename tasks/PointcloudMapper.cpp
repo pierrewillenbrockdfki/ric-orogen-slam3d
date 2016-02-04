@@ -80,7 +80,7 @@ bool PointcloudMapper::generate_map()
 	// Publish accumulated cloud
 	mLogger->message(INFO, "Requested map generation.");
 	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
-	boost::thread projThread(&PointcloudMapper::buildPointcloud, this, vertices);
+	boost::thread projThread(&PointcloudMapper::sendPointcloud, this, vertices);
 	return true;
 }
 
@@ -118,22 +118,34 @@ void PointcloudMapper::addScanToOctoMap(const VertexObject& scan)
 	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), 5, true, true);
 }
 
-void PointcloudMapper::buildPointcloud(const VertexObjectList& vertices)
+PointCloud::Ptr PointcloudMapper::buildPointcloud(const VertexObjectList& vertices)
 {
 	timeval start = mClock->now();
 	PointCloud::Ptr accumulated;
+
+	boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
+	accumulated = mPclSensor->getAccumulatedCloud(vertices);
+
+	PointCloud::Ptr downsampled = mPclSensor->downsample(accumulated, mMapResolution);
+	PointCloud::Ptr accCloud = mPclSensor->removeOutliers(downsampled, mMapOutlierRadius, mMapOutlierNeighbors);
+
+	timeval finish = mClock->now();
+	int duration = finish.tv_sec - start.tv_sec;
+	mLogger->message(INFO, (boost::format("Generated Pointcloud from %1% scans in %2% seconds.") % vertices.size() % duration).str());
+	return accCloud;
+}
+
+void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
+{
+	PointCloud::Ptr accCloud;
 	try
 	{
-		boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
-		accumulated = mPclSensor->getAccumulatedCloud(vertices);
+		accCloud = buildPointcloud(vertices);
 	}catch (boost::lock_error &e)
 	{
 		mLogger->message(ERROR, "Could not access the pose graph to build Pointcloud!");
 		return;
 	}
-	PointCloud::Ptr downsampled = mPclSensor->downsample(accumulated, mMapResolution);
-	PointCloud::Ptr accCloud = mPclSensor->removeOutliers(downsampled, mMapOutlierRadius, mMapOutlierNeighbors);
-
 	base::samples::Pointcloud mapCloud;
 	for(PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
 	{
@@ -144,10 +156,7 @@ void PointcloudMapper::buildPointcloud(const VertexObjectList& vertices)
 		mapCloud.points.push_back(vec);
 	}
 	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
-	_cloud.write(mapCloud);
-	timeval finish = mClock->now();
-	int duration = finish.tv_sec - start.tv_sec;
-	mLogger->message(INFO, (boost::format("Generated Pointcloud from %1% scans in %2% seconds.") % vertices.size() % duration).str());
+	_cloud.write(mapCloud);	
 }
 
 void PointcloudMapper::buildOcTree(const VertexObjectList& vertices)

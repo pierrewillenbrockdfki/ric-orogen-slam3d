@@ -41,7 +41,8 @@ namespace slam3d
 		void sendOdometryDrift();
         void addScanToOctoMap(const VertexObject& scan);
 		void buildOcTree(const VertexObjectList& vertices);
-		void buildPointcloud(const VertexObjectList& vertices);
+		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
+		void sendPointcloud(const VertexObjectList& vertices);
 	
 		// Members
 		slam3d::Clock* mClock;
