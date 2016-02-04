@@ -25,6 +25,8 @@ task_context "PointcloudMapper" do
 	output_port 'map2odometry', 'base/samples/RigidBodyState'
 	port_driven 'scan'
 	
+	runtime_states(:PAUSED)
+	
 	transformer do
 		transform "robot", "odometry"
 		align_port 'scan'
@@ -42,6 +44,14 @@ task_context "PointcloudMapper" do
 	operation('optimize')
 	.returns('/bool')
 	.doc("Starts the global optimization using the current SLAM backend.")
+	
+	operation('pause')
+	.returns('/bool')
+	.doc("Pauses the map building process.")
+	
+	operation('resume')
+	.returns('/bool')
+	.doc("Resumes the map building process.")
 	
 	property('scan_resolution', '/double', 0.01)
 	.doc("Pointclouds are downsampled to this resolution before being added to the map.")

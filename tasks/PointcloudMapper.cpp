@@ -32,6 +32,30 @@ PointcloudMapper::~PointcloudMapper()
 {
 }
 
+bool PointcloudMapper::pause()
+{
+	if(state() == RUNNING)
+	{
+		state(PAUSED);
+		mLogger->message(INFO, "Mapping is now paused.");
+		return true;
+	}
+	mLogger->message(WARNING, "Cannot pause, mapper is not running!");
+	return false;
+}
+
+bool PointcloudMapper::resume()
+{
+	if(state() == PAUSED)
+	{
+		state(RUNNING);
+		mLogger->message(INFO, "Mapping will now resume.");
+		return true;
+	}
+	mLogger->message(WARNING, "Cannot resume, mapper is not paused!");
+	return false;
+}
+
 bool PointcloudMapper::optimize()
 {
 	mLogger->message(INFO, "Requested global optimization.");
