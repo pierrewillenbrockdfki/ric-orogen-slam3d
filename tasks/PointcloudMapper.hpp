@@ -37,8 +37,9 @@ namespace slam3d
 		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
 		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
-		void sendRobotPose();
-		void sendOdometryDrift();
+		bool localizePointcloud(const base::samples::Pointcloud& cloud);
+		void sendRobotPose(const Transform& pose);
+		void sendOdometryDrift(const Transform& pose);
         void addScanToOctoMap(const VertexObject& scan);
 		void buildOcTree(const VertexObjectList& vertices);
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
@@ -68,7 +69,7 @@ namespace slam3d
 		int mMapPublishRate;
 		
 		// Parameters for creation of map-pcl
-		PointCloud::ConstPtr mMapCloud;
+		PointCloudMeasurement mMapCloud;
 		double mScanResolution;
 		double mMapResolution;
 		

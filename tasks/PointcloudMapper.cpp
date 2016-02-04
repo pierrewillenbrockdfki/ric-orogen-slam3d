@@ -19,12 +19,12 @@
 using namespace slam3d;
 
 PointcloudMapper::PointcloudMapper(std::string const& name)
-    : PointcloudMapperBase(name)
+    : PointcloudMapperBase(name), mMapCloud(PointCloud::ConstPtr(), "robot", "sensor", Transform::Identity())
 {
 }
 
 PointcloudMapper::PointcloudMapper(std::string const& name, RTT::ExecutionEngine* engine)
-    : PointcloudMapperBase(name, engine)
+    : PointcloudMapperBase(name, engine), mMapCloud(PointCloud::ConstPtr(), "robot", "sensor", Transform::Identity())
 {
 }
 
@@ -38,6 +38,10 @@ bool PointcloudMapper::pause()
 	{
 		state(PAUSED);
 		mLogger->message(INFO, "Mapping is now paused.");
+
+		// Create a new map cloud to localize against
+		PointCloud::ConstPtr cloud = buildPointcloud(mMapper->getVertexObjectsFromSensor(mPclSensor->getName()));
+		mMapCloud = PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), Transform::Identity());
 		return true;
 	}
 	mLogger->message(WARNING, "Cannot pause, mapper is not running!");
@@ -64,8 +68,8 @@ bool PointcloudMapper::optimize()
 		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
 		if(mMapper->optimize())
 		{
-			sendOdometryDrift();
-			sendRobotPose();
+			sendOdometryDrift(mMapper->getCurrentPose());
+			sendRobotPose(mMapper->getCurrentPose());
 			return true;
 		}
 	}catch (boost::lock_error &e)
@@ -381,11 +385,30 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 	return true;
 }
 
-void PointcloudMapper::sendRobotPose()
+bool PointcloudMapper::localizePointcloud(const base::samples::Pointcloud& cloud_in)
+{
+	// Transform base::samples::Pointcloud --> Pointcloud
+	PointCloud::Ptr cloud = createFromRockMessage(cloud_in);
+	PointCloudMeasurement m(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
+	
+	try
+	{
+		TransformWithCovariance twc = mPclSensor->calculateTransform(&mMapCloud, &m, mMapper->getCurrentPose());
+		sendRobotPose(twc.transform);
+		sendOdometryDrift(twc.transform);
+	}catch(NoMatch)
+	{
+		mLogger->message(WARNING, "Could not localize in map!");
+		return false;
+	}
+	return true;
+}
+
+void PointcloudMapper::sendRobotPose(const Transform& pose)
 {
 	// Publish the robot pose in map
 	base::samples::RigidBodyState rbs;
-	Eigen::Affine3d current = mMapper->getCurrentPose();
+	Eigen::Affine3d current = pose;
 	rbs.setTransform(current);
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = mRobotFrame;
@@ -394,11 +417,11 @@ void PointcloudMapper::sendRobotPose()
 	_map2robot.write(rbs);
 }
 
-void PointcloudMapper::sendOdometryDrift()
+void PointcloudMapper::sendOdometryDrift(const Transform& pose)
 {
 	// Publish the odometry drift
 	base::samples::RigidBodyState rbs;
-	Eigen::Affine3d current = mMapper->getCurrentPose();
+	Eigen::Affine3d current = pose;
 	Eigen::Affine3d drift = current * mOdometryPose.getTransform().inverse();
 	rbs.setTransform(drift);
 	rbs.invalidateCovariances();
@@ -427,7 +450,7 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		mOdometry->setCurrentPose(mOdometryPose);
 	}
 
-	try
+	if(state() == RUNNING)
 	{
 		if(processPointcloud(scan_sample))
 		{
@@ -438,12 +461,14 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 				generate_map();
 			}
 		}
-	}catch (std::exception &e)
-	{
-		mLogger->message(ERROR, (boost::format("Could not add scan: %1%") % e.what()).str());
+		sendOdometryDrift(mMapper->getCurrentPose());
+		sendRobotPose(mMapper->getCurrentPose());
 	}
-	sendOdometryDrift();
-	sendRobotPose();
+	
+	if(state() == PAUSED)
+	{
+		localizePointcloud(scan_sample);
+	}
 }
 
 void PointcloudMapper::updateHook()
