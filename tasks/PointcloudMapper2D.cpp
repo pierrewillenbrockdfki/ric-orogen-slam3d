@@ -27,6 +27,29 @@ void line(int x0, int y0, int x1, int y1, int* array, int sizex, int sizey)
 	}
 }
 
+void transformPointCloudWithViewPoints (const PointCloud &cloud_in, PointCloud &cloud_out, const Transform &transform)
+{
+	if (&cloud_in != &cloud_out)
+	{
+		cloud_out = cloud_in;
+	}
+
+	for (size_t i = 0; i < cloud_out.points.size (); ++i)
+	{
+		// Transform point
+		Vector3 pt (cloud_in[i].x, cloud_in[i].y, cloud_in[i].z);
+		cloud_out[i].x = static_cast<float> (transform (0, 0) * pt.coeffRef (0) + transform (0, 1) * pt.coeffRef (1) + transform (0, 2) * pt.coeffRef (2) + transform (0, 3));
+		cloud_out[i].y = static_cast<float> (transform (1, 0) * pt.coeffRef (0) + transform (1, 1) * pt.coeffRef (1) + transform (1, 2) * pt.coeffRef (2) + transform (1, 3));
+		cloud_out[i].z = static_cast<float> (transform (2, 0) * pt.coeffRef (0) + transform (2, 1) * pt.coeffRef (1) + transform (2, 2) * pt.coeffRef (2) + transform (2, 3));
+
+		// Transform viewpoint
+		Vector3 vpt (cloud_in[i].vp_x, cloud_in[i].vp_y, cloud_in[i].vp_z);
+		cloud_out[i].vp_x = static_cast<float> (transform (0, 0) * vpt.coeffRef (0) + transform (0, 1) * vpt.coeffRef (1) + transform (0, 2) * vpt.coeffRef (2) + transform (0, 3));
+		cloud_out[i].vp_y = static_cast<float> (transform (1, 0) * vpt.coeffRef (0) + transform (1, 1) * vpt.coeffRef (1) + transform (1, 2) * vpt.coeffRef (2) + transform (1, 3));
+		cloud_out[i].vp_z = static_cast<float> (transform (2, 0) * vpt.coeffRef (0) + transform (2, 1) * vpt.coeffRef (1) + transform (2, 2) * vpt.coeffRef (2) + transform (2, 3));
+	}
+}
+
 PointcloudMapper2D::PointcloudMapper2D(std::string const& name)
     : PointcloudMapper2DBase(name)
 {
@@ -72,7 +95,7 @@ bool PointcloudMapper2D::generate_map()
 		size_t sensorX, sensorY, pointX, pointY;
 
 		PointCloud::Ptr cloud(new PointCloud);
-		pcl::transformPointCloud(*(pcl->getPointCloud()), *cloud, sensorPose.matrix());
+		transformPointCloudWithViewPoints(*(pcl->getPointCloud()), *cloud, sensorPose);
 		for(PointCloud::const_iterator point = cloud->begin(); point != cloud->end(); ++point)
 		{
 			count++;
