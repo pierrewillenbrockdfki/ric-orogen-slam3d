@@ -69,7 +69,7 @@ namespace slam3d
 		int mMapPublishRate;
 		
 		// Parameters for creation of map-pcl
-		PointCloudMeasurement mMapCloud;
+		PointCloudMeasurement* mMapCloud;
 		double mScanResolution;
 		double mMapResolution;
 		
@@ -78,6 +78,8 @@ namespace slam3d
 		unsigned mMapOutlierNeighbors;
 		
 		std::queue<slam3d::VertexObject> mNewVertices;
+		
+		Transform mCurrentPose;
 
 	public:
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");

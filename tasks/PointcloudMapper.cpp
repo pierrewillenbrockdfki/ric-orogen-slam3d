@@ -19,13 +19,15 @@
 using namespace slam3d;
 
 PointcloudMapper::PointcloudMapper(std::string const& name)
-    : PointcloudMapperBase(name), mMapCloud(PointCloud::ConstPtr(), "robot", "sensor", Transform::Identity())
+    : PointcloudMapperBase(name)
 {
+	mMapCloud = NULL;
 }
 
 PointcloudMapper::PointcloudMapper(std::string const& name, RTT::ExecutionEngine* engine)
-    : PointcloudMapperBase(name, engine), mMapCloud(PointCloud::ConstPtr(), "robot", "sensor", Transform::Identity())
+    : PointcloudMapperBase(name, engine)//, mMapCloud(PointCloud::ConstPtr(), "robot", "sensor", Transform::Identity())
 {
+	mMapCloud = NULL;
 }
 
 PointcloudMapper::~PointcloudMapper()
@@ -41,7 +43,9 @@ bool PointcloudMapper::pause()
 
 		// Create a new map cloud to localize against
 		PointCloud::ConstPtr cloud = buildPointcloud(mMapper->getVertexObjectsFromSensor(mPclSensor->getName()));
-		mMapCloud = PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), Transform::Identity());
+		delete mMapCloud;
+		mMapCloud = new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), Transform::Identity());
+		mCurrentPose = mMapper->getCurrentPose();
 		return true;
 	}
 	mLogger->message(WARNING, "Cannot pause, mapper is not running!");
@@ -388,14 +392,16 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 bool PointcloudMapper::localizePointcloud(const base::samples::Pointcloud& cloud_in)
 {
 	// Transform base::samples::Pointcloud --> Pointcloud
-	PointCloud::Ptr cloud = createFromRockMessage(cloud_in);
-	PointCloudMeasurement m(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
+	PointCloud::ConstPtr cloud = createFromRockMessage(cloud_in);
+	PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, 0.1);
+	PointCloudMeasurement m(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
 	
 	try
 	{
-		TransformWithCovariance twc = mPclSensor->calculateTransform(&mMapCloud, &m, mMapper->getCurrentPose());
-		sendRobotPose(twc.transform);
-		sendOdometryDrift(twc.transform);
+		TransformWithCovariance twc = mPclSensor->calculateTransform(mMapCloud, &m, mCurrentPose);
+		mCurrentPose = twc.transform;
+		sendRobotPose(mCurrentPose);
+		sendOdometryDrift(mCurrentPose);
 	}catch(NoMatch)
 	{
 		mLogger->message(WARNING, "Could not localize in map!");
@@ -421,9 +427,15 @@ void PointcloudMapper::sendOdometryDrift(const Transform& pose)
 {
 	// Publish the odometry drift
 	base::samples::RigidBodyState rbs;
-	Eigen::Affine3d current = pose;
-	Eigen::Affine3d drift = current * mOdometryPose.getTransform().inverse();
-	rbs.setTransform(drift);
+	if(mOdometry)
+	{
+		Eigen::Affine3d current = pose;
+		Eigen::Affine3d drift = current * mOdometryPose.getTransform().inverse();
+		rbs.setTransform(drift);
+	}else
+	{
+		rbs.setTransform(Eigen::Affine3d::Identity());
+	}
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = mOdometryFrame;
 	rbs.targetFrame = mMapFrame;
