@@ -91,6 +91,7 @@ task_context "PointcloudMapper" do
 	.doc("Parameters for Generalized ICP.")
 	
 	property('log_level', '/int', 2)
+	.dynamic()
 	.doc("Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
 	
 	property('robot_name', '/std/string', "robot")

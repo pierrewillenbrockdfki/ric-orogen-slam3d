@@ -1,5 +1,3 @@
-/* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
-
 #include "PointcloudMapper.hpp"
 #include "rock-common.hpp"
 
@@ -25,7 +23,7 @@ PointcloudMapper::PointcloudMapper(std::string const& name)
 }
 
 PointcloudMapper::PointcloudMapper(std::string const& name, RTT::ExecutionEngine* engine)
-    : PointcloudMapperBase(name, engine)//, mMapCloud(PointCloud::ConstPtr(), "robot", "sensor", Transform::Identity())
+    : PointcloudMapperBase(name, engine)
 {
 	mMapCloud = NULL;
 }
@@ -72,7 +70,7 @@ bool PointcloudMapper::optimize()
 		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
 		if(mMapper->optimize())
 		{
-			sendRobotPose(mMapper->getCurrentPose(), );
+//			sendRobotPose(mMapper->getCurrentPose(), ?TIME?);
 			return true;
 		}
 	}catch (boost::lock_error &e)
@@ -188,15 +186,9 @@ void PointcloudMapper::buildOcTree(const VertexObjectList& vertices)
 	mLogger->message(INFO, (boost::format("Generated OcTree from %1% scans in %2% seconds.") % vertices.size() % duration).str());
 }
 
-bool PointcloudMapper::configureHook()
-{	
-	if (! PointcloudMapperBase::configureHook())
-		return false;
-		
-	mClock = new Clock();
-	mLogger = new Logger(*mClock);
-
-	switch(_log_level.get())
+bool PointcloudMapper::setLog_level(boost::int32_t value)
+{
+	switch(value)
 	{
 	case 4:
 		mLogger->setLogLevel(FATAL);
@@ -213,6 +205,17 @@ bool PointcloudMapper::configureHook()
 	default:
 		mLogger->setLogLevel(INFO);
 	}
+	return true;
+}
+
+bool PointcloudMapper::configureHook()
+{	
+	if (! PointcloudMapperBase::configureHook())
+		return false;
+		
+	mClock = new Clock();
+	mLogger = new Logger(*mClock);
+	setLog_level(_log_level);
 
 	mLogger->message(INFO, "=== Configure PointCloudMapper ===");
 
@@ -243,7 +246,6 @@ bool PointcloudMapper::configureHook()
 		mOdometry = new RockOdometry(_robot2odometry, mLogger);
 		mMapper->setOdometry(mOdometry, _add_odometry_edges.get());
 		mLogger->message(INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges.get()).str());
-		mLogger->message(INFO, (boost::format("odometry_time_tolerance:%1%") % _odometry_time_tolerance.get()).str());
 	}else
 	{
 		mOdometry = NULL;

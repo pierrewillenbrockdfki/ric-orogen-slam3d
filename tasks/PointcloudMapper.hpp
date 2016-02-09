@@ -1,8 +1,7 @@
 #ifndef SLAM3D_POINTCLOUDMAPPER_TASK_HPP
 #define SLAM3D_POINTCLOUDMAPPER_TASK_HPP
 
-#include "slam3d/PointcloudMapperBase.hpp"
-
+#include <slam3d/PointcloudMapperBase.hpp>
 #include <slam3d/GraphMapper.hpp>
 #include <slam3d/PointCloudSensor.hpp>
 #include <slam3d/Solver.hpp>
@@ -30,6 +29,7 @@ namespace slam3d
 		
 		// Callbacks
 		virtual void scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);
+		virtual bool setLog_level(boost::int32_t value);
 
 		// Internal methods
 		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
