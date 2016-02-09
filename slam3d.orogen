@@ -86,9 +86,6 @@ task_context "PointcloudMapper" do
 	
 	property('add_odometry_edges', '/bool', true)
 	.doc("Whether to add odometry edges to the graph.")
-	
-	property('odometry_time_tolerance', '/double', 100)
-	.doc("Tolerance of odometry samples in milliseconds.")
 
 	property('gicp_config', '/slam3d/GICPConfiguration')
 	.doc("Parameters for Generalized ICP.")

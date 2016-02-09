@@ -72,8 +72,7 @@ bool PointcloudMapper::optimize()
 		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
 		if(mMapper->optimize())
 		{
-			sendOdometryDrift(mMapper->getCurrentPose());
-			sendRobotPose(mMapper->getCurrentPose());
+			sendRobotPose(mMapper->getCurrentPose(), );
 			return true;
 		}
 	}catch (boost::lock_error &e)
@@ -241,9 +240,8 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());	
 	if(_use_odometry.get())
 	{
-		mOdometry = new RockOdometry(mLogger, _odometry_time_tolerance.get());
+		mOdometry = new RockOdometry(_robot2odometry, mLogger);
 		mMapper->setOdometry(mOdometry, _add_odometry_edges.get());
-		mOdometryPose.setTransform(Eigen::Affine3d::Identity());
 		mLogger->message(INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges.get()).str());
 		mLogger->message(INFO, (boost::format("odometry_time_tolerance:%1%") % _odometry_time_tolerance.get()).str());
 	}else
@@ -362,9 +360,9 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 	PointCloud::Ptr cloud = createFromRockMessage(cloud_in);
 	
 	// Downsample and add to map
+	PointCloudMeasurement* measurement;
 	try
 	{
-		PointCloudMeasurement* measurement;
 		if(mScanResolution > 0)
 		{
 			PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
@@ -374,7 +372,14 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 		{
 			measurement = new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
 		}
-		
+	}catch(std::exception& e)
+	{
+		mLogger->message(ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());
+		return false;
+	}
+
+	try
+	{
 		if(!mMapper->addReading(measurement))
 		{
 			delete measurement;
@@ -383,7 +388,8 @@ bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_
 		mNewVertices.push(mMapper->getLastVertex());
 	}catch(std::exception& e)
 	{
-		mLogger->message(ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());
+		mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
+		delete measurement;
 		return false;
 	}
 	return true;
@@ -400,8 +406,7 @@ bool PointcloudMapper::localizePointcloud(const base::samples::Pointcloud& cloud
 	{
 		TransformWithCovariance twc = mPclSensor->calculateTransform(mMapCloud, &m, mCurrentPose);
 		mCurrentPose = twc.transform;
-		sendRobotPose(mCurrentPose);
-		sendOdometryDrift(mCurrentPose);
+		sendRobotPose(mCurrentPose, cloud_in.time);
 	}catch(NoMatch)
 	{
 		mLogger->message(WARNING, "Could not localize in map!");
@@ -410,7 +415,7 @@ bool PointcloudMapper::localizePointcloud(const base::samples::Pointcloud& cloud
 	return true;
 }
 
-void PointcloudMapper::sendRobotPose(const Transform& pose)
+void PointcloudMapper::sendRobotPose(const Transform& pose, const base::Time& t)
 {
 	// Publish the robot pose in map
 	base::samples::RigidBodyState rbs;
@@ -419,18 +424,13 @@ void PointcloudMapper::sendRobotPose(const Transform& pose)
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = mRobotFrame;
 	rbs.targetFrame = mMapFrame;
-	rbs.time = mOdometryPose.time;
+	rbs.time = t;
 	_map2robot.write(rbs);
-}
-
-void PointcloudMapper::sendOdometryDrift(const Transform& pose)
-{
+	
 	// Publish the odometry drift
-	base::samples::RigidBodyState rbs;
 	if(mOdometry)
 	{
-		Eigen::Affine3d current = pose;
-		Eigen::Affine3d drift = current * mOdometryPose.getTransform().inverse();
+		Eigen::Affine3d drift = current * mOdometry->getOdometricPose(t).inverse();
 		rbs.setTransform(drift);
 	}else
 	{
@@ -438,29 +438,12 @@ void PointcloudMapper::sendOdometryDrift(const Transform& pose)
 	}
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = mOdometryFrame;
-	rbs.targetFrame = mMapFrame;
-	rbs.time = mOdometryPose.time;
 	_map2odometry.write(rbs);
 }
 
 void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
 {
 	++mScansReceived;
-	
-	// Read odometry data
-	if(mOdometry)
-	{
-		// Rock calls "odometry -> robot" [robot2odometry]
-		Eigen::Affine3d odom;
-		if(!_robot2odometry.get(ts, odom, true))
-		{
-			mLogger->message(ERROR, "Odometry not available!");
-			return;
-		}
-		mOdometryPose.setTransform(odom);
-		mOdometryPose.time = ts;
-		mOdometry->setCurrentPose(mOdometryPose);
-	}
 
 	if(state() == RUNNING)
 	{
@@ -473,8 +456,7 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 				generate_map();
 			}
 		}
-		sendOdometryDrift(mMapper->getCurrentPose());
-		sendRobotPose(mMapper->getCurrentPose());
+		sendRobotPose(mMapper->getCurrentPose(), ts);
 	}
 	
 	if(state() == PAUSED)

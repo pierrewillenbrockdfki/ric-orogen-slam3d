@@ -1,5 +1,3 @@
-/* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
-
 #ifndef SLAM3D_POINTCLOUDMAPPER_TASK_HPP
 #define SLAM3D_POINTCLOUDMAPPER_TASK_HPP
 
@@ -38,8 +36,7 @@ namespace slam3d
 		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
 		bool localizePointcloud(const base::samples::Pointcloud& cloud);
-		void sendRobotPose(const Transform& pose);
-		void sendOdometryDrift(const Transform& pose);
+		void sendRobotPose(const Transform& pose, const base::Time& t);
         void addScanToOctoMap(const VertexObject& scan);
 		void buildOcTree(const VertexObjectList& vertices);
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
@@ -54,8 +51,6 @@ namespace slam3d
 		RockOdometry* mOdometry;
 		octomap::OcTree* mOcTree;
 		boost::shared_mutex mGraphMutex;
-		
-		base::samples::RigidBodyState mOdometryPose;
 
 		std::string mRobotName;
 		std::string mRobotFrame;
@@ -96,4 +91,3 @@ namespace slam3d
 }
 
 #endif
-

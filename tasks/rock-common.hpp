@@ -18,85 +18,91 @@ namespace slam3d
 			return -msec;
 	}
 	
-	class BaseLogger : public slam3d::Logger
+	class BaseLogger : public Logger
 	{
 	public:
-		BaseLogger() : slam3d::Logger(slam3d::Clock()){}
+		BaseLogger() : Logger(Clock()){}
 		~BaseLogger(){}
 		
-		virtual void message(slam3d::LOG_LEVEL lvl, const std::string& msg)
+		virtual void message(LOG_LEVEL lvl, const std::string& msg)
 		{
 			switch(lvl)
 			{
-				case slam3d::DEBUG:
+				case DEBUG:
 					LOG_DEBUG("%s", msg.c_str());
 					break;
-				case slam3d::INFO:
+				case INFO:
 					LOG_INFO("%s", msg.c_str());
 					break;
-				case slam3d::WARNING:
+				case WARNING:
 					LOG_WARN("%s", msg.c_str());
 					break;
-				case slam3d::ERROR:
+				case ERROR:
 					LOG_ERROR("%s", msg.c_str());
 					break;
-				case slam3d::FATAL:
+				case FATAL:
 					LOG_FATAL("%s", msg.c_str());
 					break;
 			}
 		}
 	};
 	
-	class RockOdometry : public slam3d::Odometry
+	class RockOdometry : public Odometry
 	{
 	public:
-		RockOdometry(slam3d::Logger* logger, double tolerance = 100) : slam3d::Odometry(logger)
-		{
-			mCurrentPose = slam3d::Transform::Identity();
-			mTolerance = tolerance; // milliseconds
+		RockOdometry(transformer::Transformation& tf, Logger* logger)
+		: Odometry(logger), mTransformation(tf){}
 
-		}
 		~RockOdometry() {}
 		
-		// Rock transformer cannot be queried for a specific timestamp.
-		// So we have to rely on current pose to match last received measurement.
-		slam3d::Transform getOdometricPose(timeval stamp)
+		Transform getOdometricPose(timeval stamp)
 		{
-			long diff = timevaldiff(stamp, mCurrentTime);
-			if(diff > mTolerance)
+			base::Time ts = base::Time::fromSeconds(stamp.tv_sec, stamp.tv_usec);
+			Eigen::Affine3d affine = getOdometricPose(ts);
+			
+			Transform tf;
+			if((affine.matrix().array() == affine.matrix().array()).all())
 			{
-				mLogger->message(slam3d::ERROR, (boost::format("Odometry data stamp differs from requested stamp by %1% ms.")%diff).str());
-				throw slam3d::OdometryException();
-			}
-			return mCurrentPose;
-		}
-		
-		slam3d::TransformWithCovariance getRelativePose(timeval last, timeval next)
-		{
-			slam3d::TransformWithCovariance twc;
-			twc.transform = slam3d::Transform::Identity();
-			twc.covariance = slam3d::Covariance::Identity();
-			return twc;
-		}
-		
-		void setCurrentPose(const base::samples::RigidBodyState& pose)
-		{
-			Eigen::Affine3d odom_aff = pose.getTransform();
-			if((odom_aff.matrix().array() == odom_aff.matrix().array()).all())
-			{
-				mCurrentPose.linear() = odom_aff.linear();
-				mCurrentPose.translation() = odom_aff.translation();
-				mCurrentTime = pose.time.toTimeval();
+				tf.linear() = affine.linear();
+				tf.translation() = affine.translation();
 			}else
 			{
-				mLogger->message(slam3d::ERROR, "Odometry sample contained invalid data!");
-				throw slam3d::OdometryException();
+				mLogger->message(ERROR, "Odometry sample contained invalid data!");
+				throw OdometryException();
 			}
+			return tf;
 		}
 		
+		Eigen::Affine3d getOdometricPose(base::Time t)
+		{
+			Eigen::Affine3d odom;
+			bool res;
+			try
+			{
+				res = mTransformation.get(t, odom, true);
+			}catch(std::exception& e)
+			{
+				mLogger->message(ERROR, e.what());
+				throw OdometryException();
+			}
+			
+			if(!res)
+			{
+				transformer::TransformationStatus s = mTransformation.getStatus();
+				mLogger->message(ERROR, (boost::format("Transformation not available! [success: %1%, no chain: %2%, no sample: %3%, interpolation failed: %4%]") % s.generated_transformations % s.failed_no_chain % s.failed_no_sample % s.failed_interpolation_impossible).str());
+			}
+			return odom;
+		}
+		
+		TransformWithCovariance getRelativePose(timeval last, timeval next)
+		{
+			TransformWithCovariance twc;
+			twc.transform = Transform::Identity();
+			twc.covariance = Covariance::Identity();
+			return twc;
+		}
+
 	private:
-		slam3d::Transform mCurrentPose;
-		timeval mCurrentTime;
-		long mTolerance;
+		transformer::Transformation& mTransformation;
 	};
 }
