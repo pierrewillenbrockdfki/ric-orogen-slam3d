@@ -23,7 +23,8 @@ task_context "PointcloudMapper" do
 	output_port 'cloud', '/base/samples/Pointcloud'
 	output_port 'map2robot', 'base/samples/RigidBodyState'
 	output_port 'map2odometry', 'base/samples/RigidBodyState'
-	port_driven 'scan'
+
+	periodic 0.1
 	
 	runtime_states(:PAUSED)
 	
