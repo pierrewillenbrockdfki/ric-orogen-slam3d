@@ -37,7 +37,7 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 			if port.task.name == "aila-control/hokuyo_front"
 				port.connect_to fusion.scan1
 			elsif port.task.name == "aila-control/hokuyo_rear"
-				port.connect_to fusion.scan2			
+				port.connect_to fusion.scan2
 			end
 		end
 		Orocos.transformer.load_conf("aila_tf.rb")
@@ -65,7 +65,7 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 	
 		mapper.gicp_config do |c|
 			c.max_correspondence_distance = 0.1
-			c.max_fitness_score = 20
+			c.max_fitness_score = 30
 			c.point_cloud_density = 0.1
 			c.maximum_iterations = 20
 		end
@@ -90,8 +90,8 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 		## Start the replay ##
 		Vizkit.control log
 
-		Vizkit.display fusion.cloud
-		Vizkit.display mapper.cloud
+#		Vizkit.display fusion.cloud
+#		Vizkit.display mapper.cloud
 		Vizkit.display mapper.envire_map
 
 		begin
