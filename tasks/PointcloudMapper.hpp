@@ -34,8 +34,6 @@ namespace slam3d
 		// Internal methods
 		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
 		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
-		bool processPointcloud(const base::samples::Pointcloud& cloud);
-		bool localizePointcloud(const base::samples::Pointcloud& cloud);
 		void sendRobotPose();
         void addScanToOctoMap(const VertexObject& scan);
 		void buildOcTree(const VertexObjectList& vertices);

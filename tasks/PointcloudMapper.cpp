@@ -357,69 +357,6 @@ void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::sampl
 	}
 }
 
-bool PointcloudMapper::processPointcloud(const base::samples::Pointcloud& cloud_in)
-{
-	// Transform base::samples::Pointcloud --> Pointcloud
-	PointCloud::Ptr cloud = createFromRockMessage(cloud_in);
-	
-	// Downsample and add to map
-	PointCloudMeasurement* measurement;
-	try
-	{
-		if(mScanResolution > 0)
-		{
-			PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
-			mLogger->message(DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
-			measurement = new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
-		}else
-		{
-			measurement = new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
-		}
-	}catch(std::exception& e)
-	{
-		mLogger->message(ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());
-		return false;
-	}
-
-	try
-	{
-		if(!mMapper->addReading(measurement))
-		{
-			delete measurement;
-			return false;
-		}
-		mNewVertices.push(mMapper->getLastVertex());
-	}catch(std::exception& e)
-	{
-		mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
-		delete measurement;
-		return false;
-	}
-	return true;
-}
-
-bool PointcloudMapper::localizePointcloud(const base::samples::Pointcloud& cloud_in)
-{
-	// Transform base::samples::Pointcloud --> Pointcloud
-	PointCloud::ConstPtr cloud = createFromRockMessage(cloud_in);
-	PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, 0.1);
-	PointCloudMeasurement m(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
-	
-	try
-	{
-		Transform current;
-		current.translation() = mCurrentPose.translation();
-		current.linear() = mCurrentPose.linear();
-		TransformWithCovariance twc = mPclSensor->calculateTransform(mMapCloud, &m, current);
-		mCurrentPose = twc.transform;
-	}catch(NoMatch)
-	{
-		mLogger->message(WARNING, "Could not localize in map!");
-		return false;
-	}
-	return true;
-}
-
 void PointcloudMapper::sendRobotPose()
 {
 	// Publish the robot pose in map
@@ -444,24 +381,68 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 	mCurrentTime = ts;
 	mCurrentOdometry = mOdometry->getOdometricPose(ts);
 
+	// Transform base::samples::Pointcloud --> Pointcloud
+	PointCloud::Ptr cloud = createFromRockMessage(scan_sample);
+	
+	// Downsample and add to map
+	PointCloudMeasurement* measurement;
+	try
+	{
+		if(mScanResolution > 0)
+		{
+			PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
+			mLogger->message(DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
+			measurement = new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
+		}else
+		{
+			measurement = new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
+		}
+	}catch(std::exception& e)
+	{
+		mLogger->message(ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());
+		return;
+	}
+
 	if(state() == RUNNING)
 	{
-		if(processPointcloud(scan_sample))
+		bool added = false;
+		try
 		{
-			mScansAdded++;
-			if(mMapPublishRate > 0 && mScansAdded % mMapPublishRate == 0)
+			if(added = mMapper->addReading(measurement))
 			{
-				optimize();
-				generate_map();
+				mScansAdded++;
+				mNewVertices.push(mMapper->getLastVertex());
+				if(mMapPublishRate > 0 && mScansAdded % mMapPublishRate == 0)
+				{
+					optimize();
+					generate_map();
+				}
 			}
+			mCurrentPose = mMapper->getCurrentPose();
+			sendRobotPose();
+		}catch(std::exception& e)
+		{
+			mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
 		}
-		mCurrentPose = mMapper->getCurrentPose();
-		sendRobotPose();
-		
+		if(!added)
+		{
+			delete measurement;
+		}
 	}else if(state() == PAUSED)
 	{
-		localizePointcloud(scan_sample);
-		sendRobotPose();
+		try
+		{
+			Transform pose;
+			pose.translation() = mCurrentPose.translation();
+			pose.linear() = mCurrentPose.linear();
+			TransformWithCovariance twc = mPclSensor->calculateTransform(mMapCloud, measurement, pose);
+			mCurrentPose = twc.transform;
+			sendRobotPose();
+		}catch(NoMatch)
+		{
+			mLogger->message(WARNING, "Could not localize in map!");
+		}
+		delete measurement;
 	}
 }
 
