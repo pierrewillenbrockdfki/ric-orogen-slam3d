@@ -26,6 +26,7 @@ PointcloudMapper::PointcloudMapper(std::string const& name, RTT::ExecutionEngine
     : PointcloudMapperBase(name, engine)
 {
 	mMapCloud = NULL;
+	mCurrentOdometry = Eigen::Affine3d::Identity();
 }
 
 PointcloudMapper::~PointcloudMapper()
@@ -70,7 +71,7 @@ bool PointcloudMapper::optimize()
 		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
 		if(mMapper->optimize())
 		{
-//			sendRobotPose(mMapper->getCurrentPose(), ?TIME?);
+			sendRobotPose();
 			return true;
 		}
 	}catch (boost::lock_error &e)
@@ -406,9 +407,11 @@ bool PointcloudMapper::localizePointcloud(const base::samples::Pointcloud& cloud
 	
 	try
 	{
-		TransformWithCovariance twc = mPclSensor->calculateTransform(mMapCloud, &m, mCurrentPose);
+		Transform current;
+		current.translation() = mCurrentPose.translation();
+		current.linear() = mCurrentPose.linear();
+		TransformWithCovariance twc = mPclSensor->calculateTransform(mMapCloud, &m, current);
 		mCurrentPose = twc.transform;
-		sendRobotPose(mCurrentPose, cloud_in.time);
 	}catch(NoMatch)
 	{
 		mLogger->message(WARNING, "Could not localize in map!");
@@ -417,28 +420,20 @@ bool PointcloudMapper::localizePointcloud(const base::samples::Pointcloud& cloud
 	return true;
 }
 
-void PointcloudMapper::sendRobotPose(const Transform& pose, const base::Time& t)
+void PointcloudMapper::sendRobotPose()
 {
 	// Publish the robot pose in map
 	base::samples::RigidBodyState rbs;
-	Eigen::Affine3d current = pose;
-	rbs.setTransform(current);
+	rbs.setTransform(mCurrentPose);
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = mRobotFrame;
 	rbs.targetFrame = mMapFrame;
-	rbs.time = t;
+	rbs.time = mCurrentTime;
 	_map2robot.write(rbs);
 	
 	// Publish the odometry drift
-	if(mOdometry)
-	{
-		Eigen::Affine3d drift = current * mOdometry->getOdometricPose(t).inverse();
-		rbs.setTransform(drift);
-	}else
-	{
-		rbs.setTransform(Eigen::Affine3d::Identity());
-	}
-	rbs.invalidateCovariances();
+	Eigen::Affine3d drift = mCurrentPose * mCurrentOdometry.inverse();
+	rbs.setTransform(drift);
 	rbs.sourceFrame = mOdometryFrame;
 	_map2odometry.write(rbs);
 }
@@ -446,6 +441,8 @@ void PointcloudMapper::sendRobotPose(const Transform& pose, const base::Time& t)
 void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
 {
 	++mScansReceived;
+	mCurrentTime = ts;
+	mCurrentOdometry = mOdometry->getOdometricPose(ts);
 
 	if(state() == RUNNING)
 	{
@@ -458,12 +455,13 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 				generate_map();
 			}
 		}
-		sendRobotPose(mMapper->getCurrentPose(), ts);
-	}
-	
-	if(state() == PAUSED)
+		mCurrentPose = mMapper->getCurrentPose();
+		sendRobotPose();
+		
+	}else if(state() == PAUSED)
 	{
 		localizePointcloud(scan_sample);
+		sendRobotPose();
 	}
 }
 

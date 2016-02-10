@@ -36,7 +36,7 @@ namespace slam3d
 		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
 		bool processPointcloud(const base::samples::Pointcloud& cloud);
 		bool localizePointcloud(const base::samples::Pointcloud& cloud);
-		void sendRobotPose(const Transform& pose, const base::Time& t);
+		void sendRobotPose();
         void addScanToOctoMap(const VertexObject& scan);
 		void buildOcTree(const VertexObjectList& vertices);
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
@@ -74,7 +74,10 @@ namespace slam3d
 		
 		std::queue<slam3d::VertexObject> mNewVertices;
 		
-		Transform mCurrentPose;
+		// Current state of transformations
+		base::Time mCurrentTime;
+		Eigen::Affine3d mCurrentPose;
+		Eigen::Affine3d mCurrentOdometry;
 
 	public:
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");
