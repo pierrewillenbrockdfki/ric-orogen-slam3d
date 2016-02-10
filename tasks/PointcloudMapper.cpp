@@ -53,6 +53,9 @@ bool PointcloudMapper::pause()
 
 bool PointcloudMapper::resume()
 {
+	mLogger->message(ERROR, "Operation 'resume' is not available yet.");
+	return false;
+/*
 	if(state() == PAUSED)
 	{
 		state(RUNNING);
@@ -61,6 +64,7 @@ bool PointcloudMapper::resume()
 	}
 	mLogger->message(WARNING, "Cannot resume, mapper is not paused!");
 	return false;
+*/
 }
 
 bool PointcloudMapper::optimize()
