@@ -383,7 +383,10 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 {
 	++mScansReceived;
 	mCurrentTime = ts;
-	mCurrentOdometry = mOdometry->getOdometricPose(ts);
+	if(mOdometry)
+	{
+		mCurrentOdometry = mOdometry->getOdometricPose(ts);
+	}
 
 	// Transform base::samples::Pointcloud --> Pointcloud
 	PointCloud::Ptr cloud = createFromRockMessage(scan_sample);
