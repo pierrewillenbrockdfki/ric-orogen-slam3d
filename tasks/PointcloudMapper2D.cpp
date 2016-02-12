@@ -18,11 +18,11 @@ void line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, grid_t* grid, unsi
 
 	while(1)
 	{
+		if (x0==x1 && y0==y1) break;
 		if(x0 >= 0 && x0 < sizex && y0 >= 0 && y0 < sizey)
 		{
 			grid[(y0 * sizex) + x0] += 1;
 		}
-		if (x0==x1 && y0==y1) break;
 		e2 = 2*err;
 		if (e2 > dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
 		if (e2 < dx) { err += dx; y0 += sy; } /* e_xy+e_y < 0 */
@@ -118,6 +118,7 @@ bool PointcloudMapper2D::generate_map()
 					continue;
 			}	
 			occ[(pointY * size_x) + pointX] += 1;
+			hit[(pointY * size_x) + pointX] += 1;
 			line(sensorX, sensorY, pointX, pointY, hit, size_x, size_y);
 			valid++;
 		}
