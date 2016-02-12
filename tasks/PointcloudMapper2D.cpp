@@ -148,7 +148,7 @@ bool PointcloudMapper2D::generate_map()
 	delete[] occ;
 	delete[] hit;
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
-//	emitter.setTime(mapTime);
+	emitter.setTime(mCurrentTime);
 	emitter.flush();
 	return true;
 }
