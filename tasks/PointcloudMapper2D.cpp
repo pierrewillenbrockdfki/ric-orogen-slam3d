@@ -7,8 +7,10 @@
 
 using namespace slam3d;
 
+typedef uint16_t grid_t;
+
 // https://de.wikipedia.org/wiki/Bresenham-Algorithmus#Kompakte_Variante
-void line(int x0, int y0, int x1, int y1, int* array, int sizex, int sizey)
+void line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, grid_t* grid, unsigned sizex, unsigned sizey)
 {
 	int dx =  abs(x1-x0), sx = x0<x1 ? 1 : -1;
 	int dy = -abs(y1-y0), sy = y0<y1 ? 1 : -1;
@@ -18,7 +20,7 @@ void line(int x0, int y0, int x1, int y1, int* array, int sizex, int sizey)
 	{
 		if(x0 >= 0 && x0 < sizex && y0 >= 0 && y0 < sizey)
 		{
-			array[(y0 * sizex) + x0] += 1;
+			grid[(y0 * sizex) + x0] += 1;
 		}
 		if (x0==x1 && y0==y1) break;
 		e2 = 2*err;
@@ -66,17 +68,21 @@ PointcloudMapper2D::~PointcloudMapper2D()
 
 bool PointcloudMapper2D::generate_map()
 {
+	mLogger->message(INFO, "Requested traversability-grid generation.");
+
 	// Setup a temporary array
 	size_t size_x = mGrid->getCellSizeX();
 	size_t size_y = mGrid->getCellSizeY();
 	size_t arr_size = size_x * size_y;
-	int occ[arr_size];
-	int hit[arr_size];
-	memset(occ, 0, arr_size * sizeof(int));
-	memset(hit, 0, arr_size * sizeof(int));	
+	mLogger->message(DEBUG, (boost::format("Grid size: %1% * %2%") % size_x % size_y).str());
+	
+	grid_t* occ = new grid_t[arr_size];
+	grid_t* hit = new grid_t[arr_size];
+	memset(occ, 0, arr_size * sizeof(grid_t));
+	memset(hit, 0, arr_size * sizeof(grid_t));
+	mLogger->message(DEBUG, (boost::format("Initialized array with size: %1%") % arr_size ).str());
 	
 	// Project pointclouds to temporary array
-	mLogger->message(INFO, "Requested traversability-grid generation.");
 	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
 	int count = 0;
 	int valid = 0;
@@ -139,6 +145,8 @@ bool PointcloudMapper2D::generate_map()
 			mGrid->setTraversabilityAndProbability(k, 1.0, x, y);
 		}
 	}
+	delete[] occ;
+	delete[] hit;
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
 //	emitter.setTime(mapTime);
 	emitter.flush();
