@@ -88,7 +88,7 @@ bool PointcloudMapper2D::generate_map()
 			mLogger->message(ERROR, "Measurement from PCL-Sensor is not a point cloud!");
 			return false;
 		}
-		
+
 		// Get sensor's pose in map coordinates
 		Transform sensorPose = it->corrected_pose * pcl->getSensorPose();
 		
@@ -117,7 +117,7 @@ bool PointcloudMapper2D::generate_map()
 		}
 	}
 	mLogger->message(DEBUG, (boost::format("Projected %1% out of %2% points to the grid.") % valid % count).str());
-	
+
 	// Write temporary array to traversability map
 	size_t index = 0;
 	for(size_t y = 0; y < size_y; y++)
@@ -139,8 +139,6 @@ bool PointcloudMapper2D::generate_map()
 			mGrid->setTraversabilityAndProbability(k, 1.0, x, y);
 		}
 	}
-	
-	
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
 //	emitter.setTime(mapTime);
 	emitter.flush();
@@ -165,7 +163,7 @@ bool PointcloudMapper2D::configureHook()
 	size_t x_size = mSizeX / mResolution;
 	size_t y_size = mSizeY / mResolution;
 	mGrid = new envire::TraversabilityGrid(x_size, y_size, mResolution, mResolution, mOffsetX, mOffsetY, "slam3d-grid");
-    mGrid->setTraversabilityClass(0, envire::TraversabilityClass(0.5));
+	mGrid->setTraversabilityClass(0, envire::TraversabilityClass(0.5));
 	mGrid->setTraversabilityClass(1, envire::TraversabilityClass(0.0));
 	mGrid->setTraversabilityClass(2, envire::TraversabilityClass(1.0));
 
