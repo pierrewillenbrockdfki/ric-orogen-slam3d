@@ -7,7 +7,7 @@ require_relative 'visualize'
 
 include Orocos
 
-log = Orocos::Log::Replay.open("/media/data/replays/aila_01")
+log = Orocos::Log::Replay.open("/media/data/replays/aila_02")
 log.use_sample_time = false
 
 ## Initialize orocos ##
@@ -19,10 +19,10 @@ scan_ports.each do |port|
 	port.tracked = true
 end
 
-odometry_ports = log.find_all_output_ports("/base/samples/RigidBodyState_m", "odometry")
-odometry_ports.each do |port|
-	port.tracked = true
-end
+#odometry_ports = log.find_all_output_ports("/base/samples/RigidBodyState_m", "odometry")
+#odometry_ports.each do |port|
+#	port.tracked = true
+#end
 
 ## Execute the task 'message_producer::Task' ##
 Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
@@ -36,8 +36,18 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 		scan_ports.each do |port|
 			if port.task.name == "aila-control/hokuyo_front"
 				port.connect_to fusion.scan1
+				frontViz = Vizkit.default_loader.LaserScanVisualization
+				port.connect_to do |data,_|
+					frontViz.updateData(data)
+				end
+				frontViz.frame = "laser1"
 			elsif port.task.name == "aila-control/hokuyo_rear"
 				port.connect_to fusion.scan2
+				rearViz = Vizkit.default_loader.LaserScanVisualization
+				port.connect_to do |data,_|
+					rearViz.updateData(data)
+				end
+				rearViz.frame = "laser2"
 			end
 		end
 		Orocos.transformer.load_conf("aila_tf.rb")
@@ -47,7 +57,7 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 		############################################################################
 		## Configure the mapper ##
 		mapper = Orocos.name_service.get 'mapper'
-		mapper.scan_resolution = 0.01
+		mapper.scan_resolution = 0.0
 		mapper.map_resolution = 0.01
 		mapper.map_outlier_radius = 0.2
 		mapper.map_outlier_neighbors = 2
@@ -62,6 +72,7 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 		mapper.robot_frame = "body"
 		mapper.robot_name = "Aila"
 		mapper.use_colors_as_viewpoints = true
+		mapper.map_publish_rate = 0
 	
 		mapper.gicp_config do |c|
 			c.max_correspondence_distance = 0.1
@@ -76,7 +87,7 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 		mapper.offset_y = -10
 		mapper.min_z = -5;
 		mapper.max_z = 5;
-		mapper.resolution = 0.05
+		mapper.resolution = 0.01
 		mapper.configure
 
 		fusion.cloud.connect_to mapper.scan,              :type => :buffer, :size => 10
