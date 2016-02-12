@@ -10,18 +10,26 @@ using namespace slam3d;
 typedef uint16_t grid_t;
 
 // https://de.wikipedia.org/wiki/Bresenham-Algorithmus#Kompakte_Variante
-void line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, grid_t* grid, unsigned sizex, unsigned sizey)
+void line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, grid_t* hit, grid_t* occ, unsigned sizex, unsigned sizey)
 {
 	int dx =  abs(x1-x0), sx = x0<x1 ? 1 : -1;
 	int dy = -abs(y1-y0), sy = y0<y1 ? 1 : -1;
 	int err = dx+dy, e2; /* error value e_xy */
+	bool reached = false;
 
 	while(1)
 	{
-		if (x0==x1 && y0==y1) break;
+		if(abs(x0-x1)<=1 && abs(y0-y1)<=1)
+		{
+			occ[(y0 * sizex) + x0] += 1;
+		}else
+		{
+			if(reached)	break;
+		}
+		if (x0==x1 && y0==y1) reached = true;
 		if(x0 >= 0 && x0 < sizex && y0 >= 0 && y0 < sizey)
 		{
-			grid[(y0 * sizex) + x0] += 1;
+			hit[(y0 * sizex) + x0] += 1;
 		}
 		e2 = 2*err;
 		if (e2 > dy) { err += dy; x0 += sx; } /* e_xy+e_x > 0 */
@@ -116,10 +124,8 @@ bool PointcloudMapper2D::generate_map()
 			{
 				if(!mGrid->toGrid(sensorPose.translation(), sensorX, sensorY))
 					continue;
-			}	
-			occ[(pointY * size_x) + pointX] += 1;
-			hit[(pointY * size_x) + pointX] += 1;
-			line(sensorX, sensorY, pointX, pointY, hit, size_x, size_y);
+			}
+			line(sensorX, sensorY, pointX, pointY, hit, occ, size_x, size_y);
 			valid++;
 		}
 	}
@@ -134,7 +140,7 @@ bool PointcloudMapper2D::generate_map()
 			int k = 0;
 			if(hit[index] > 0)
 			{
-				if((occ[index] / hit[index]) > 0.5)
+				if((occ[index] / hit[index]) > 0.1)
 				{
 					k = 1;
 				}else
