@@ -54,6 +54,10 @@ task_context "PointcloudMapper" do
 	.returns('/bool')
 	.doc("Resumes the map building process.")
 	
+	operation('write_graph')
+	.returns('/bool')
+	.doc("Writes internal graph structure to file.")
+	
 	property('scan_resolution', '/double', 0.01)
 	.doc("Pointclouds are downsampled to this resolution before being added to the map.")
 	 

@@ -107,6 +107,12 @@ bool PointcloudMapper::generate_octomap()
 	return true;
 }
 
+bool PointcloudMapper::write_graph()
+{
+	mMapper->writeGraphToFile("slam3d_graph");
+	return true;
+}
+
 void PointcloudMapper::addScanToOctoMap(const VertexObject& scan)
 {
 	PointCloudMeasurement* pcl = dynamic_cast<PointCloudMeasurement*>(scan.measurement);

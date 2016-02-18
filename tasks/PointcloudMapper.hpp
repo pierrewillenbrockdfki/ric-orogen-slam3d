@@ -26,6 +26,7 @@ namespace slam3d
 		virtual bool generate_octomap();
 		virtual bool pause();
 		virtual bool resume();
+		virtual bool write_graph();
 		
 		// Callbacks
 		virtual void scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);
