@@ -273,6 +273,10 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("max_neighbor_links:     %1%") % max_neighbor_links).str());
 	mMapper->setNeighborRadius(neighbor_radius, max_neighbor_links);
 	
+	unsigned range = _patch_building_range.get();
+	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
+	mMapper->setPatchBuildingRange(range);
+	
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
 	

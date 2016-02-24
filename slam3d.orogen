@@ -73,6 +73,9 @@ task_context "PointcloudMapper" do
 	property('max_neighbor_links', '/int', 5)
 	.doc("Maximum number of additional constraints per node added to the graph.")
 	
+	property('patch_building_range', '/int', 0)
+	.doc("Number of steps to follow BFS when building local patches for matching.")
+	
 	property('map_outlier_radius', '/double', 0.2)
 	.doc("Map-Pointcloud outlier rejection radius.")
 	
