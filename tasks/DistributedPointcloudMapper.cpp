@@ -55,7 +55,7 @@ void DistributedPointcloudMapper::updateHook()
 	{
 		slam3d::VertexObject v = mNewVertices.front();
 		mNewVertices.pop();
-		slam3d::PointCloudMeasurement* m = dynamic_cast<slam3d::PointCloudMeasurement*>(v.measurement);
+		slam3d::PointCloudMeasurement::Ptr m = boost::dynamic_pointer_cast<slam3d::PointCloudMeasurement>(v.measurement);
 		slam3d::LocalizedPointcloud loc_cloud;
 		loc_cloud.robot_name = mRobotName;
 		loc_cloud.sensor_name = mPclSensor->getName();
@@ -69,7 +69,6 @@ void DistributedPointcloudMapper::updateHook()
 	
 	// Add readings from other robots to own map
 	slam3d::LocalizedPointcloud lc;
-	slam3d::PointCloudMeasurement* m;
 	slam3d::Transform sensor_pose;
 	slam3d::Transform robot_pose;
 	boost::uuids::uuid id;
@@ -79,7 +78,7 @@ void DistributedPointcloudMapper::updateHook()
 		sensor_pose = pose2eigen(lc.sensor_pose);
 		robot_pose = pose2eigen(lc.corrected_pose);
 		slam3d::PointCloud::Ptr cloud = createFromRockMessage(lc.point_cloud);
-		m = new slam3d::PointCloudMeasurement(cloud, lc.robot_name, lc.sensor_name, sensor_pose, id);
+		slam3d::PointCloudMeasurement::Ptr m(new slam3d::PointCloudMeasurement(cloud, lc.robot_name, lc.sensor_name, sensor_pose, id));
 		mMapper->addExternalReading(m, robot_pose);
 	}
 }

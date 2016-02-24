@@ -96,7 +96,7 @@ bool PointcloudMapper2D::generate_map()
 	int valid = 0;
 	for(VertexObjectList::const_iterator it = vertices.begin(); it < vertices.end(); it++)
 	{
-		PointCloudMeasurement* pcl = dynamic_cast<PointCloudMeasurement*>(it->measurement);
+		PointCloudMeasurement::Ptr pcl = boost::dynamic_pointer_cast<PointCloudMeasurement>(it->measurement);
 		if(!pcl)
 		{
 			mLogger->message(ERROR, "Measurement from PCL-Sensor is not a point cloud!");

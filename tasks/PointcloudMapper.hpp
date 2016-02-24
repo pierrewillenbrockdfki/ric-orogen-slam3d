@@ -63,7 +63,7 @@ namespace slam3d
 		int mMapPublishRate;
 		
 		// Parameters for creation of map-pcl
-		PointCloudMeasurement* mMapCloud;
+		PointCloudMeasurement::Ptr mMapCloud;
 		double mScanResolution;
 		double mMapResolution;
 		

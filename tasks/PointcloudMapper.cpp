@@ -19,13 +19,12 @@ using namespace slam3d;
 PointcloudMapper::PointcloudMapper(std::string const& name)
     : PointcloudMapperBase(name)
 {
-	mMapCloud = NULL;
+	mCurrentOdometry = Eigen::Affine3d::Identity();
 }
 
 PointcloudMapper::PointcloudMapper(std::string const& name, RTT::ExecutionEngine* engine)
     : PointcloudMapperBase(name, engine)
 {
-	mMapCloud = NULL;
 	mCurrentOdometry = Eigen::Affine3d::Identity();
 }
 
@@ -42,8 +41,7 @@ bool PointcloudMapper::pause()
 
 		// Create a new map cloud to localize against
 		PointCloud::ConstPtr cloud = buildPointcloud(mMapper->getVertexObjectsFromSensor(mPclSensor->getName()));
-		delete mMapCloud;
-		mMapCloud = new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), Transform::Identity());
+		mMapCloud = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), Transform::Identity()));
 		mCurrentPose = mMapper->getCurrentPose();
 		return true;
 	}
@@ -115,7 +113,7 @@ bool PointcloudMapper::write_graph()
 
 void PointcloudMapper::addScanToOctoMap(const VertexObject& scan)
 {
-	PointCloudMeasurement* pcl = dynamic_cast<PointCloudMeasurement*>(scan.measurement);
+	PointCloudMeasurement::Ptr pcl = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
 	if(!pcl)
 	{
 		mLogger->message(ERROR, "Measurement is not a point cloud!");
@@ -402,17 +400,17 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 	PointCloud::Ptr cloud = createFromRockMessage(scan_sample);
 	
 	// Downsample and add to map
-	PointCloudMeasurement* measurement;
+	PointCloudMeasurement::Ptr measurement;
 	try
 	{
 		if(mScanResolution > 0)
 		{
 			PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
 			mLogger->message(DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
-			measurement = new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
+			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose()));
 		}else
 		{
-			measurement = new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose());
+			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose()));
 		}
 	}catch(std::exception& e)
 	{
@@ -422,10 +420,9 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 
 	if(state() == RUNNING)
 	{
-		bool added = false;
 		try
 		{
-			if(added = mMapper->addReading(measurement))
+			if(mMapper->addReading(measurement))
 			{
 				mScansAdded++;
 				mNewVertices.push(mMapper->getLastVertex());
@@ -441,10 +438,6 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		{
 			mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
 		}
-		if(!added)
-		{
-			delete measurement;
-		}
 	}else if(state() == PAUSED)
 	{
 		try
@@ -459,7 +452,6 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		{
 			mLogger->message(WARNING, "Could not localize in map!");
 		}
-		delete measurement;
 	}
 }
 
