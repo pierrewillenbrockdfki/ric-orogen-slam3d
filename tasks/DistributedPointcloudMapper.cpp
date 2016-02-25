@@ -80,6 +80,13 @@ void DistributedPointcloudMapper::updateHook()
 		slam3d::PointCloud::Ptr cloud = createFromRockMessage(lc.point_cloud);
 		slam3d::PointCloudMeasurement::Ptr m(new slam3d::PointCloudMeasurement(cloud, lc.robot_name, lc.sensor_name, sensor_pose, id));
 		mMapper->addExternalReading(m, robot_pose);
+		mScansAdded++;
+	}
+	
+	if(mMapPublishRate > 0 && mScansAdded % mMapPublishRate == 0)
+	{
+		optimize();
+		generate_map();
 	}
 }
 
