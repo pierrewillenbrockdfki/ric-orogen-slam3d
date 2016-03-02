@@ -17,6 +17,9 @@ void line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, grid_t* hit, grid_
 	int err = dx+dy, e2; /* error value e_xy */
 	bool reached = false;
 
+	if(dx == 0 && dy == 0)
+		return;
+
 	while(1)
 	{
 		if(abs(x0-x1)<=1 && abs(y0-y1)<=1)
