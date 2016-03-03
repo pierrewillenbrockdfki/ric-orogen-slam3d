@@ -115,8 +115,11 @@ end
 task_context "DistributedPointcloudMapper" do
 	subclasses "PointcloudMapper"
 	
-	input_port 'external_in', '/slam3d/LocalizedPointcloud'
-	output_port 'external_out', '/slam3d/LocalizedPointcloud'
+	input_port 'vertex_in', '/slam3d/LocalizedPointcloud'
+	output_port 'vertex_out', '/slam3d/LocalizedPointcloud'
+	
+	input_port 'edge_in', '/slam3d/SpatialConstraint'
+	output_port 'edge_out', '/slam3d/SpatialConstraint'
 	
 	periodic 1.0
 end

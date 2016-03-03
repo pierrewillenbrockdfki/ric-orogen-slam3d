@@ -16,12 +16,20 @@ namespace slam3d
 		std::string sensor_name;
 		std::string unique_id;
 		base::Pose sensor_pose;
-		base::Pose corrected_pose;
 	};
 	
 	struct LocalizedPointcloud : public Localized
 	{
 		base::samples::Pointcloud point_cloud;
+	};
+	
+	struct SpatialConstraint
+	{
+		std::string source_unique_id;
+		std::string target_unique_id;
+		std::string sensor_name;
+		base::Pose relative_pose;
+		base::Matrix6d covariance;
 	};
 }
 
