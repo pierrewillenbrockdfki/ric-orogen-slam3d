@@ -396,6 +396,23 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		mCurrentOdometry = mOdometry->getOdometricPose(ts);
 	}
 
+	// Get laser pose
+	Transform laserPose = Transform::Identity();
+	try
+	{
+		Eigen::Affine3d affine;
+		_laser2robot.get(ts, affine, true);
+		if((affine.matrix().array() == affine.matrix().array()).all())
+		{
+			laserPose.linear() = affine.linear();
+			laserPose.translation() = affine.translation();
+		}
+	}catch(std::exception &e)
+	{
+		mLogger->message(ERROR, e.what());
+	}
+	
+
 	// Transform base::samples::Pointcloud --> Pointcloud
 	PointCloud::Ptr cloud = createFromRockMessage(scan_sample);
 	
@@ -407,10 +424,10 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		{
 			PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
 			mLogger->message(DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
-			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose()));
+			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), laserPose));
 		}else
 		{
-			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), mPclSensor->getSensorPose()));
+			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), laserPose));
 		}
 	}catch(std::exception& e)
 	{

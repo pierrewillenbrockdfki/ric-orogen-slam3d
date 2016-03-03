@@ -32,6 +32,8 @@ task_context "PointcloudMapper" do
 		transform "robot", "odometry"
 		align_port 'scan'
 		max_latency 0.5
+		
+		transform "laser", "robot"
 	end
 	
 	operation('generate_map')
