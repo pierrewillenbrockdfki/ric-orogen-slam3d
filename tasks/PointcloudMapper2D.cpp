@@ -15,7 +15,6 @@ void line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, grid_t* hit, grid_
 	int dx =  abs(x1-x0), sx = x0<x1 ? 1 : -1;
 	int dy = -abs(y1-y0), sy = y0<y1 ? 1 : -1;
 	int err = dx+dy, e2; /* error value e_xy */
-	bool reached = false;
 
 	if(dx == 0 && dy == 0)
 		return;
@@ -25,11 +24,8 @@ void line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, grid_t* hit, grid_
 		if(abs(x0-x1)<=1 && abs(y0-y1)<=1)
 		{
 			occ[(y0 * sizex) + x0] += 1;
-		}else
-		{
-			if(reached)	break;
 		}
-		if (x0==x1 && y0==y1) reached = true;
+		if (x0==x1 && y0==y1) break;
 		if(x0 >= 0 && x0 < sizex && y0 >= 0 && y0 < sizey)
 		{
 			hit[(y0 * sizex) + x0] += 1;
