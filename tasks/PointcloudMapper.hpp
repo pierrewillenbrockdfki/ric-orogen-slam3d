@@ -13,6 +13,9 @@
 
 namespace slam3d
 {
+	typedef std::queue<VertexObject> VertexQueue;
+	typedef std::queue<EdgeObject> EdgeQueue;
+	
 	class RockOdometry;
 	
 	class PointcloudMapper : public PointcloudMapperBase
@@ -71,7 +74,7 @@ namespace slam3d
 		double   mMapOutlierRadius;
 		unsigned mMapOutlierNeighbors;
 		
-		std::queue<slam3d::VertexObject> mNewVertices;
+		VertexQueue mNewVertices;
 		
 		// Current state of transformations
 		base::Time mCurrentTime;

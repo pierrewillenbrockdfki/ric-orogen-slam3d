@@ -61,25 +61,34 @@ void DistributedPointcloudMapper::updateHook()
 		loc_cloud.sensor_name = mPclSensor->getName();
 		loc_cloud.stamp.fromMicroseconds(m->getPointCloud()->header.stamp);
 		loc_cloud.sensor_pose = base::Pose(m->getSensorPose());
-		loc_cloud.corrected_pose = base::Pose(v.corrected_pose);
 		loc_cloud.unique_id = boost::uuids::to_string(m->getUniqueId());
 		createFromPcl(m->getPointCloud(), loc_cloud.point_cloud);
-		_external_out.write(loc_cloud);
+		_vertex_out.write(loc_cloud);
+		
+		EdgeObjectList edges = mMapper->getOutEdges(v.index);
+		for(EdgeObjectList::iterator e = edges.begin(); e != edges.end(); ++e)
+		{
+			SpatialConstraint constr;
+			constr.source_unique_id = boost::uuids::to_string(mMapper->getVertex(e->source).measurement->getUniqueId());
+			constr.target_unique_id = boost::uuids::to_string(mMapper->getVertex(e->target).measurement->getUniqueId());
+			constr.sensor_name = e->sensor;
+			constr.relative_pose = base::Pose(e->transform);
+			constr.covariance = base::Matrix6d(e->covariance);
+			_edge_out.write(constr);
+		}
 	}
 	
 	// Add readings from other robots to own map
 	slam3d::LocalizedPointcloud lc;
 	slam3d::Transform sensor_pose;
-	slam3d::Transform robot_pose;
 	boost::uuids::uuid id;
-	while(_external_in.read(lc, false) == RTT::NewData)
+	while(_vertex_in.read(lc, false) == RTT::NewData)
 	{
 		id = boost::lexical_cast<boost::uuids::uuid>(lc.unique_id);
 		sensor_pose = pose2eigen(lc.sensor_pose);
-		robot_pose = pose2eigen(lc.corrected_pose);
 		slam3d::PointCloud::Ptr cloud = createFromRockMessage(lc.point_cloud);
 		slam3d::PointCloudMeasurement::Ptr m(new slam3d::PointCloudMeasurement(cloud, lc.robot_name, lc.sensor_name, sensor_pose, id));
-		mMapper->addExternalReading(m, robot_pose);
+		mMapper->addExternalReading(m, Transform::Identity());
 		mScansAdded++;
 
 		if(mMapPublishRate > 0 && mScansAdded % mMapPublishRate == 0)
