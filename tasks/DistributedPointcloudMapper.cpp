@@ -78,24 +78,80 @@ void DistributedPointcloudMapper::updateHook()
 		}
 	}
 	
-	// Add readings from other robots to own map
+	// Get external pointclouds
 	slam3d::LocalizedPointcloud lc;
-	slam3d::Transform sensor_pose;
-	boost::uuids::uuid id;
 	while(_vertex_in.read(lc, false) == RTT::NewData)
 	{
-		id = boost::lexical_cast<boost::uuids::uuid>(lc.unique_id);
-		sensor_pose = pose2eigen(lc.sensor_pose);
+		boost::uuids::uuid id = boost::lexical_cast<boost::uuids::uuid>(lc.unique_id);
+		slam3d::Transform sensor_pose = pose2eigen(lc.sensor_pose);
 		slam3d::PointCloud::Ptr cloud = createFromRockMessage(lc.point_cloud);
 		slam3d::PointCloudMeasurement::Ptr m(new slam3d::PointCloudMeasurement(cloud, lc.robot_name, lc.sensor_name, sensor_pose, id));
-		mMapper->addExternalReading(m, Transform::Identity());
-		mScansAdded++;
-
-		if(mMapPublishRate > 0 && mScansAdded % mMapPublishRate == 0)
+		mExternalMeasurements.insert(MeasurementMap::value_type(m->getUniqueId(), m));
+	}
+	
+	// Get external constraints
+	slam3d::SpatialConstraint c;
+	while(_edge_in.read(c, false) == RTT::NewData)
+	{
+		mExternalConstraints.push_back(c);
+	}
+	
+	// Try to add all external measurements and constraints collected so far
+	bool update = false;
+	for(ConstraintList::iterator c = mExternalConstraints.begin(); c != mExternalConstraints.end();)
+	{
+		boost::uuids::uuid s_id = boost::lexical_cast<boost::uuids::uuid>(c->source_unique_id);
+		boost::uuids::uuid t_id = boost::lexical_cast<boost::uuids::uuid>(c->target_unique_id);
+		slam3d::Transform relative_pose = pose2eigen(c->relative_pose);
+		try
 		{
-			optimize();
-			generate_map();
+			// Case 1: Graph -> Graph
+			mMapper->addExternalConstraint(s_id, t_id, relative_pose, c->covariance, c->sensor_name);
+			c = mExternalConstraints.erase(c);
+		}catch (std::out_of_range &e)
+		{
+			try
+			{
+				// Case 2: Graph -> External
+				mMapper->getVertex(s_id);
+				PointCloudMeasurement::Ptr m = mExternalMeasurements.at(t_id);
+
+				mMapper->addExternalReading(m, s_id, relative_pose, c->covariance, c->sensor_name);
+				mExternalMeasurements.erase(t_id);
+				c = mExternalConstraints.erase(c);
+				mScansAdded++;
+				if(mScansAdded % mMapPublishRate == 0) update = true;
+				continue;
+
+			}catch (std::out_of_range &e)
+			{
+				try
+				{
+					// Case 3: External -> Graph
+					mMapper->getVertex(t_id);
+					PointCloudMeasurement::Ptr m = mExternalMeasurements.at(s_id);
+					
+					mMapper->addExternalReading(m, t_id, relative_pose.inverse(), c->covariance, c->sensor_name);
+					mExternalMeasurements.erase(s_id);
+					c = mExternalConstraints.erase(c);
+					mScansAdded++;
+					if(mScansAdded % mMapPublishRate == 0) update = true;
+					continue;
+					
+				}catch (std::out_of_range &e)
+				{
+					// Case 4: Both not in graph, leave this edge for now
+					++c;
+					continue;
+				}
+			}
 		}
+	}
+		
+	if(mMapPublishRate > 0 && update)
+	{
+		optimize();
+		generate_map();
 	}
 }
 

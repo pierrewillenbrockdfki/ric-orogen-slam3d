@@ -7,10 +7,16 @@
 
 namespace slam3d
 {
+	typedef std::map<boost::uuids::uuid, PointCloudMeasurement::Ptr> MeasurementMap;
+	typedef std::vector<SpatialConstraint> ConstraintList;
+	
 	class DistributedPointcloudMapper : public DistributedPointcloudMapperBase
 	{
 	friend class DistributedPointcloudMapperBase;
+
 	protected:
+		MeasurementMap mExternalMeasurements;
+		ConstraintList mExternalConstraints;
 
 	public:
 		DistributedPointcloudMapper(std::string const& name = "slam3d::DistributedPointcloudMapper");
