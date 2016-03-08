@@ -17,6 +17,10 @@ namespace slam3d
 	protected:
 		MeasurementMap mExternalMeasurements;
 		ConstraintList mExternalConstraints;
+		
+	protected:
+		bool hasVertex(boost::uuids::uuid id) const;
+		bool hasEdge(const std::string& source, const std::string& target, const std::string& sensor) const;
 
 	public:
 		DistributedPointcloudMapper(std::string const& name = "slam3d::DistributedPointcloudMapper");

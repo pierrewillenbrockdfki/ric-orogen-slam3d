@@ -18,6 +18,51 @@ slam3d::Transform pose2eigen(const base::Pose& pose)
 	return tf;
 }
 
+bool DistributedPointcloudMapper::hasVertex(boost::uuids::uuid id) const
+{
+	if(mExternalMeasurements.find(id) != mExternalMeasurements.end())
+		return true;
+	try
+	{
+		mMapper->getVertex(id);
+		return true;
+	}catch(std::out_of_range &e)
+	{
+		return false;
+	}
+}
+
+bool DistributedPointcloudMapper::hasEdge(const std::string& source,
+                                          const std::string& target,
+                                          const std::string& sensor) const
+{	
+	for(ConstraintList::const_iterator c = mExternalConstraints.begin(); c != mExternalConstraints.end(); ++c)
+	{
+		if(c->sensor_name != sensor)
+			continue;
+		if(c->source_unique_id == source && c->target_unique_id == target)
+			return true;
+		if(c->source_unique_id == target && c->target_unique_id == source)
+			return true;
+	}
+	
+	boost::uuids::uuid s_uuid = boost::lexical_cast<boost::uuids::uuid>(source);
+	boost::uuids::uuid t_uuid = boost::lexical_cast<boost::uuids::uuid>(target);
+	try
+	{
+		IdType s_id = mMapper->getVertex(s_uuid).index;
+		IdType t_id = mMapper->getVertex(t_uuid).index;
+		mMapper->getEdge(s_id, t_id, sensor);
+		return true;
+	}catch(std::out_of_range &e)
+	{
+		return false;
+	}catch(InvalidEdge &e)
+	{
+		return false;
+	}
+}
+
 DistributedPointcloudMapper::DistributedPointcloudMapper(std::string const& name)
 	: DistributedPointcloudMapperBase(name)
 {
@@ -83,6 +128,12 @@ void DistributedPointcloudMapper::updateHook()
 	while(_vertex_in.read(lc, false) == RTT::NewData)
 	{
 		boost::uuids::uuid id = boost::lexical_cast<boost::uuids::uuid>(lc.unique_id);
+		if(hasVertex(id))
+		{
+			mLogger->message(DEBUG, (boost::format("Received '%1%:%2%', which is already present.") % lc.robot_name % lc.sensor_name).str());
+			continue;
+		}
+		
 		slam3d::Transform sensor_pose = pose2eigen(lc.sensor_pose);
 		slam3d::PointCloud::Ptr cloud = createFromRockMessage(lc.point_cloud);
 		slam3d::PointCloudMeasurement::Ptr m(new slam3d::PointCloudMeasurement(cloud, lc.robot_name, lc.sensor_name, sensor_pose, id));
@@ -93,6 +144,11 @@ void DistributedPointcloudMapper::updateHook()
 	slam3d::SpatialConstraint c;
 	while(_edge_in.read(c, false) == RTT::NewData)
 	{
+		if(hasEdge(c.source_unique_id, c.target_unique_id, c.sensor_name))
+		{
+			mLogger->message(DEBUG, (boost::format("Received %1%-edge, which is already present.") % c.sensor_name).str());
+			continue;
+		}
 		mExternalConstraints.push_back(c);
 	}
 	
