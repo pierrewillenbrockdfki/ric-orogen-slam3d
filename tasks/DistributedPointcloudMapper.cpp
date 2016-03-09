@@ -175,44 +175,66 @@ void DistributedPointcloudMapper::updateHook()
 		try
 		{
 			// Case 1: Graph -> Graph
+			mLogger->message(DEBUG, "Trying case 1...");
 			mMapper->addExternalConstraint(s_id, t_id, relative_pose, c->covariance, c->sensor_name);
+			c = mExternalConstraints.erase(c);
+			mLogger->message(DEBUG, "Finished case 1.");
+		}catch(DuplicateEdge &de)
+		{
+			mLogger->message(DEBUG, de.what());
 			c = mExternalConstraints.erase(c);
 		}catch (std::out_of_range &e)
 		{
 			try
 			{
 				// Case 2: Graph -> External
+				mLogger->message(DEBUG, "Trying case 2...");
 				PointCloudMeasurement::Ptr m = mExternalMeasurements.at(t_id);
 				mMapper->addExternalReading(m, s_id, relative_pose, c->covariance, c->sensor_name);
 				mExternalMeasurements.erase(t_id);
 				c = mExternalConstraints.erase(c);
-				mScansAdded++;
-				if(mScansAdded % mMapPublishRate == 0) update = true;
-				continue;
-
+//				if(++mScansAdded % mMapPublishRate == 0) update = true;
+				mLogger->message(DEBUG, "Finished case 2.");
+			}catch(DuplicateMeasurement &dm)
+			{
+				mLogger->message(DEBUG, dm.what());
+				c = mExternalConstraints.erase(c);
 			}catch (std::out_of_range &e)
 			{
 				try
 				{
 					// Case 3: External -> Graph
+					mLogger->message(DEBUG, "Trying case 3...");
 					PointCloudMeasurement::Ptr m = mExternalMeasurements.at(s_id);
 					mMapper->addExternalReading(m, t_id, relative_pose.inverse(), c->covariance, c->sensor_name);
 					mExternalMeasurements.erase(s_id);
 					c = mExternalConstraints.erase(c);
-					mScansAdded++;
-					if(mScansAdded % mMapPublishRate == 0) update = true;
-					continue;
+//					if(++mScansAdded % mMapPublishRate == 0) update = true;
+					mLogger->message(DEBUG, "Finished case 3.");
 					
+				}catch(DuplicateMeasurement &dm)
+				{
+					mLogger->message(DEBUG, dm.what());
+					c = mExternalConstraints.erase(c);
 				}catch (std::out_of_range &e)
 				{
 					// Case 4: Both not in graph, leave this edge for now
+					mLogger->message(DEBUG, "Fallback to case 4.");
 					++c;
-					continue;
 				}
 			}
+		}catch(std::exception &e)
+		{
+			mLogger->message(ERROR, e.what());
 		}
 	}
-		
+	
+	int left = mExternalConstraints.size();
+	if(left > 0)
+	{
+		mLogger->message(DEBUG, (boost::format("There are %1% unmatched external constraints left.") % left).str());
+	}
+	
 	if(mMapPublishRate > 0 && update)
 	{
 		optimize();
