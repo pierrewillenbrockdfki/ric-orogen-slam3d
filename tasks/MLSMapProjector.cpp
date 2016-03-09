@@ -50,6 +50,7 @@ bool MLSMapProjector::configureHook()
 	size_t y_size = mSizeY / mResolution;
 	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(x_size, y_size, mResolution, mResolution, mOffsetX, mOffsetY);
 	mMultiLayerMap->setUniqueId("/slam3d-mls");
+	mMultiLayerMap->getConfig() = _mls_config.get();
 	mPointcloud = new envire::Pointcloud();
 	mProjection = new envire::MLSProjection();
 
