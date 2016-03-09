@@ -193,7 +193,11 @@ void DistributedPointcloudMapper::updateHook()
 				mMapper->addExternalReading(m, s_id, relative_pose, c->covariance, c->sensor_name);
 				mExternalMeasurements.erase(t_id);
 				c = mExternalConstraints.erase(c);
-//				if(++mScansAdded % mMapPublishRate == 0) update = true;
+				mScansAdded++;
+				if((mScansAdded % mMapPublishRate) == 0)
+				{
+					update = true;
+				}
 				mLogger->message(DEBUG, "Finished case 2.");
 			}catch(DuplicateMeasurement &dm)
 			{
@@ -209,7 +213,11 @@ void DistributedPointcloudMapper::updateHook()
 					mMapper->addExternalReading(m, t_id, relative_pose.inverse(), c->covariance, c->sensor_name);
 					mExternalMeasurements.erase(s_id);
 					c = mExternalConstraints.erase(c);
-//					if(++mScansAdded % mMapPublishRate == 0) update = true;
+					mScansAdded++;
+					if((mScansAdded % mMapPublishRate) == 0)
+					{
+						update = true;
+					}
 					mLogger->message(DEBUG, "Finished case 3.");
 					
 				}catch(DuplicateMeasurement &dm)
@@ -235,7 +243,7 @@ void DistributedPointcloudMapper::updateHook()
 		mLogger->message(DEBUG, (boost::format("There are %1% unmatched external constraints left.") % left).str());
 	}
 	
-	if(mMapPublishRate > 0 && update)
+	if((mMapPublishRate > 0) && update)
 	{
 		optimize();
 		generate_map();
