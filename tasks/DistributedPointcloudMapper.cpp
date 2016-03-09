@@ -111,6 +111,18 @@ void DistributedPointcloudMapper::updateHook()
 		_vertex_out.write(loc_cloud);
 		
 		EdgeObjectList edges = mMapper->getOutEdges(v.index);
+		if(edges.empty())
+		{
+			SpatialConstraint constr;
+			constr.source_unique_id = boost::uuids::to_string(boost::uuids::nil_uuid());
+			constr.target_unique_id = boost::uuids::to_string(v.measurement->getUniqueId());
+			constr.sensor_name = "none";
+			constr.relative_pose = base::Pose(v.corrected_pose);
+			constr.covariance = base::Matrix6d::Identity();
+			_edge_out.write(constr);
+			continue;
+		}
+		
 		for(EdgeObjectList::iterator e = edges.begin(); e != edges.end(); ++e)
 		{
 			SpatialConstraint constr;
@@ -159,6 +171,7 @@ void DistributedPointcloudMapper::updateHook()
 		boost::uuids::uuid s_id = boost::lexical_cast<boost::uuids::uuid>(c->source_unique_id);
 		boost::uuids::uuid t_id = boost::lexical_cast<boost::uuids::uuid>(c->target_unique_id);
 		slam3d::Transform relative_pose = pose2eigen(c->relative_pose);
+		
 		try
 		{
 			// Case 1: Graph -> Graph
@@ -169,9 +182,7 @@ void DistributedPointcloudMapper::updateHook()
 			try
 			{
 				// Case 2: Graph -> External
-				mMapper->getVertex(s_id);
 				PointCloudMeasurement::Ptr m = mExternalMeasurements.at(t_id);
-
 				mMapper->addExternalReading(m, s_id, relative_pose, c->covariance, c->sensor_name);
 				mExternalMeasurements.erase(t_id);
 				c = mExternalConstraints.erase(c);
@@ -184,9 +195,7 @@ void DistributedPointcloudMapper::updateHook()
 				try
 				{
 					// Case 3: External -> Graph
-					mMapper->getVertex(t_id);
 					PointCloudMeasurement::Ptr m = mExternalMeasurements.at(s_id);
-					
 					mMapper->addExternalReading(m, t_id, relative_pose.inverse(), c->covariance, c->sensor_name);
 					mExternalMeasurements.erase(s_id);
 					c = mExternalConstraints.erase(c);
