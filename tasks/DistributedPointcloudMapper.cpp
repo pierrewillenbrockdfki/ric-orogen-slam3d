@@ -210,8 +210,8 @@ void DistributedPointcloudMapper::addExternals()
 				mExternalMeasurements.erase(t_id);
 				c = mExternalConstraints.erase(c);
 				mScansAdded++;
-				if((mScansAdded % mOptimizationRate) == 0) opt = true;
-				if((mScansAdded % mMapPublishRate) == 0) update = true;
+				if((mOptimizationRate > 0) && (mScansAdded % mOptimizationRate) == 0) opt = true;
+				if((mMapPublishRate > 0) && (mScansAdded % mMapPublishRate) == 0) update = true;
 			}catch(DuplicateMeasurement &dm)
 			{
 				mLogger->message(DEBUG, dm.what());
@@ -226,8 +226,8 @@ void DistributedPointcloudMapper::addExternals()
 					mExternalMeasurements.erase(s_id);
 					c = mExternalConstraints.erase(c);
 					mScansAdded++;
-					if((mScansAdded % mOptimizationRate) == 0) opt = true;
-					if((mScansAdded % mMapPublishRate) == 0) update = true;					
+					if((mOptimizationRate > 0) && (mScansAdded % mOptimizationRate) == 0) opt = true;
+					if((mMapPublishRate > 0) && (mScansAdded % mMapPublishRate) == 0) update = true;					
 				}catch(DuplicateMeasurement &dm)
 				{
 					mLogger->message(DEBUG, dm.what());
@@ -247,8 +247,8 @@ void DistributedPointcloudMapper::addExternals()
 		mLogger->message(DEBUG, (boost::format("There are %1% unmatched external constraints left.") % left).str());
 	}
 	
-	if((mOptimizationRate > 0) && opt) optimize();
-	if((mMapPublishRate > 0) && update) generate_map();
+	if(opt) optimize();
+	if(update) generate_map();
 }
 
 void DistributedPointcloudMapper::errorHook()
