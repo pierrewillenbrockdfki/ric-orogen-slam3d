@@ -136,6 +136,7 @@ void DistributedPointcloudMapper::updateHook()
 	}
 	
 	// Get external pointclouds
+	int received = 0;
 	slam3d::LocalizedPointcloud lc;
 	while(_vertex_in.read(lc, false) == RTT::NewData)
 	{
@@ -150,6 +151,7 @@ void DistributedPointcloudMapper::updateHook()
 		slam3d::PointCloud::Ptr cloud = createFromRockMessage(lc.point_cloud);
 		slam3d::PointCloudMeasurement::Ptr m(new slam3d::PointCloudMeasurement(cloud, lc.robot_name, lc.sensor_name, sensor_pose, id));
 		mExternalMeasurements.insert(MeasurementMap::value_type(m->getUniqueId(), m));
+		received++;
 	}
 	
 	// Get external constraints
@@ -162,15 +164,19 @@ void DistributedPointcloudMapper::updateHook()
 			continue;
 		}
 		mExternalConstraints.push_back(c);
+		received++;
 	}
 
-	try
+	if(received > 0)
 	{
-		addExternals();
-	}
-	catch(std::exception &e)
-	{
-		mLogger->message(ERROR, e.what());
+		try
+		{
+			addExternals();
+		}
+		catch(std::exception &e)
+		{
+			mLogger->message(ERROR, e.what());
+		}
 	}
 }
 
