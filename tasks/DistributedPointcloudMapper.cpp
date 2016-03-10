@@ -184,6 +184,7 @@ void DistributedPointcloudMapper::addExternals()
 {
 	// Try to add all external measurements and constraints collected so far
 	bool update = false;
+	bool opt = false;
 	for(ConstraintList::iterator c = mExternalConstraints.begin(); c != mExternalConstraints.end();)
 	{
 		boost::uuids::uuid s_id = boost::lexical_cast<boost::uuids::uuid>(c->source_unique_id);
@@ -208,7 +209,9 @@ void DistributedPointcloudMapper::addExternals()
 				mMapper->addExternalReading(m, s_id, relative_pose, c->covariance, c->sensor_name);
 				mExternalMeasurements.erase(t_id);
 				c = mExternalConstraints.erase(c);
-				if((++mScansAdded % mMapPublishRate) == 0) update = true;
+				mScansAdded++;
+				if((mScansAdded % mOptimizationRate) == 0) opt = true;
+				if((mScansAdded % mMapPublishRate) == 0) update = true;
 			}catch(DuplicateMeasurement &dm)
 			{
 				mLogger->message(DEBUG, dm.what());
@@ -222,8 +225,9 @@ void DistributedPointcloudMapper::addExternals()
 					mMapper->addExternalReading(m, t_id, relative_pose.inverse(), c->covariance, c->sensor_name);
 					mExternalMeasurements.erase(s_id);
 					c = mExternalConstraints.erase(c);
-					if((++mScansAdded % mMapPublishRate) == 0) update = true;
-					
+					mScansAdded++;
+					if((mScansAdded % mOptimizationRate) == 0) opt = true;
+					if((mScansAdded % mMapPublishRate) == 0) update = true;					
 				}catch(DuplicateMeasurement &dm)
 				{
 					mLogger->message(DEBUG, dm.what());
@@ -243,11 +247,8 @@ void DistributedPointcloudMapper::addExternals()
 		mLogger->message(DEBUG, (boost::format("There are %1% unmatched external constraints left.") % left).str());
 	}
 	
-	if((mMapPublishRate > 0) && update)
-	{
-		optimize();
-		generate_map();
-	}
+	if((mOptimizationRate > 0) && opt) optimize();
+	if((mMapPublishRate > 0) && update) generate_map();
 }
 
 void DistributedPointcloudMapper::errorHook()

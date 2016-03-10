@@ -63,6 +63,7 @@ namespace slam3d
 		
 		int mScansReceived;
 		int mScansAdded;
+		int mOptimizationRate;
 		int mMapPublishRate;
 		
 		// Parameters for creation of map-pcl
