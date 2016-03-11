@@ -29,13 +29,7 @@
     <File Name="tasks/ScanConverter.cpp"/>
     <File Name="tasks/MLSMapProjector.hpp"/>
     <File Name="tasks/MLSMapProjector.cpp"/>
-    <File Name="tasks/DistributedPointcloudMapper.cpp"/>
-    <File Name="tasks/DistributedPointcloudMapper.hpp"/>
     <File Name="tasks/rock-types.hpp"/>
-    <File Name="tasks/Demultiplexer.cpp"/>
-    <File Name="tasks/Demultiplexer.hpp"/>
-    <File Name="tasks/Multiplexer.cpp"/>
-    <File Name="tasks/Multiplexer.hpp"/>
     <File Name="tasks/PointcloudToBinary.cpp"/>
     <File Name="tasks/PointcloudToBinary.hpp"/>
     <File Name="tasks/LineScanConverter.cpp"/>
@@ -57,8 +51,6 @@
     <File Name="scripts/map_asguard.rb"/>
     <File Name="scripts/asguard_tf.rb"/>
     <File Name="scripts/service.rb"/>
-    <File Name="scripts/map_distributed_pub.rb"/>
-    <File Name="scripts/map_distributed_sub.rb"/>
     <File Name="scripts/map_eo.rb"/>
     <File Name="scripts/eo2_tf.rb"/>
     <File Name="scripts/aila.rb"/>

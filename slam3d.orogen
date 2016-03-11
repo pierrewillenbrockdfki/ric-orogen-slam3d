@@ -13,9 +13,6 @@ import_types_from 'envire'
 import_types_from 'tasks/rock-types.hpp'
 import_types_from 'envire/maps/MLSConfiguration.hpp'
 
-using_task_library 'telemetry_provider'
-
-
 ## Mapper using Pointclouds
 task_context "PointcloudMapper" do
 	needs_configuration
@@ -117,19 +114,6 @@ task_context "PointcloudMapper" do
 	.doc("Whether to get viewpoints from pointcloud's color vector.")
 end
 
-## Distributed Mapper using Pointclouds
-task_context "DistributedPointcloudMapper" do
-	subclasses "PointcloudMapper"
-	
-	input_port 'vertex_in', '/slam3d/LocalizedPointcloud'
-	output_port 'vertex_out', '/slam3d/LocalizedPointcloud'
-	
-	input_port 'edge_in', '/slam3d/SpatialConstraint'
-	output_port 'edge_out', '/slam3d/SpatialConstraint'
-	
-	periodic 1.0
-end
-
 ## Pointcloud-Mapper for 2D
 task_context "PointcloudMapper2D" do
 	subclasses "PointcloudMapper"
@@ -227,14 +211,4 @@ task_context "MLSMapProjector" do
 	
 	property('mls_config', '/envire/MLSConfiguration')
 	.doc("Multi-Layer-Surface-Map specific configuration.")
-end
-
-# Multiplexer for sending data to other robots
-task_context "Multiplexer" do
-	subclasses "telemetry_provider::Multiplexer"
-end
-
-# Demultiplexer for receiving data from other robots
-task_context "Demultiplexer" do
-	subclasses "telemetry_provider::Demultiplexer"
 end
