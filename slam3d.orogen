@@ -10,7 +10,6 @@ import_types_from 'base'
 import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
 import_types_from 'slam3d/GICPConfiguration.hpp'
 import_types_from 'envire'
-import_types_from 'tasks/rock-types.hpp'
 import_types_from 'envire/maps/MLSConfiguration.hpp'
 
 ## Mapper using Pointclouds
