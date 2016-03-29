@@ -396,7 +396,15 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 	mCurrentTime = ts;
 	if(mOdometry)
 	{
-		mCurrentOdometry = mOdometry->getOdometricPose(ts);
+		try
+		{
+			mCurrentOdometry = mOdometry->getOdometricPose(ts);
+		}
+		catch(OdometryException &e)
+		{
+			mLogger->message(ERROR, e.what());
+			return;
+		}
 	}
 
 	// Get laser pose

@@ -79,7 +79,7 @@ namespace slam3d
 			bool res;
 			try
 			{
-				res = mTransformation.get(t, odom, true);
+				res = mTransformation.get(t, odom, false);
 			}catch(std::exception& e)
 			{
 				mLogger->message(ERROR, e.what());
@@ -90,7 +90,9 @@ namespace slam3d
 			{
 				transformer::TransformationStatus s = mTransformation.getStatus();
 				mLogger->message(ERROR, (boost::format("Transformation not available! [success: %1%, no chain: %2%, no sample: %3%, interpolation failed: %4%]") % s.generated_transformations % s.failed_no_chain % s.failed_no_sample % s.failed_interpolation_impossible).str());
+				throw OdometryException();
 			}
+			
 			return odom;
 		}
 		
