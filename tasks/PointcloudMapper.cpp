@@ -275,6 +275,13 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
 	mMapper->setPatchBuildingRange(range);
 	
+	bool add_root = _add_root_edge.get();
+	mLogger->message(INFO, (boost::format("add_root_edge:          %1%") % add_root).str());
+	if(add_root)
+	{
+		mMapper->addRootEdge();
+	}
+	
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
 	
