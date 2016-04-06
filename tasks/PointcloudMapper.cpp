@@ -391,10 +391,13 @@ void PointcloudMapper::sendRobotPose()
 	_map2robot.write(rbs);
 	
 	// Publish the odometry drift
-	Eigen::Affine3d drift = mCurrentPose * mCurrentOdometry.inverse();
-	rbs.setTransform(drift);
-	rbs.sourceFrame = mOdometryFrame;
-	_map2odometry.write(rbs);
+	if(mOdometry)
+	{
+		Eigen::Affine3d drift = mCurrentPose * mCurrentOdometry.inverse();
+		rbs.setTransform(drift);
+		rbs.sourceFrame = mOdometryFrame;
+		_map2odometry.write(rbs);
+	}
 }
 
 void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
