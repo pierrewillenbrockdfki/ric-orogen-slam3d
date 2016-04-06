@@ -103,6 +103,11 @@ namespace slam3d
 			twc.covariance = Covariance::Identity();
 			return twc;
 		}
+		
+		Covariance calculateCovariance(const Transform &tf)
+		{
+			return Covariance::Identity() * 100;
+		}
 
 	private:
 		transformer::Transformation& mTransformation;
