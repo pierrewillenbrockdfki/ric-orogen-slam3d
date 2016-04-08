@@ -71,11 +71,7 @@ bool PointcloudMapper::optimize()
 	try
 	{
 		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
-		if(mMapper->optimize())
-		{
-			sendRobotPose();
-			return true;
-		}
+		return mMapper->optimize();
 	}catch (boost::lock_error &e)
 	{
 		mLogger->message(WARNING, "Could not access the pose graph for optimization! Is another operation still running?");
@@ -275,21 +271,11 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
 	mMapper->setPatchBuildingRange(range);
 	
-	bool add_root = _add_root_edge.get();
-	mLogger->message(INFO, (boost::format("add_root_edge:          %1%") % add_root).str());
-	if(add_root)
-	{
-		mMapper->addRootEdge();
-	}
-	
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
 	
 	mMapResolution = _map_resolution.get();
 	mLogger->message(INFO, (boost::format("map_resolution:         %1%") % mMapResolution).str());
-	
-	mOptimizationRate = _optimization_rate.get();
-	mLogger->message(INFO, (boost::format("optimization_rate:      %1%") % mOptimizationRate).str());
 	
 	mMapPublishRate = _map_publish_rate.get();
 	mLogger->message(INFO, (boost::format("map_publish_rate:       %1%") % mMapPublishRate).str());
@@ -464,10 +450,6 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 			{
 				mScansAdded++;
 				mNewVertices.push(mMapper->getLastVertex());
-				if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
-				{
-					optimize();
-				}
 				if(mMapPublishRate > 0 && (mScansAdded % mMapPublishRate) == 0)
 				{
 					generate_map();
