@@ -63,6 +63,9 @@ task_context "PointcloudMapper" do
 	property('map_resolution', '/double', 0.01)
 	.doc("Map-Pointcloud is downsampled to this resolution before being published.")
 
+	property('optimization_rate', '/int', 0)
+	.doc("Optimize the graph every X scans, that are added to the map.")
+
 	property('map_publish_rate', '/int', 0)
 	.doc("Publish Map-Pointcloud every X scans, that are added to the map.")
 	

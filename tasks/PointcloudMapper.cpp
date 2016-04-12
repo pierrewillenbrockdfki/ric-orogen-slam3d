@@ -71,7 +71,11 @@ bool PointcloudMapper::optimize()
 	try
 	{
 		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
-		return mMapper->optimize();
+		if(mMapper->optimize())
+		{
+			sendRobotPose();
+			return true;
+		}
 	}catch (boost::lock_error &e)
 	{
 		mLogger->message(WARNING, "Could not access the pose graph for optimization! Is another operation still running?");
@@ -277,6 +281,9 @@ bool PointcloudMapper::configureHook()
 	mMapResolution = _map_resolution.get();
 	mLogger->message(INFO, (boost::format("map_resolution:         %1%") % mMapResolution).str());
 	
+	mOptimizationRate = _optimization_rate.get();
+	mLogger->message(INFO, (boost::format("optimization_rate:      %1%") % mOptimizationRate).str());
+	
 	mMapPublishRate = _map_publish_rate.get();
 	mLogger->message(INFO, (boost::format("map_publish_rate:       %1%") % mMapPublishRate).str());
 	
@@ -450,6 +457,10 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 			{
 				mScansAdded++;
 				mNewVertices.push(mMapper->getLastVertex());
+				if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
+				{
+					optimize();
+				}
 				if(mMapPublishRate > 0 && (mScansAdded % mMapPublishRate) == 0)
 				{
 					generate_map();
