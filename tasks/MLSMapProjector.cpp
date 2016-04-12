@@ -99,6 +99,7 @@ void MLSMapProjector::updateHook()
 		{
 			mPointcloud->vertices.push_back(*it);
 		}
+		mMultiLayerMap->clear();
 		mProjection->updateAll();
 	}
 	
