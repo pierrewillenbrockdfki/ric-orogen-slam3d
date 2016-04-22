@@ -81,6 +81,7 @@ namespace slam3d
 		base::Time mCurrentTime;
 		Eigen::Affine3d mCurrentPose;
 		Eigen::Affine3d mCurrentOdometry;
+		Eigen::Affine3d mLastOdometry;
 
 	public:
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");

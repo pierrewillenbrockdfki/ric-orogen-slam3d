@@ -43,6 +43,7 @@ bool PointcloudMapper::pause()
 		PointCloud::ConstPtr cloud = buildPointcloud(mMapper->getVertexObjectsFromSensor(mPclSensor->getName()));
 		mMapCloud = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), Transform::Identity()));
 		mCurrentPose = mMapper->getCurrentPose();
+		mLastOdometry = mCurrentOdometry;
 		return true;
 	}
 	mLogger->message(WARNING, "Cannot pause, mapper is not running!");
@@ -476,6 +477,8 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 	{
 		try
 		{
+			mCurrentPose = mLastOdometry.inverse() * mCurrentOdometry * mCurrentPose;
+			mLastOdometry = mCurrentOdometry;
 			Transform pose;
 			pose.translation() = mCurrentPose.translation();
 			pose.linear() = mCurrentPose.linear();
