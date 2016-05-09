@@ -141,13 +141,13 @@ PointCloud::Ptr PointcloudMapper::buildPointcloud(const VertexObjectList& vertic
 	boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
 	accumulated = mPclSensor->getAccumulatedCloud(vertices);
 
-	PointCloud::Ptr downsampled = mPclSensor->downsample(accumulated, mMapResolution);
-	PointCloud::Ptr accCloud = mPclSensor->removeOutliers(downsampled, mMapOutlierRadius, mMapOutlierNeighbors);
+	PointCloud::Ptr cleaned = mPclSensor->removeOutliers(accumulated, mMapOutlierRadius, mMapOutlierNeighbors);
+	PointCloud::Ptr downsampled = mPclSensor->downsample(cleaned, mMapResolution);
 
 	timeval finish = mClock->now();
 	int duration = finish.tv_sec - start.tv_sec;
 	mLogger->message(INFO, (boost::format("Generated Pointcloud from %1% scans in %2% seconds.") % vertices.size() % duration).str());
-	return accCloud;
+	return downsampled;
 }
 
 void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
