@@ -32,40 +32,6 @@ PointcloudMapper::~PointcloudMapper()
 {
 }
 
-bool PointcloudMapper::pause()
-{
-	if(state() == RUNNING)
-	{
-		state(PAUSED);
-		mLogger->message(INFO, "Mapping is now paused.");
-
-		// Create a new map cloud to localize against
-		PointCloud::ConstPtr cloud = buildPointcloud(mMapper->getVertexObjectsFromSensor(mPclSensor->getName()));
-		mMapCloud = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), Transform::Identity()));
-		mCurrentPose = mMapper->getCurrentPose();
-		mLastOdometry = mCurrentOdometry;
-		return true;
-	}
-	mLogger->message(WARNING, "Cannot pause, mapper is not running!");
-	return false;
-}
-
-bool PointcloudMapper::resume()
-{
-	mLogger->message(ERROR, "Operation 'resume' is not available yet.");
-	return false;
-/*
-	if(state() == PAUSED)
-	{
-		state(RUNNING);
-		mLogger->message(INFO, "Mapping will now resume.");
-		return true;
-	}
-	mLogger->message(WARNING, "Cannot resume, mapper is not paused!");
-	return false;
-*/
-}
-
 bool PointcloudMapper::optimize()
 {
 	mLogger->message(INFO, "Requested global optimization.");
@@ -426,7 +392,6 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 	{
 		mLogger->message(ERROR, e.what());
 	}
-	
 
 	// Transform base::samples::Pointcloud --> Pointcloud
 	PointCloud::Ptr cloud = createFromRockMessage(scan_sample);
@@ -444,51 +409,25 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		{
 			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), laserPose));
 		}
+
+		if(mMapper->addReading(measurement))
+		{
+			mScansAdded++;
+			mNewVertices.push(mMapper->getLastVertex());
+			if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
+			{
+				optimize();
+			}
+			if(mMapPublishRate > 0 && (mScansAdded % mMapPublishRate) == 0)
+			{
+				generate_map();
+			}
+		}
+		mCurrentPose = mMapper->getCurrentPose();
+		sendRobotPose();
 	}catch(std::exception& e)
 	{
-		mLogger->message(ERROR, (boost::format("Downsampling failed: %1%") % e.what()).str());
-		return;
-	}
-
-	if(state() == RUNNING)
-	{
-		try
-		{
-			if(mMapper->addReading(measurement))
-			{
-				mScansAdded++;
-				mNewVertices.push(mMapper->getLastVertex());
-				if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
-				{
-					optimize();
-				}
-				if(mMapPublishRate > 0 && (mScansAdded % mMapPublishRate) == 0)
-				{
-					generate_map();
-				}
-			}
-			mCurrentPose = mMapper->getCurrentPose();
-			sendRobotPose();
-		}catch(std::exception& e)
-		{
-			mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
-		}
-	}else if(state() == PAUSED)
-	{
-		try
-		{
-			mCurrentPose = mLastOdometry.inverse() * mCurrentOdometry * mCurrentPose;
-			mLastOdometry = mCurrentOdometry;
-			Transform pose;
-			pose.translation() = mCurrentPose.translation();
-			pose.linear() = mCurrentPose.linear();
-			TransformWithCovariance twc = mPclSensor->calculateTransform(mMapCloud, measurement, pose);
-			mCurrentPose = twc.transform;
-			sendRobotPose();
-		}catch(NoMatch)
-		{
-			mLogger->message(WARNING, "Could not localize in map!");
-		}
+		mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
 	}
 }
 

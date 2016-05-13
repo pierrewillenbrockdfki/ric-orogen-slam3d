@@ -27,8 +27,6 @@ namespace slam3d
 		virtual bool optimize();
 		virtual bool generate_map();
 		virtual bool generate_octomap();
-		virtual bool pause();
-		virtual bool resume();
 		virtual bool write_graph();
 		
 		// Callbacks
@@ -67,7 +65,6 @@ namespace slam3d
 		int mMapPublishRate;
 		
 		// Parameters for creation of map-pcl
-		PointCloudMeasurement::Ptr mMapCloud;
 		double mScanResolution;
 		double mMapResolution;
 		
