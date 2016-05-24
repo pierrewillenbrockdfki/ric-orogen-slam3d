@@ -7,6 +7,7 @@
 #include <slam3d/Solver.hpp>
 
 #include <octomap/OcTree.h>
+#include <envire/maps/MLSGrid.hpp>
 
 #include <queue>
 #include <boost/thread/shared_mutex.hpp>
@@ -39,6 +40,7 @@ namespace slam3d
 		void sendRobotPose();
         void addScanToOctoMap(const VertexObject& scan);
 		void buildOcTree(const VertexObjectList& vertices);
+		void buildMLS();
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
 	
@@ -71,6 +73,19 @@ namespace slam3d
 		// Parameters for outlier rejection in map-pcl
 		double   mMapOutlierRadius;
 		unsigned mMapOutlierNeighbors;
+		
+		// Parameters for creation of MLS
+		envire::Environment mEnvironment;
+		envire::MultiLevelSurfaceGrid* mMultiLayerMap;
+		envire::BinarySerialization mBinarySerialization;
+		
+		double mGridSizeX;
+		double mGridSizeY;
+		double mGridOffsetX;
+		double mGridOffsetY;
+		double mGridMinZ;
+		double mGridMaxZ;
+		double mGridResolution;
 		
 		VertexQueue mNewVertices;
 		

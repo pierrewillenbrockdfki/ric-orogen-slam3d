@@ -18,6 +18,7 @@ task_context "PointcloudMapper" do
 
 	input_port 'scan', '/base/samples/Pointcloud'
 	output_port 'cloud', '/base/samples/Pointcloud'
+	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
 	output_port 'map2robot', 'base/samples/RigidBodyState'
 	output_port 'map2odometry', 'base/samples/RigidBodyState'
 
@@ -102,34 +103,34 @@ task_context "PointcloudMapper" do
 	property('use_colors_as_viewpoints', '/bool', false)
 	.doc("Whether to get viewpoints from pointcloud's color vector.")
 
+	property('grid_size_x', '/double', 10)
+	.doc("Map size in x-direction (meter).")
+
+	property('grid_size_y', '/double', 10)
+	.doc("Map size in y-direction (meter).")
+
+	property('grid_offset_x', '/double', -5)
+	.doc("Position of grid origin in x-direction (meter).")
+
+	property('grid_offset_y', '/double', -5)
+	.doc("Position  of grid origin in y-direction (meter).")
+
+	property('grid_min_z', '/double', -3)
+	.doc("Minimum z-value for grid cells (meter).")
+
+	property('grid_max_z', 'double', 3)
+	.doc("Maximum z-value for grid cells (meter).")
+
+	property('grid_resolution', '/double', 0.05)
+	.doc("Resolution (size of grid-cell) of the map (meter).")
+	
+	property('grid_mls_config', '/envire/MLSConfiguration')
+	.doc("Multi-Layer-Surface-Map specific configuration.")
 end
 
 ## Pointcloud-Mapper for 2D
 task_context "PointcloudMapper2D" do
 	subclasses "PointcloudMapper"
-
-	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
-
-	property('size_x', '/double', 10)
-	.doc("Map size in x-direction (meter).")
-
-	property('size_y', '/double', 10)
-	.doc("Map size in y-direction (meter).")
-
-	property('offset_x', '/double', -5)
-	.doc("Position of grid origin in x-direction (meter).")
-
-	property('offset_y', '/double', -5)
-	.doc("Position  of grid origin in y-direction (meter).")
-
-	property('min_z', '/double', -3)
-	.doc("Minimum z-value for grid cells (meter).")
-
-	property('max_z', 'double', 3)
-	.doc("Maximum z-value for grid cells (meter).")
-
-	property('resolution', '/double', 0.05)
-	.doc("Resolution (size of grid-cell) of the map (meter).")
 end
 
 ## Task to dump velodyne-Scans to KITTI-Format

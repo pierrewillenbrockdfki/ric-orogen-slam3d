@@ -162,6 +162,11 @@ void PointcloudMapper::buildOcTree(const VertexObjectList& vertices)
 	mLogger->message(INFO, (boost::format("Generated OcTree from %1% scans in %2% seconds.") % vertices.size() % duration).str());
 }
 
+void PointcloudMapper::buildMLS()
+{
+	
+}
+
 bool PointcloudMapper::setLog_level(boost::int32_t value)
 {
 	switch(value)
@@ -275,6 +280,15 @@ bool PointcloudMapper::configureHook()
 	mUseColorsAsViewpoints = _use_colors_as_viewpoints.get();
 	mLogger->message(INFO, (boost::format("use_viewpoints:         %1%") % mUseColorsAsViewpoints).str());
 
+	// MLS
+	mGridSizeX = _grid_size_x.get();
+	mGridSizeY = _grid_size_y.get();
+	mGridOffsetX = _grid_offset_x.get();
+	mGridOffsetY = _grid_offset_y.get();
+	mGridMinZ = _grid_min_z.get();
+	mGridMaxZ = _grid_max_z.get();
+	mGridResolution = _grid_resolution.get();
+
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
@@ -282,6 +296,18 @@ bool PointcloudMapper::configureHook()
 	mScansAdded = 0;
 	
 	mOcTree = new octomap::OcTree(mMapResolution);
+	
+	// Initialize MLS-Map
+	size_t x_size = mGridSizeX / mGridResolution;
+	size_t y_size = mGridSizeY / mGridResolution;
+	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(x_size, y_size, mGridResolution, mGridResolution, mGridOffsetX, mGridOffsetY);
+	mMultiLayerMap->setUniqueId("/slam3d-mls");
+	mMultiLayerMap->getConfig() = _grid_mls_config.get();
+	
+	// add mls to environment
+	envire::FrameNode* mls_node = new envire::FrameNode();
+	mEnvironment.addChild(mEnvironment.getRootNode(), mls_node);
+	mEnvironment.setFrameNode(mMultiLayerMap, mls_node);
 	return true;
 }
 

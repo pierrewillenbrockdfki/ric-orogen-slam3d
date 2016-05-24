@@ -163,20 +163,11 @@ bool PointcloudMapper2D::configureHook()
 {
 	if (! PointcloudMapper2DBase::configureHook())
 		return false;
-	
-	// Read parameters
-	mSizeX = _size_x.get();
-	mSizeY = _size_y.get();
-	mOffsetX = _offset_x.get();
-	mOffsetY = _offset_y.get();
-	mMinZ = _min_z.get();
-	mMaxZ = _max_z.get();
-	mResolution = _resolution.get();
 
 	// Initialize envire stuff
-	size_t x_size = mSizeX / mResolution;
-	size_t y_size = mSizeY / mResolution;
-	mGrid = new envire::TraversabilityGrid(x_size, y_size, mResolution, mResolution, mOffsetX, mOffsetY, "slam3d-grid");
+	size_t x_size = mGridSizeX / mGridResolution;
+	size_t y_size = mGridSizeY / mGridResolution;
+	mGrid = new envire::TraversabilityGrid(x_size, y_size, mGridResolution, mGridResolution, mGridOffsetX, mGridOffsetY, "slam3d-grid");
 	mGrid->setTraversabilityClass(0, envire::TraversabilityClass(0.5));
 	mGrid->setTraversabilityClass(1, envire::TraversabilityClass(0.0));
 	mGrid->setTraversabilityClass(2, envire::TraversabilityClass(1.0));
