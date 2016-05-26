@@ -41,23 +41,36 @@ bool ScanConverter::startHook()
 void ScanConverter::updateHook()
 {
 	ScanConverterBase::updateHook();
-	
-	// Get scans from input port
+
+	if(_scan.connected() && _depth_map.connected())
+	{
+		LOG_ERROR("ScanConverter allows a connection to either scan or depth_map port");
+		state(MULTIPLE_INPUT_CONNECTIONS);
+	}
+
+	// Get scans from any of the input ports
+	std::vector<Eigen::Vector3d> points;
+
+	// Deprecated velodyne output format
 	velodyne_lidar::MultilevelLaserScan scan;
 	while(_scan.read(scan, false) == RTT::NewData)
 	{
 		// Convert to PointCloud
-		std::vector<Eigen::Vector3d> points;
 		velodyne_lidar::ConvertHelper::convertScanToPointCloud(scan, points);
-		if(points.size() == 0)
-		{
-			LOG_ERROR("Convertion to pointcloud returned no points!");
-			return;
-		}else
-		{
-			LOG_DEBUG("Converted to pointcloud with %d points.", points.size());
-		}
-		
+	}
+
+	base::samples::DepthMap depthMap;
+	while(_depth_map.read(depthMap, false) == RTT::NewData)
+	{
+		depthMap.convertDepthMapToPointCloud(points);
+	}
+
+	if(points.empty())
+	{
+		LOG_ERROR("Convertion to pointcloud returned no points!");
+	}else
+	{
+		LOG_DEBUG("Converted to pointcloud with %d points.", points.size());
 		base::samples::Pointcloud cloud;
 		for(std::vector<Eigen::Vector3d>::iterator it = points.begin(); it < points.end(); ++it)
 		{
