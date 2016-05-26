@@ -172,50 +172,28 @@ void PointcloudMapper::buildOcTree(const VertexObjectList& vertices)
 void PointcloudMapper::buildMLS()
 {
 	mMultiLayerMap->clear();
-
-	size_t size_x = mMultiLayerMap->getCellSizeX();
-	size_t size_y = mMultiLayerMap->getCellSizeY();
-	for(size_t y = 0; y < size_y; ++y)
+	octomap::OcTree::leaf_iterator leaf = mOcTree->begin_leafs();
+	octomap::OcTree::leaf_iterator end = mOcTree->end_leafs();
+	
+	for( ; leaf != end; ++leaf)
 	{
-		for(size_t x = 0; x < size_x; ++x)
+		if(!mOcTree->isNodeOccupied(*leaf))
 		{
-			double world_x = mMultiLayerMap->getOffsetX() + (x * mMultiLayerMap->getScaleX());
-			double world_y = mMultiLayerMap->getOffsetY() + (y * mMultiLayerMap->getScaleY());
-			
-//			double height = -2.0 +((world_x + world_y) * 0.01);
-//			envire::SurfacePatch patch(height, 0.5);
-//			if(!mMultiLayerMap->update(Eigen::Vector2d(world_x, world_y) , patch))
-//			{
-//				mLogger->message(ERROR, "Could not update MLS!");
-//			}
-			octomap::point3d origin(world_x, world_y, 10);
-			octomap::point3d direction(0,0,-1);
-			octomap::point3d end, intersection;
-			if(mOcTree->castRay(origin, direction, end, true, 20) && mOcTree->getRayIntersection(origin, direction, end, intersection))
+			continue;
+		}
+		double half_size = leaf.getSize() / 2.0;
+		double x_min = leaf.getX() - half_size;
+		double y_min = leaf.getY() - half_size;
+		double x_max = leaf.getX() + half_size;
+		double y_max = leaf.getY() + half_size;
+		
+		for(double y = y_min; y <= y_max; y += mGridResolution)
+		{
+			for(double x = x_min; x <= x_max; x += mGridResolution)
 			{
-				mMultiLayerMap->update(Eigen::Vector2d(world_x, world_y) , envire::SurfacePatch(intersection.z(), 0));
+				envire::SurfacePatch patch(leaf.getZ() + half_size, 0, leaf.getSize(), envire::SurfacePatch::HORIZONTAL);
+				mMultiLayerMap->update(Eigen::Vector2d(x, y) , patch);
 			}
-
-/*
-			if(mOcTree->computeRayKeys(origin, end, ray))
-			{
-				for(octomap::KeyRay::const_iterator key = ray.begin(); key != ray.end(); key++)
-				{
-					if(mOcTree->cast)
-					{
-						envire::SurfacePatch patch(intersection, 0);						
-						if(!mMultiLayerMap->update(Eigen::Vector2d(world_x, world_y) , patch))
-						{
-							mLogger->message(ERROR, "Could not update MLS!");
-						}
-						break;
-					}
-				}
-			}else
-			{
-				// Did not work :(
-			}
-*/
 		}
 	}
 }
