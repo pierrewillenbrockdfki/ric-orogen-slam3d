@@ -168,11 +168,15 @@ task_context "PointcloudFilter" do
 	.doc("Remove all points beyond this radius of the sensor.")
 end
 
-## Convert MultilevelLaserScan to Pointcloud
+## Convert MultilevelLaserScan (deprecated format)
+## or a Depthmap from a velodyne scanner to Pointcloud format
 task_context "ScanConverter" do
+	error_states :MULTIPLE_INPUT_CONNECTIONS
+
 	input_port 'scan', '/velodyne_lidar/MultilevelLaserScan'
+        input_port 'depth_map', '/base/samples/DepthMap'
 	output_port 'cloud', '/base/samples/Pointcloud'
-	port_driven 'scan'
+	port_driven
 end
 
 ## Convert LaserScan to Pointcloud
