@@ -76,6 +76,7 @@ PointcloudMapper2D::~PointcloudMapper2D()
 bool PointcloudMapper2D::generate_map()
 {
 	mLogger->message(INFO, "Requested traversability-grid generation.");
+	timeval start = mClock->now();
 
 	// Setup a temporary array
 	size_t size_x = mGrid->getCellSizeX();
@@ -156,6 +157,10 @@ bool PointcloudMapper2D::generate_map()
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
 	emitter.setTime(mCurrentTime);
 	emitter.flush();
+	
+	timeval finish = mClock->now();
+	int duration = finish.tv_sec - start.tv_sec;
+	mLogger->message(INFO, (boost::format("Generated Traversability-Grid from %1% scans in %2% seconds.") % vertices.size() % duration).str());
 	return true;
 }
 
