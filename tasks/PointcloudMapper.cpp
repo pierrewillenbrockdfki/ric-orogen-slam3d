@@ -11,7 +11,6 @@
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
 
-#include <octomap/octomap.h>
 #include <pcl/common/transforms.h>
 
 #include <envire/Orocos.hpp>
@@ -52,7 +51,7 @@ bool PointcloudMapper::optimize()
 	return false;
 }
 
-bool PointcloudMapper::generate_map()
+bool PointcloudMapper::generate_cloud()
 {
 	// Publish accumulated cloud
 	mLogger->message(INFO, "Requested map generation.");
@@ -61,44 +60,16 @@ bool PointcloudMapper::generate_map()
 	return true;
 }
 
-bool PointcloudMapper::generate_octomap()
+bool PointcloudMapper::generate_map()
 {
-	// Reset OctoMap
-	delete mOcTree;
-	mOcTree = new octomap::OcTree(mMapResolution);
-
-	// Project all scans to octomap
-	mLogger->message(INFO, "Requested octomap generation.");
-	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
-	boost::thread projThread(&PointcloudMapper::buildOcTree, this, vertices);
-	return true;
+	mLogger->message(ERROR, "Map generation not implemented!");
+	return false;
 }
 
 bool PointcloudMapper::write_graph()
 {
 	mMapper->writeGraphToFile("slam3d_graph");
 	return true;
-}
-
-void PointcloudMapper::addScanToOctoMap(const VertexObject& scan)
-{
-	PointCloudMeasurement::Ptr pcl = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
-	if(!pcl)
-	{
-		mLogger->message(ERROR, "Measurement is not a point cloud!");
-		throw BadMeasurementType();
-	}
-
-	PointCloud::Ptr tempCloud(new PointCloud);
-	pcl::transformPointCloud(*(pcl->getPointCloud()), *tempCloud, (scan.corrected_pose * pcl->getSensorPose()).matrix());
-
-	octomap::Pointcloud octoCloud;
-	for(PointCloud::iterator it = tempCloud->begin(); it < tempCloud->end(); ++it)
-	{
-		octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
-	}
-	Vector3 origin = scan.corrected_pose.translation();
-	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), 5, true, true);
 }
 
 PointCloud::Ptr PointcloudMapper::buildPointcloud(const VertexObjectList& vertices)
@@ -140,62 +111,6 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 	}
 	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
 	_cloud.write(mapCloud);	
-}
-
-void PointcloudMapper::buildOcTree(const VertexObjectList& vertices)
-{
-	timeval start = mClock->now();
-	try
-	{
-		boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
-		for(VertexObjectList::const_iterator it = vertices.begin(); it != vertices.end(); it++)
-		{
-			addScanToOctoMap(*it);
-		}
-	}catch (boost::lock_error &e)
-	{
-		mLogger->message(ERROR, "Could not access the pose graph to build OcTree!");
-		return;
-	}
-	mOcTree->updateInnerOccupancy();
-	mOcTree->writeBinary("slam3d_octomap.bt");
-	timeval finish = mClock->now();
-	int duration = finish.tv_sec - start.tv_sec;
-	mLogger->message(INFO, (boost::format("Generated OcTree from %1% scans in %2% seconds.") % vertices.size() % duration).str());
-	
-	// Publish the MLS-Map	
-	buildMLS();
-	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
-	emitter.flush();
-}
-
-void PointcloudMapper::buildMLS()
-{
-	mMultiLayerMap->clear();
-	octomap::OcTree::leaf_iterator leaf = mOcTree->begin_leafs();
-	octomap::OcTree::leaf_iterator end = mOcTree->end_leafs();
-	
-	for( ; leaf != end; ++leaf)
-	{
-		if(!mOcTree->isNodeOccupied(*leaf))
-		{
-			continue;
-		}
-		double half_size = leaf.getSize() / 2.0;
-		double x_min = leaf.getX() - half_size;
-		double y_min = leaf.getY() - half_size;
-		double x_max = leaf.getX() + half_size;
-		double y_max = leaf.getY() + half_size;
-		
-		for(double y = y_min; y <= y_max; y += mGridResolution)
-		{
-			for(double x = x_min; x <= x_max; x += mGridResolution)
-			{
-				envire::SurfacePatch patch(leaf.getZ() + half_size, 0, leaf.getSize(), envire::SurfacePatch::HORIZONTAL);
-				mMultiLayerMap->update(Eigen::Vector2d(x, y) , patch);
-			}
-		}
-	}
 }
 
 bool PointcloudMapper::setLog_level(boost::int32_t value)
@@ -325,8 +240,6 @@ bool PointcloudMapper::configureHook()
 	
 	mScansReceived = 0;
 	mScansAdded = 0;
-	
-	mOcTree = new octomap::OcTree(mGridResolution);
 	
 	// Initialize MLS-Map
 	size_t x_size = mGridSizeX / mGridResolution;
@@ -506,7 +419,6 @@ void PointcloudMapper::stopHook()
 void PointcloudMapper::cleanupHook()
 {
 	PointcloudMapperBase::cleanupHook();
-	delete mOcTree;
 	delete mMapper;
 	delete mPclSensor;
 	delete mSolver;

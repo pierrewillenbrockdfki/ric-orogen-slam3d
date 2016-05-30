@@ -35,6 +35,8 @@
     <File Name="tasks/LineScanConverter.hpp"/>
     <File Name="tasks/PointcloudMapper2D.cpp"/>
     <File Name="tasks/PointcloudMapper2D.hpp"/>
+    <File Name="tasks/OcTreeMapper.cpp"/>
+    <File Name="tasks/OcTreeMapper.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>

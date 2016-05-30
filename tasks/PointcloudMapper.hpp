@@ -6,7 +6,6 @@
 #include <slam3d/PointCloudSensor.hpp>
 #include <slam3d/Solver.hpp>
 
-#include <octomap/OcTree.h>
 #include <envire/maps/MLSGrid.hpp>
 
 #include <queue>
@@ -25,9 +24,9 @@ namespace slam3d
 	protected:
 
 		// Operations
-		virtual bool optimize();
+		virtual bool generate_cloud();
 		virtual bool generate_map();
-		virtual bool generate_octomap();
+		virtual bool optimize();
 		virtual bool write_graph();
 		
 		// Callbacks
@@ -38,9 +37,6 @@ namespace slam3d
 		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
 		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
 		void sendRobotPose();
-        void addScanToOctoMap(const VertexObject& scan);
-		void buildOcTree(const VertexObjectList& vertices);
-		void buildMLS();
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
 	
@@ -51,7 +47,6 @@ namespace slam3d
 		slam3d::PointCloudSensor* mPclSensor;
 		slam3d::Solver* mSolver;
 		RockOdometry* mOdometry;
-		octomap::OcTree* mOcTree;
 		boost::shared_mutex mGraphMutex;
 
 		std::string mRobotName;

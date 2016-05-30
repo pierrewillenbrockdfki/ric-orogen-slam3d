@@ -32,13 +32,13 @@ task_context "PointcloudMapper" do
 		transform "laser", "robot"
 	end
 
+	operation('generate_cloud')
+	.returns('/bool')
+	.doc("Generates and sends the accumulated pointcloud.")
+
 	operation('generate_map')
 	.returns('/bool')
-	.doc("Generates and sends the environment map.")
-
-	operation('generate_octomap')
-	.returns('/bool')
-	.doc("Generates an octomap and saves it in binary format.")
+	.doc("Generates the envire map.")
 
 	operation('optimize')
 	.returns('/bool')
@@ -126,6 +126,11 @@ task_context "PointcloudMapper" do
 	
 	property('grid_mls_config', '/envire/MLSConfiguration')
 	.doc("Multi-Layer-Surface-Map specific configuration.")
+end
+
+## Mapper that creates a Multi-Level-Surface-Map from an OcTree
+task_context "OcTreeMapper" do
+	subclasses "PointcloudMapper"
 end
 
 ## Pointcloud-Mapper for 2D
