@@ -27,8 +27,6 @@
     <File Name="tasks/PointcloudFilter.hpp"/>
     <File Name="tasks/ScanConverter.hpp"/>
     <File Name="tasks/ScanConverter.cpp"/>
-    <File Name="tasks/MLSMapProjector.hpp"/>
-    <File Name="tasks/MLSMapProjector.cpp"/>
     <File Name="tasks/PointcloudToBinary.cpp"/>
     <File Name="tasks/PointcloudToBinary.hpp"/>
     <File Name="tasks/LineScanConverter.cpp"/>
