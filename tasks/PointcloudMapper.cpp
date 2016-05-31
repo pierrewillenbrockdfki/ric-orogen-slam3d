@@ -54,7 +54,7 @@ bool PointcloudMapper::optimize()
 bool PointcloudMapper::generate_cloud()
 {
 	// Publish accumulated cloud
-	mLogger->message(INFO, "Requested map generation.");
+	mLogger->message(INFO, "Requested pointcloud generation.");
 	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
 	boost::thread projThread(&PointcloudMapper::sendPointcloud, this, vertices);
 	return true;
@@ -62,8 +62,10 @@ bool PointcloudMapper::generate_cloud()
 
 bool PointcloudMapper::generate_map()
 {
-	mLogger->message(ERROR, "Map generation not implemented!");
-	return false;
+	mLogger->message(INFO, "Requested map generation.");
+	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+	boost::thread projThread(&PointcloudMapper::sendMap, this, vertices);
+	return true;
 }
 
 bool PointcloudMapper::write_graph()
@@ -112,6 +114,32 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
 	_cloud.write(mapCloud);	
 }
+
+void PointcloudMapper::sendMap(const VertexObjectList& vertices)
+{
+	mMultiLayerMap->clear();
+	for(VertexObjectList::const_iterator v = vertices.begin(); v != vertices.end(); ++v)
+	{
+		PointCloudMeasurement::Ptr m = boost::dynamic_pointer_cast<PointCloudMeasurement>(v->measurement);
+		if(!m)
+		{
+			mLogger->message(WARNING, "Vertex given to projectToGrid is not a Pointcloud!");
+			continue;
+		}
+		
+		PointCloud::ConstPtr pcl = m->getPointCloud();
+		for(PointCloud::const_iterator it = pcl->begin(); it != pcl->end(); ++it)
+		{
+			Eigen::Vector3d p = v->corrected_pose * Eigen::Vector3d(it->x, it->y, it->z);
+			envire::MLSGrid::SurfacePatch patch( p[2], 0.1 );
+			mMultiLayerMap->update(Eigen::Vector2d(p[0], p[1]) , patch );
+		}
+	}
+	
+	// Publish the MLS-Map	
+	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
+	emitter.flush();
+}	
 
 bool PointcloudMapper::setLog_level(boost::int32_t value)
 {
@@ -248,10 +276,11 @@ bool PointcloudMapper::configureHook()
 	mMultiLayerMap->setUniqueId("/slam3d-mls");
 	mMultiLayerMap->getConfig() = _grid_mls_config.get();
 	
-	// add mls to environment
+	// Add MLS to Environment
 	envire::FrameNode* mls_node = new envire::FrameNode();
 	mEnvironment.addChild(mEnvironment.getRootNode(), mls_node);
 	mEnvironment.setFrameNode(mMultiLayerMap, mls_node);
+	
 	return true;
 }
 

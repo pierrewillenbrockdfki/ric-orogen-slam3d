@@ -7,6 +7,7 @@
 #include <slam3d/Solver.hpp>
 
 #include <envire/maps/MLSGrid.hpp>
+#include <envire/operators/MLSProjection.hpp>
 
 #include <queue>
 #include <boost/thread/shared_mutex.hpp>
@@ -39,6 +40,7 @@ namespace slam3d
 		void sendRobotPose();
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
+		void sendMap(const VertexObjectList& vertices);
 	
 		// Members
 		slam3d::Clock* mClock;
@@ -71,8 +73,7 @@ namespace slam3d
 		
 		// Parameters for creation of MLS
 		envire::Environment mEnvironment;
-		envire::MultiLevelSurfaceGrid* mMultiLayerMap;
-		envire::BinarySerialization mBinarySerialization;
+		envire::MLSGrid* mMultiLayerMap;
 		
 		double mGridSizeX;
 		double mGridSizeY;
