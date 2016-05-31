@@ -54,7 +54,7 @@ void OcTreeMapper::addScanToOctoMap(const VertexObject& scan)
 		octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
 	}
 	Vector3 origin = scan.corrected_pose.translation();
-	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), 5, true, true);
+	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), -1, true, true);
 }
 
 void OcTreeMapper::buildOcTree(const VertexObjectList& vertices)
