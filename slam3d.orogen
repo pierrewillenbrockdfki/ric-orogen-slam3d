@@ -22,7 +22,7 @@ task_context "PointcloudMapper" do
 	output_port 'map2robot', 'base/samples/RigidBodyState'
 	output_port 'map2odometry', 'base/samples/RigidBodyState'
 
-	periodic 0.1
+	port_driven
 
 	transformer do
 		transform "robot", "odometry"

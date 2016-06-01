@@ -40,7 +40,9 @@ namespace slam3d
 		void sendRobotPose();
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
-		void sendMap(const VertexObjectList& vertices);
+		void addScanToMap(const VertexObject& scan);
+		void rebuildMap(const VertexObjectList& vertices);
+		void sendMap();
 	
 		// Members
 		slam3d::Clock* mClock;
@@ -83,6 +85,7 @@ namespace slam3d
 		double mGridMaxZ;
 		double mGridResolution;
 		
+		bool mRebuildMap;
 		VertexQueue mNewVertices;
 		
 		// Current state of transformations

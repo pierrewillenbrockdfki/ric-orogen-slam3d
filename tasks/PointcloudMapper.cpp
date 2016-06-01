@@ -63,8 +63,14 @@ bool PointcloudMapper::generate_cloud()
 bool PointcloudMapper::generate_map()
 {
 	mLogger->message(INFO, "Requested map generation.");
-	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
-	boost::thread projThread(&PointcloudMapper::sendMap, this, vertices);
+	if(mRebuildMap)
+	{
+		VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+		boost::thread projThread(&PointcloudMapper::rebuildMap, this, vertices);
+	}else
+	{
+		sendMap();
+	}
 	return true;
 }
 
@@ -115,28 +121,38 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 	_cloud.write(mapCloud);	
 }
 
-void PointcloudMapper::sendMap(const VertexObjectList& vertices)
+void PointcloudMapper::addScanToMap(const VertexObject& scan)
+{
+	PointCloudMeasurement::Ptr m = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
+	if(!m)
+	{
+		mLogger->message(WARNING, "Vertex given to addScanToMap is not a Pointcloud!");
+		return;
+	}
+	
+	PointCloud::ConstPtr pcl = m->getPointCloud();
+	for(PointCloud::const_iterator it = pcl->begin(); it != pcl->end(); ++it)
+	{
+		Eigen::Vector3d p = scan.corrected_pose * Eigen::Vector3d(it->x, it->y, it->z);
+		envire::MLSGrid::SurfacePatch patch( p[2], 0.1 );
+		mMultiLayerMap->update(Eigen::Vector2d(p[0], p[1]) , patch );
+	}
+}
+
+void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
 {
 	mMultiLayerMap->clear();
 	boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
 	for(VertexObjectList::const_iterator v = vertices.begin(); v != vertices.end(); ++v)
 	{
-		PointCloudMeasurement::Ptr m = boost::dynamic_pointer_cast<PointCloudMeasurement>(v->measurement);
-		if(!m)
-		{
-			mLogger->message(WARNING, "Vertex given to projectToGrid is not a Pointcloud!");
-			continue;
-		}
-		
-		PointCloud::ConstPtr pcl = m->getPointCloud();
-		for(PointCloud::const_iterator it = pcl->begin(); it != pcl->end(); ++it)
-		{
-			Eigen::Vector3d p = v->corrected_pose * Eigen::Vector3d(it->x, it->y, it->z);
-			envire::MLSGrid::SurfacePatch patch( p[2], 0.1 );
-			mMultiLayerMap->update(Eigen::Vector2d(p[0], p[1]) , patch );
-		}
+		addScanToMap(*v);
 	}
-	
+	mRebuildMap = false;
+	sendMap();
+}
+
+void PointcloudMapper::sendMap()
+{
 	// Publish the MLS-Map	
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
 	emitter.flush();
@@ -269,6 +285,7 @@ bool PointcloudMapper::configureHook()
 	
 	mScansReceived = 0;
 	mScansAdded = 0;
+	mRebuildMap = false;
 	
 	// Initialize MLS-Map
 	size_t x_size = mGridSizeX / mGridResolution;
@@ -433,6 +450,12 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 
 void PointcloudMapper::updateHook()
 {
+	// Add all new vertices to the MLS-Map
+	while(!mNewVertices.empty())
+	{
+		addScanToMap(mNewVertices.front());
+		mNewVertices.pop();
+	}
 	PointcloudMapperBase::updateHook();
 }
 
