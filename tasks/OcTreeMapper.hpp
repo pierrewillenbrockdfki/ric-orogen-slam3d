@@ -17,7 +17,7 @@ namespace slam3d
 		virtual bool generate_map();
 
 		// Internal methods
-        void addScanToOctoMap(const VertexObject& scan);
+        void addScanToMap(const VertexObject& scan);
 		void buildOcTree(const VertexObjectList& vertices);
 		void buildMLS();
 

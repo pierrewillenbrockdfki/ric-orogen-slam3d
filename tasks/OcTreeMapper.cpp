@@ -36,7 +36,7 @@ bool OcTreeMapper::generate_map()
 	return true;
 }
 
-void OcTreeMapper::addScanToOctoMap(const VertexObject& scan)
+void OcTreeMapper::addScanToMap(const VertexObject& scan)
 {
 	PointCloudMeasurement::Ptr pcl = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
 	if(!pcl)
@@ -65,7 +65,7 @@ void OcTreeMapper::buildOcTree(const VertexObjectList& vertices)
 		boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
 		for(VertexObjectList::const_iterator it = vertices.begin(); it != vertices.end(); it++)
 		{
-			addScanToOctoMap(*it);
+			addScanToMap(*it);
 		}
 	}catch (boost::lock_error &e)
 	{
@@ -97,17 +97,23 @@ void OcTreeMapper::buildMLS()
 			continue;
 		}
 		double half_size = leaf.getSize() / 2.0;
-		double x_min = leaf.getX() - half_size;
-		double y_min = leaf.getY() - half_size;
+		double half_res = mGridResolution / 2.0;
+		double x_min = leaf.getX() - half_size + half_res;
+		double y_min = leaf.getY() - half_size + half_res;
 		double x_max = leaf.getX() + half_size;
 		double y_max = leaf.getY() + half_size;
 		
-		for(double y = y_min; y <= y_max; y += mGridResolution)
+		for(double y = y_min; y < y_max; y += mGridResolution)
 		{
-			for(double x = x_min; x <= x_max; x += mGridResolution)
+			for(double x = x_min; x < x_max; x += mGridResolution)
 			{
-				envire::SurfacePatch patch(leaf.getZ() + half_size, 0, leaf.getSize(), envire::SurfacePatch::HORIZONTAL);
-				mMultiLayerMap->update(Eigen::Vector2d(x, y) , patch);
+				double z_low  = std::max(mGridMinZ, leaf.getZ() - half_size);
+				double z_high = std::min(mGridMaxZ, leaf.getZ() + half_size);
+				if(z_high > z_low)
+				{
+					envire::SurfacePatch patch(z_high, 0, z_high - z_low, envire::SurfacePatch::HORIZONTAL);
+					mMultiLayerMap->update(Eigen::Vector2d(x, y) , patch);
+				}
 			}
 		}
 	}
