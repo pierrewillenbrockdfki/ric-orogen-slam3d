@@ -134,8 +134,11 @@ void PointcloudMapper::addScanToMap(const VertexObject& scan)
 	for(PointCloud::const_iterator it = pcl->begin(); it != pcl->end(); ++it)
 	{
 		Eigen::Vector3d p = scan.corrected_pose * Eigen::Vector3d(it->x, it->y, it->z);
-		envire::MLSGrid::SurfacePatch patch( p[2], 0.1 );
-		mMultiLayerMap->update(Eigen::Vector2d(p[0], p[1]) , patch );
+		if(p[2] >= mGridMinZ && p[2] <= mGridMaxZ)
+		{
+			envire::MLSGrid::SurfacePatch patch( p[2], 0.1 );
+			mMultiLayerMap->update(Eigen::Vector2d(p[0], p[1]) , patch );
+		}
 	}
 }
 
