@@ -118,6 +118,7 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 void PointcloudMapper::sendMap(const VertexObjectList& vertices)
 {
 	mMultiLayerMap->clear();
+	boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
 	for(VertexObjectList::const_iterator v = vertices.begin(); v != vertices.end(); ++v)
 	{
 		PointCloudMeasurement::Ptr m = boost::dynamic_pointer_cast<PointCloudMeasurement>(v->measurement);
