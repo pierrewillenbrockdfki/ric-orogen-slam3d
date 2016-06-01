@@ -450,13 +450,14 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 
 void PointcloudMapper::updateHook()
 {
+	PointcloudMapperBase::updateHook();
+	
 	// Add all new vertices to the MLS-Map
 	while(!mNewVertices.empty())
 	{
 		addScanToMap(mNewVertices.front());
 		mNewVertices.pop();
 	}
-	PointcloudMapperBase::updateHook();
 }
 
 void PointcloudMapper::errorHook()
