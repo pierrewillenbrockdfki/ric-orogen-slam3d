@@ -23,19 +23,6 @@ OcTreeMapper::~OcTreeMapper()
 {
 }
 
-bool OcTreeMapper::generate_map()
-{
-	// Reset OctoMap
-	delete mOcTree;
-	mOcTree = new octomap::OcTree(mMapResolution);
-
-	// Project all scans to octomap
-	mLogger->message(INFO, "Requested octomap generation.");
-	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
-	boost::thread projThread(&OcTreeMapper::buildOcTree, this, vertices);
-	return true;
-}
-
 void OcTreeMapper::addScanToMap(const VertexObject& scan)
 {
 	PointCloudMeasurement::Ptr pcl = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
@@ -57,8 +44,13 @@ void OcTreeMapper::addScanToMap(const VertexObject& scan)
 	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), -1, true, true);
 }
 
-void OcTreeMapper::buildOcTree(const VertexObjectList& vertices)
+void OcTreeMapper::rebuildMap(const VertexObjectList& vertices)
 {
+	// Reset OctoMap
+	delete mOcTree;
+	mOcTree = new octomap::OcTree(mMapResolution);
+	
+	// Rebuild from pointclouds
 	timeval start = mClock->now();
 	try
 	{
@@ -78,10 +70,8 @@ void OcTreeMapper::buildOcTree(const VertexObjectList& vertices)
 	int duration = finish.tv_sec - start.tv_sec;
 	mLogger->message(INFO, (boost::format("Generated OcTree from %1% scans in %2% seconds.") % vertices.size() % duration).str());
 	
-	// Publish the MLS-Map	
-	buildMLS();
-	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
-	emitter.flush();
+	// Create mls-map and send it via Envire
+	sendMap();
 }
 
 void OcTreeMapper::buildMLS()
@@ -117,6 +107,14 @@ void OcTreeMapper::buildMLS()
 			}
 		}
 	}
+}
+
+void OcTreeMapper::sendMap()
+{
+	// Build and publish the MLS-Map	
+	buildMLS();
+	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
+	emitter.flush();
 }
 
 bool OcTreeMapper::configureHook()

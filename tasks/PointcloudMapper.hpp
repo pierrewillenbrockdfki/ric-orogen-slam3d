@@ -40,9 +40,9 @@ namespace slam3d
 		void sendRobotPose();
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
-		void addScanToMap(const VertexObject& scan);
-		void rebuildMap(const VertexObjectList& vertices);
-		void sendMap();
+		virtual void addScanToMap(const VertexObject& scan);
+		virtual void rebuildMap(const VertexObjectList& vertices);
+		virtual void sendMap();
 	
 		// Members
 		slam3d::Clock* mClock;

@@ -13,12 +13,12 @@ namespace slam3d
 	friend class OcTreeMapperBase;
 	protected:
 
-		// Operations
-		virtual bool generate_map();
-
+		// Overloaded methods
+		virtual void addScanToMap(const VertexObject& scan);
+		virtual void rebuildMap(const VertexObjectList& vertices);
+		virtual void sendMap();
+		
 		// Internal methods
-        void addScanToMap(const VertexObject& scan);
-		void buildOcTree(const VertexObjectList& vertices);
 		void buildMLS();
 
 		// Members
