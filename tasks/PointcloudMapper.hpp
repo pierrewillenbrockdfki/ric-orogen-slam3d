@@ -13,10 +13,7 @@
 #include <boost/thread/shared_mutex.hpp>
 
 namespace slam3d
-{
-	typedef std::queue<VertexObject> VertexQueue;
-	typedef std::queue<EdgeObject> EdgeQueue;
-	
+{	
 	class RockOdometry;
 	
 	class PointcloudMapper : public PointcloudMapperBase
@@ -40,6 +37,7 @@ namespace slam3d
 		void sendRobotPose();
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
+		virtual void handleNewScan(const VertexObject& scan);
 		virtual void addScanToMap(const VertexObject& scan);
 		virtual void rebuildMap(const VertexObjectList& vertices);
 		virtual void sendMap();
@@ -86,7 +84,6 @@ namespace slam3d
 		double mGridResolution;
 		
 		bool mRebuildMap;
-		VertexQueue mNewVertices;
 		
 		// Current state of transformations
 		base::Time mCurrentTime;

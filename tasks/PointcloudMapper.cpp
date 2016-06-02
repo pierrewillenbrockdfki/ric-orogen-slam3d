@@ -121,6 +121,11 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 	_cloud.write(mapCloud);	
 }
 
+void PointcloudMapper::handleNewScan(const VertexObject& scan)
+{
+	addScanToMap(scan);
+}
+
 void PointcloudMapper::addScanToMap(const VertexObject& scan)
 {
 	PointCloudMeasurement::Ptr m = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
@@ -433,7 +438,7 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		if(mMapper->addReading(measurement))
 		{
 			mScansAdded++;
-			mNewVertices.push(mMapper->getLastVertex());
+			handleNewScan(mMapper->getLastVertex());
 			if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
 			{
 				optimize();
@@ -454,13 +459,6 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 void PointcloudMapper::updateHook()
 {
 	PointcloudMapperBase::updateHook();
-	
-	// Add all new vertices to the MLS-Map
-	while(!mNewVertices.empty())
-	{
-		addScanToMap(mNewVertices.front());
-		mNewVertices.pop();
-	}
 }
 
 void PointcloudMapper::errorHook()
