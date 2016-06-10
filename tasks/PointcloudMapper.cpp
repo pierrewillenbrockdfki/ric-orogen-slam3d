@@ -136,9 +136,10 @@ void PointcloudMapper::addScanToMap(const VertexObject& scan)
 	}
 	
 	PointCloud::ConstPtr pcl = m->getPointCloud();
+	Transform sensor_pose = scan.corrected_pose * m->getSensorPose();
 	for(PointCloud::const_iterator it = pcl->begin(); it != pcl->end(); ++it)
 	{
-		Eigen::Vector3d p = scan.corrected_pose * Eigen::Vector3d(it->x, it->y, it->z);
+		Eigen::Vector3d p = sensor_pose * Eigen::Vector3d(it->x, it->y, it->z);
 		if(p[2] >= mGridMinZ && p[2] <= mGridMaxZ)
 		{
 			envire::MLSGrid::SurfacePatch patch( p[2], 0.1 );
