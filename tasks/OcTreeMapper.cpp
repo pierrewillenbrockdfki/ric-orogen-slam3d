@@ -123,6 +123,11 @@ bool OcTreeMapper::configureHook()
 		return false;
 		
 	mOcTree = new octomap::OcTree(mGridResolution);
+	mOcTree->setOccupancyThres(0.6);
+	mOcTree->setProbHit(0.9);
+	mOcTree->setProbMiss(0.1);
+	mOcTree->setClampingThresMin(0.1);
+	mOcTree->setClampingThresMax(0.7);
 	return true;
 }
 
