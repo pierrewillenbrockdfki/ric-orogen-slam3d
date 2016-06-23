@@ -1,5 +1,3 @@
-/* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
-
 #ifndef SLAM3D_POINTCLOUDFILTER_TASK_HPP
 #define SLAM3D_POINTCLOUDFILTER_TASK_HPP
 
@@ -16,6 +14,9 @@ namespace slam3d
 		double mMaxHeight;
 		double mSqMinDistance;
 		double mSqMaxDistance;
+		unsigned mPassRate;
+		
+		unsigned mSkipCount;
 
 	public:
 		PointcloudFilter(std::string const& name = "slam3d::PointcloudFilter", TaskCore::TaskState initial_state = Stopped);

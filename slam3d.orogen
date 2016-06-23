@@ -165,6 +165,9 @@ task_context "PointcloudFilter" do
 
 	property('max_distance', '/double', 10)
 	.doc("Remove all points beyond this radius of the sensor.")
+	
+	property('pass_rate', '/int', 1)
+	.doc("Only pass every n'th scan.")
 end
 
 ## Convert MultilevelLaserScan (deprecated format)

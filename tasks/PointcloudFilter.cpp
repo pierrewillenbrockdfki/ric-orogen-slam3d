@@ -28,6 +28,8 @@ bool PointcloudFilter::configureHook()
 	mMaxHeight = _max_height.get();
 	mSqMinDistance = _min_distance.get() * _min_distance.get();
 	mSqMaxDistance = _max_distance.get() * _max_distance.get();
+	mPassRate = _pass_rate.get();
+	mSkipCount = 0;
 	return true;
 }
 
@@ -46,6 +48,12 @@ void PointcloudFilter::updateHook()
 	base::samples::Pointcloud cloud;
 	while(_cloud_in.read(cloud, false) == RTT::NewData)
 	{
+		mSkipCount++;
+		if(mSkipCount < mPassRate)
+		{
+			continue;
+		}
+		mSkipCount = 0;
 		base::samples::Pointcloud filtered_cloud;
 		for(std::vector<base::Vector3d>::const_iterator it = cloud.points.begin(); it < cloud.points.end(); ++it)
 		{
