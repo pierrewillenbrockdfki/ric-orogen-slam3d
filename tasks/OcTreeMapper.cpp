@@ -65,7 +65,6 @@ void OcTreeMapper::rebuildMap(const VertexObjectList& vertices)
 		return;
 	}
 	mOcTree->updateInnerOccupancy();
-	mOcTree->writeBinary("slam3d_octomap.bt");
 	timeval finish = mClock->now();
 	int duration = finish.tv_sec - start.tv_sec;
 	mLogger->message(INFO, (boost::format("Generated OcTree from %1% scans in %2% seconds.") % vertices.size() % duration).str());
@@ -111,7 +110,8 @@ void OcTreeMapper::buildMLS()
 
 void OcTreeMapper::sendMap()
 {
-	// Build and publish the MLS-Map	
+	// Build and publish the MLS-Map
+	mOcTree->writeBinary("slam3d_octomap.bt");
 	buildMLS();
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
 	emitter.flush();
