@@ -13,6 +13,9 @@ namespace slam3d
 	friend class OcTreeMapperBase;
 	protected:
 
+		// Operations
+		virtual bool remove_dynamic_objects();
+		
 		// Overloaded methods
 		virtual void addScanToMap(const VertexObject& scan);
 		virtual void rebuildMap(const VertexObjectList& vertices);

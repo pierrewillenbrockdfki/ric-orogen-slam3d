@@ -445,7 +445,7 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 	{
 		if(mScanResolution > 0)
 		{
-			PointCloud::ConstPtr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
+			PointCloud::Ptr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
 			mLogger->message(DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
 			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), laserPose));
 		}else

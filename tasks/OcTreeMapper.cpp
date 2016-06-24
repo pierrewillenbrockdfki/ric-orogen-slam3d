@@ -117,6 +117,33 @@ void OcTreeMapper::sendMap()
 	emitter.flush();
 }
 
+bool OcTreeMapper::remove_dynamic_objects()
+{
+	mLogger->message(INFO, "Requested dynamic object removal.");
+	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+	
+	boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
+	for(VertexObjectList::iterator v = vertices.begin(); v != vertices.end(); ++v)
+	{
+		// Cast to PointCloudMeasurement
+		PointCloudMeasurement::Ptr m = boost::dynamic_pointer_cast<PointCloudMeasurement>(v->measurement);
+		if(!m)
+		{
+			mLogger->message(WARNING, "Vertex given to remove_dynamic_objects is not a Pointcloud!");
+			continue;
+		}
+		
+		// Check each point, if it is in free OctoMap voxel
+		Pointcloud::Ptr cloud = m->getPointCloud();
+		for(PointCloud::iterator p = cloud.begin(); p != cloud.end(); ++p)
+		{
+			
+		}
+	}
+	
+	return true;
+}
+
 bool OcTreeMapper::configureHook()
 {
 	if (! OcTreeMapperBase::configureHook())

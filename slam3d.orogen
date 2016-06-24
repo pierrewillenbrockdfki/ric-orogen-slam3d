@@ -134,6 +134,10 @@ end
 ## Mapper that creates a Multi-Level-Surface-Map from an OcTree
 task_context "OcTreeMapper" do
 	subclasses "PointcloudMapper"
+	
+	operation('remove_dynamic_objects')
+	.returns('/bool')
+	.doc("Removes points from scans that have changed in the environment.")
 end
 
 ## Pointcloud-Mapper for 2D
