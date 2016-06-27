@@ -120,7 +120,9 @@ void OcTreeMapper::sendMap()
 bool OcTreeMapper::remove_dynamic_objects()
 {
 	mLogger->message(INFO, "Requested dynamic object removal.");
+	timeval start = mClock->now();
 	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+	unsigned deleted = 0;
 	
 	boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
 	for(VertexObjectList::iterator v = vertices.begin(); v != vertices.end(); ++v)
@@ -134,13 +136,22 @@ bool OcTreeMapper::remove_dynamic_objects()
 		}
 		
 		// Check each point, if it is in free OctoMap voxel
-		Pointcloud::Ptr cloud = m->getPointCloud();
-		for(PointCloud::iterator p = cloud.begin(); p != cloud.end(); ++p)
+		PointCloud::Ptr cloud = m->getPointCloud();
+		for(PointCloud::iterator p = cloud->begin(); p != cloud->end();)
 		{
-			
+			octomap::OcTreeNode* node = mOcTree->search(p->x, p->y, p->z);
+			if(node && !mOcTree->isNodeOccupied(node))
+			{
+				deleted++;
+				p = cloud->erase(p);
+			}else
+			{
+				p++;
+			}
 		}
 	}
-	
+	int duration = mClock->now().tv_sec - start.tv_sec;
+	mLogger->message(INFO, (boost::format("Removed %1% dynamic points in %2% seconds.") % deleted % duration).str());
 	return true;
 }
 
@@ -153,7 +164,7 @@ bool OcTreeMapper::configureHook()
 	mOcTree->setOccupancyThres(0.6);
 	mOcTree->setProbHit(0.9);
 	mOcTree->setProbMiss(0.1);
-	mOcTree->setClampingThresMin(0.1);
+	mOcTree->setClampingThresMin(0.3);
 	mOcTree->setClampingThresMax(0.7);
 	return true;
 }
