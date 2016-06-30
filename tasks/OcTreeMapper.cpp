@@ -167,6 +167,14 @@ bool OcTreeMapper::configureHook()
 	mOcTree->setProbMiss(conf.probMiss);
 	mOcTree->setClampingThresMin(conf.clampingThresMin);
 	mOcTree->setClampingThresMax(conf.clampingThresMax);
+	
+	mLogger->message(INFO, " = OctoMap - Parameters =");
+	mLogger->message(INFO, (boost::format("occupancyThres:   %1%") % conf.occupancyThres).str());
+	mLogger->message(INFO, (boost::format("probHit:          %1%") % conf.probHit).str());
+	mLogger->message(INFO, (boost::format("probMiss:         %1%") % conf.probMiss).str());
+	mLogger->message(INFO, (boost::format("clampingThresMin: %1%") % conf.clampingThresMin).str());
+	mLogger->message(INFO, (boost::format("clampingThresMax: %1%") % conf.clampingThresMax).str());
+	
 	return true;
 }
 
