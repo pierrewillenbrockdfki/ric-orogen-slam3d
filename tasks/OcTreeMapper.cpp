@@ -1,4 +1,5 @@
 #include "OcTreeMapper.hpp"
+#include "OctoMapConfiguration.hpp"
 
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
@@ -47,8 +48,8 @@ void OcTreeMapper::addScanToMap(const VertexObject& scan)
 void OcTreeMapper::rebuildMap(const VertexObjectList& vertices)
 {
 	// Reset OctoMap
-	delete mOcTree;
-	mOcTree = new octomap::OcTree(mMapResolution);
+	mOcTree->clear();
+	mLogger->message(DEBUG, "Rebuilding OcTree from all scans.");
 	
 	// Rebuild from pointclouds
 	timeval start = mClock->now();
@@ -75,11 +76,9 @@ void OcTreeMapper::rebuildMap(const VertexObjectList& vertices)
 
 void OcTreeMapper::buildMLS()
 {
+	mLogger->message(DEBUG, "Generating MLS from OcTree.");
 	mMultiLayerMap->clear();
-	octomap::OcTree::leaf_iterator leaf = mOcTree->begin_leafs();
-	octomap::OcTree::leaf_iterator end = mOcTree->end_leafs();
-	
-	for( ; leaf != end; ++leaf)
+	for(octomap::OcTree::leaf_iterator leaf = mOcTree->begin_leafs() ; leaf != mOcTree->end_leafs(); ++leaf)
 	{
 		if(!mOcTree->isNodeOccupied(*leaf))
 		{
@@ -160,12 +159,14 @@ bool OcTreeMapper::configureHook()
 	if (! OcTreeMapperBase::configureHook())
 		return false;
 		
+	
 	mOcTree = new octomap::OcTree(mGridResolution);
-	mOcTree->setOccupancyThres(0.6);
-	mOcTree->setProbHit(0.9);
-	mOcTree->setProbMiss(0.1);
-	mOcTree->setClampingThresMin(0.3);
-	mOcTree->setClampingThresMax(0.7);
+	OctoMapConfiguration conf = _octo_map_config.get();
+	mOcTree->setOccupancyThres(conf.occupancyThres);
+	mOcTree->setProbHit(conf.probHit);
+	mOcTree->setProbMiss(conf.probMiss);
+	mOcTree->setClampingThresMin(conf.clampingThresMin);
+	mOcTree->setClampingThresMax(conf.clampingThresMax);
 	return true;
 }
 

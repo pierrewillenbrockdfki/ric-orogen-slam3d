@@ -39,6 +39,7 @@
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
     <File Name="slam3d.orogen"/>
+    <File Name="OctoMapConfiguration.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="scripts">
     <File Name="scripts/transforms.rb"/>
