@@ -81,13 +81,13 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 			c.maximum_iterations = 20
 		end
 	
-		mapper.size_x = 20
-		mapper.size_y = 20
-		mapper.offset_x = -10
-		mapper.offset_y = -10
-		mapper.min_z = -5;
-		mapper.max_z = 5;
-		mapper.resolution = 0.01
+		mapper.grid_size_x = 20
+		mapper.grid_size_y = 20
+		mapper.grid_offset_x = -10
+		mapper.grid_offset_y = -10
+		mapper.grid_min_z = -5;
+		mapper.grid_max_z = 5;
+		mapper.grid_resolution = 0.01
 		mapper.configure
 
 		fusion.cloud.connect_to mapper.scan,              :type => :buffer, :size => 10
