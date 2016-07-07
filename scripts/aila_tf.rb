@@ -5,7 +5,7 @@ static_transform Eigen::Vector3.new(-0.155, 0.0, 0.11),
 static_transform Eigen::Vector3.new(0.155, 0.0, 0.11),
 	"laser1" => "body"
 
-#dynamic_transform "aila_rover.odometry", "body" => "odometry"
-#dynamic_transform "mapper.map2odometry", "odometry" => "world_osg"
+dynamic_transform "aila_rover.odometry", "body" => "odometry"
+dynamic_transform "mapper.map2odometry", "odometry" => "world_osg"
 
-dynamic_transform "mapper.map2robot", "body" => "world_osg"
+#dynamic_transform "mapper.map2robot", "body" => "world_osg"
