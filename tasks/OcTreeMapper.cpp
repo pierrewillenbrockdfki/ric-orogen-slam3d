@@ -110,7 +110,7 @@ void OcTreeMapper::buildMLS()
 				double z_high = std::min(mGridMaxZ, leaf.getZ() + half_size);
 				if(z_high > z_low)
 				{
-					envire::SurfacePatch patch(z_high, 0, z_high - z_low, envire::SurfacePatch::HORIZONTAL);
+					envire::SurfacePatch patch(z_high, 0, z_high - z_low, envire::SurfacePatch::VERTICAL);
 					mMultiLayerMap->update(Eigen::Vector2d(x, y) , patch);
 				}
 			}
