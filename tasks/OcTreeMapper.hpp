@@ -1,5 +1,3 @@
-/* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
-
 #ifndef SLAM3D_OCTREEMAPPER_TASK_HPP
 #define SLAM3D_OCTREEMAPPER_TASK_HPP
 

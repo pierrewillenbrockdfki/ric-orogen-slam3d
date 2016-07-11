@@ -10,6 +10,17 @@
 
 using namespace slam3d;
 
+octomap::OcTree* initOcTree(const OctoMapConfiguration &conf, double res)
+{
+	octomap::OcTree* tree = new octomap::OcTree(res);
+	tree->setOccupancyThres(conf.occupancyThres);
+	tree->setProbHit(conf.probHit);
+	tree->setProbMiss(conf.probMiss);
+	tree->setClampingThresMin(conf.clampingThresMin);
+	tree->setClampingThresMax(conf.clampingThresMax);
+	return tree;
+}
+
 OcTreeMapper::OcTreeMapper(std::string const& name)
     : OcTreeMapperBase(name)
 {
@@ -47,8 +58,11 @@ void OcTreeMapper::addScanToMap(const VertexObject& scan)
 
 void OcTreeMapper::rebuildMap(const VertexObjectList& vertices)
 {
-	// Reset OctoMap
-	mOcTree->clear();
+	// Reset OctoMap (OcTree::clear is currently not working)
+	OctoMapConfiguration conf = _octo_map_config.get();
+	delete mOcTree;
+	mOcTree = initOcTree(conf, mGridResolution);
+
 	mLogger->message(DEBUG, "Rebuilding OcTree from all scans.");
 	
 	// Rebuild from pointclouds
@@ -159,14 +173,8 @@ bool OcTreeMapper::configureHook()
 	if (! OcTreeMapperBase::configureHook())
 		return false;
 		
-	
-	mOcTree = new octomap::OcTree(mGridResolution);
 	OctoMapConfiguration conf = _octo_map_config.get();
-	mOcTree->setOccupancyThres(conf.occupancyThres);
-	mOcTree->setProbHit(conf.probHit);
-	mOcTree->setProbMiss(conf.probMiss);
-	mOcTree->setClampingThresMin(conf.clampingThresMin);
-	mOcTree->setClampingThresMax(conf.clampingThresMax);
+	mOcTree = initOcTree(conf, mGridResolution);
 	
 	mLogger->message(INFO, " = OctoMap - Parameters =");
 	mLogger->message(INFO, (boost::format("occupancyThres:   %1%") % conf.occupancyThres).str());
