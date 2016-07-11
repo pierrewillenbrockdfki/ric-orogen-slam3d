@@ -4,6 +4,8 @@
 #include <slam3d/OcTreeMapperBase.hpp>
 #include <octomap/OcTree.h>
 
+#include "OctoMapConfiguration.hpp"
+
 namespace slam3d
 {
 	class OcTreeMapper : public OcTreeMapperBase
@@ -24,6 +26,7 @@ namespace slam3d
 
 		// Members
 		octomap::OcTree* mOcTree;
+		OctoMapConfiguration mConfiguration;
 		
 	public:
 		OcTreeMapper(std::string const& name = "slam3d::OcTreeMapper");

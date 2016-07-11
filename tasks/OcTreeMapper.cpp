@@ -1,5 +1,4 @@
 #include "OcTreeMapper.hpp"
-#include "OctoMapConfiguration.hpp"
 
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
@@ -53,15 +52,14 @@ void OcTreeMapper::addScanToMap(const VertexObject& scan)
 		octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
 	}
 	Vector3 origin = scan.corrected_pose.translation();
-	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), -1, true, true);
+	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), mConfiguration.rangeMax, true, true);
 }
 
 void OcTreeMapper::rebuildMap(const VertexObjectList& vertices)
 {
 	// Reset OctoMap (OcTree::clear is currently not working)
-	OctoMapConfiguration conf = _octo_map_config.get();
 	delete mOcTree;
-	mOcTree = initOcTree(conf, mGridResolution);
+	mOcTree = initOcTree(mConfiguration, mGridResolution);
 
 	mLogger->message(DEBUG, "Rebuilding OcTree from all scans.");
 	
@@ -173,15 +171,16 @@ bool OcTreeMapper::configureHook()
 	if (! OcTreeMapperBase::configureHook())
 		return false;
 		
-	OctoMapConfiguration conf = _octo_map_config.get();
-	mOcTree = initOcTree(conf, mGridResolution);
+	mConfiguration  = _octo_map_config.get();
+	mOcTree = initOcTree(mConfiguration, mGridResolution);
 	
 	mLogger->message(INFO, " = OctoMap - Parameters =");
-	mLogger->message(INFO, (boost::format("occupancyThres:   %1%") % conf.occupancyThres).str());
-	mLogger->message(INFO, (boost::format("probHit:          %1%") % conf.probHit).str());
-	mLogger->message(INFO, (boost::format("probMiss:         %1%") % conf.probMiss).str());
-	mLogger->message(INFO, (boost::format("clampingThresMin: %1%") % conf.clampingThresMin).str());
-	mLogger->message(INFO, (boost::format("clampingThresMax: %1%") % conf.clampingThresMax).str());
+	mLogger->message(INFO, (boost::format("occupancyThres:   %1%") % mConfiguration.occupancyThres).str());
+	mLogger->message(INFO, (boost::format("probHit:          %1%") % mConfiguration.probHit).str());
+	mLogger->message(INFO, (boost::format("probMiss:         %1%") % mConfiguration.probMiss).str());
+	mLogger->message(INFO, (boost::format("clampingThresMin: %1%") % mConfiguration.clampingThresMin).str());
+	mLogger->message(INFO, (boost::format("clampingThresMax: %1%") % mConfiguration.clampingThresMax).str());
+	mLogger->message(INFO, (boost::format("rangeMax:         %1%") % mConfiguration.rangeMax).str());
 	
 	return true;
 }
