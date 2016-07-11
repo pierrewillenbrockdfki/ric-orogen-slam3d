@@ -1,6 +1,6 @@
 #include "PointcloudFilter.hpp"
 
-#include <base/Logging.hpp>
+#include <base-logging/Logging.hpp>
 #include <base/samples/Pointcloud.hpp>
 
 using namespace slam3d;

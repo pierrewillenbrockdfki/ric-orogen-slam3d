@@ -1,6 +1,6 @@
 #include "LineScanConverter.hpp"
 
-#include <base/Logging.hpp>
+#include <base-logging/Logging.hpp>
 #include <base/samples/LaserScan.hpp>
 #include <base/samples/Pointcloud.hpp>
 

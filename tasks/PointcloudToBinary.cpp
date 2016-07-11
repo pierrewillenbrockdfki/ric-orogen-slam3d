@@ -1,8 +1,6 @@
-/* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
-
 #include "PointcloudToBinary.hpp"
 
-#include <base/Logging.hpp>
+#include <base-logging/Logging.hpp>
 #include <base/samples/RigidBodyState.hpp>
 #include <velodyne_lidar/pointcloudConvertHelper.hpp>
 

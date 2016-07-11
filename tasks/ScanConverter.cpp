@@ -1,11 +1,9 @@
-/* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
-
 #include "ScanConverter.hpp"
 
 #include <velodyne_lidar/MultilevelLaserScan.h>
 #include <velodyne_lidar/pointcloudConvertHelper.hpp>
 
-#include <base/Logging.hpp>
+#include <base-logging/Logging.hpp>
 #include <base/samples/Pointcloud.hpp>
 
 using namespace slam3d;

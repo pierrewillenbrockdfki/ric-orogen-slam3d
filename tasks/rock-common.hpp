@@ -3,7 +3,7 @@
 #include <slam3d/Odometry.hpp>
 
 #include <base/samples/RigidBodyState.hpp>
-#include <base/Logging.hpp>
+#include <base-logging/Logging.hpp>
 
 namespace slam3d
 {

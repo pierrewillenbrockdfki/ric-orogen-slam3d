@@ -14,6 +14,7 @@
 	<depend package="drivers/orogen/transformer" />
 	<depend package="base/cmake" />
 	<depend package="base/orogen/types" />
+	<depend package="base/logging" />
 	<depend package="tools/orocos.rb" />
 	<depend package="gui/vizkit" />
 	<depend package="slam/octomap" />
