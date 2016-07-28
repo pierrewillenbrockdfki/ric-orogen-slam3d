@@ -31,6 +31,9 @@ task_context "PointcloudMapper" do
 		max_latency 0.5
 
 		transform "laser", "robot"
+
+		transform_output "map2robot", "robot" => "map"
+		transform_output "map2odometry", "odometry" => "map"
 	end
 
 	operation('generate_cloud')
