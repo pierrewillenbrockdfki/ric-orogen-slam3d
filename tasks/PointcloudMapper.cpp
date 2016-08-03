@@ -196,7 +196,22 @@ bool PointcloudMapper::configureHook()
 		return false;
 		
 	mClock = new Clock();
-	mLogger = new Logger(*mClock);
+	switch(_log_type)
+	{
+	case 0:
+		mLogger = new Logger(*mClock);
+		break;
+	case 1:
+		mLogger = new BaseLogger();
+		break;
+	case 2:
+		mLogger = new FileLogger(*mClock, "slam3d.log");
+		break;
+	default:
+		mLogger = new Logger(*mClock);
+		mLogger->message(WARNING, "Invalid logger type, using standard logger.");
+	}
+
 	setLog_level(_log_level);
 
 	mLogger->message(INFO, "=== Configure PointCloudMapper ===");

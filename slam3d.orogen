@@ -97,6 +97,9 @@ task_context "PointcloudMapper" do
 	property('gicp_coarse_config', '/slam3d/GICPConfiguration')
 	.doc("Parameters for coarse Generalized ICP when doing loop closures.")
 	
+	property('log_type', '/int', 0)
+	.doc("Standard(0), Base(1), File(2)")
+	
 	property('log_level', '/int', 2)
 	.dynamic()
 	.doc("Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
