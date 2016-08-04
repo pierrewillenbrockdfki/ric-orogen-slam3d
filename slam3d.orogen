@@ -164,9 +164,15 @@ end
 
 ## Filter to reduce velodyne-scans taking indoor
 task_context "PointcloudFilter" do
-	input_port 'cloud_in', '/base/samples/Pointcloud'
-	output_port 'cloud_out', '/base/samples/Pointcloud'
-	port_driven 'cloud_in'
+	input_port 'input', '/base/samples/Pointcloud'
+	output_port 'output', '/base/samples/Pointcloud'
+	port_driven 'input'
+
+	transformer do
+		transform "laser", "odometry"
+		align_port 'input'
+		max_latency 0.5
+	end
 
 	property('min_height', '/double', -1)
 	.doc("Remove all points below this height.")
@@ -182,6 +188,12 @@ task_context "PointcloudFilter" do
 	
 	property('pass_rate', '/int', 1)
 	.doc("Only pass every n'th scan.")
+	
+	property('resolution', '/double', 0.01)
+	.doc("Resolution of output cloud and OctoMap.")
+	
+	property('octo_map_config', 'slam3d/OctoMapConfiguration')
+	.doc("OctoMap specific configuration.")
 end
 
 ## Convert MultilevelLaserScan (deprecated format)
