@@ -20,6 +20,9 @@ namespace slam3d
 		// Callbacks
 		virtual void inputTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);
 
+		// Internal methods
+		PointCloud::Ptr downsample(PointCloud::Ptr source, float leaf_size);
+
 		// Members
 		slam3d::PointCloud mPointcloud;
 		octomap::OcTree* mOcTree;
@@ -32,6 +35,7 @@ namespace slam3d
 		double mSqMinDistance;
 		double mSqMaxDistance;
 		double mResolution;
+		unsigned mPassRate;
 
 	public:
 		PointcloudFilter(std::string const& name = "slam3d::PointcloudFilter");
