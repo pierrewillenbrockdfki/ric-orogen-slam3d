@@ -1,5 +1,6 @@
 #include "PointcloudMapper.hpp"
-#include "rock-common.hpp"
+#include "RockOdometry.hpp"
+#include "BaseLogger.hpp"
 
 #include <base/samples/Pointcloud.hpp>
 #include <base/samples/RigidBodyState.hpp>

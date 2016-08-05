@@ -22,7 +22,6 @@
   <VirtualDirectory Name="tasks">
     <File Name="tasks/PointcloudMapper.cpp"/>
     <File Name="tasks/PointcloudMapper.hpp"/>
-    <File Name="tasks/rock-common.hpp"/>
     <File Name="tasks/PointcloudFilter.cpp"/>
     <File Name="tasks/PointcloudFilter.hpp"/>
     <File Name="tasks/ScanConverter.hpp"/>
@@ -35,6 +34,12 @@
     <File Name="tasks/PointcloudMapper2D.hpp"/>
     <File Name="tasks/OcTreeMapper.cpp"/>
     <File Name="tasks/OcTreeMapper.hpp"/>
+    <File Name="tasks/Common.hpp"/>
+    <File Name="tasks/Common.cpp"/>
+    <File Name="tasks/RockOdometry.cpp"/>
+    <File Name="tasks/RockOdometry.hpp"/>
+    <File Name="tasks/BaseLogger.hpp"/>
+    <File Name="tasks/BaseLogger.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
