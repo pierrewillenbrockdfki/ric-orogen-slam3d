@@ -124,7 +124,12 @@ void PointcloudFilter::inputTransformerCallback(const base::Time &ts, const ::ba
 	}
 	result.time = ts;
 	_output.write(result);
-//	mOcTree->writeBinary("slam3d_filter_result.bt");
+
+	// Write octree binary to view with 'octovis'
+	if(_log_level.get() == 0)
+	{
+		mOcTree->writeBinary("slam3d_filter_result.bt");
+	}
 	
 	// Reset everything
 	delete mOcTree;
