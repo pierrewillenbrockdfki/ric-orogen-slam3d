@@ -1,8 +1,6 @@
 #include "Common.hpp"
 
-using namespace slam3d;
-
-long timevaldiff(const timeval& start, const timeval& end)
+long slam3d::timevaldiff(const timeval& start, const timeval& end)
 {
 	long msec;
 	msec=(end.tv_sec - start.tv_sec)*1000;

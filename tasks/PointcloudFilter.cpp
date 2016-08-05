@@ -1,10 +1,11 @@
 #include "PointcloudFilter.hpp"
+#include "BaseLogger.hpp"
+#include "Common.hpp"
 
-#include <base-logging/Logging.hpp>
 #include <base/samples/Pointcloud.hpp>
+#include <slam3d/FileLogger.hpp>
 
 #include <pcl/filters/voxel_grid.h>
-#include <slam3d/FileLogger.hpp>
 
 using namespace slam3d;
 
@@ -93,10 +94,7 @@ void PointcloudFilter::inputTransformerCallback(const base::Time &ts, const ::ba
 	mScanCount++;
 	if(mScanCount < mPassRate)
 	{
-		timeval finish = mClock->now();
-		unsigned d_sec = finish.tv_sec - start.tv_sec;
-		unsigned d_usec = finish.tv_usec - start.tv_usec;
-		mLogger->message(DEBUG, (boost::format("Added scan in %02i.%06i seconds.") % d_sec % d_usec).str());
+		mLogger->message(DEBUG, (boost::format("Added scan in %1% ms.") % timevaldiff(start, mClock->now())).str());
 		return;
 	}
 	mScanCount = 0;
@@ -141,11 +139,7 @@ void PointcloudFilter::inputTransformerCallback(const base::Time &ts, const ::ba
 	mOcTree->setClampingThresMax(mOctoConfig.clampingThresMax);
 	
 	mPointcloud.clear();
-	
-	timeval finish = mClock->now();
-	unsigned d_sec = finish.tv_sec - start.tv_sec;
-	unsigned d_usec = finish.tv_usec - start.tv_usec;
-	mLogger->message(DEBUG, (boost::format("Created output in %02i.%06i seconds.") % d_sec % d_usec).str());
+	mLogger->message(DEBUG, (boost::format("Created output in %1% ms.") % timevaldiff(start, mClock->now())).str());
 }
 
 bool PointcloudFilter::configureHook()
@@ -160,10 +154,10 @@ bool PointcloudFilter::configureHook()
 		mLogger = new Logger(*mClock);
 		break;
 	case 1:
-		mLogger = new Logger(*mClock);
+		mLogger = new BaseLogger();
 		break;
 	case 2:
-		mLogger = new FileLogger(*mClock, "slam3d.log");
+		mLogger = new FileLogger(*mClock, "slam3d_filter.log");
 		break;
 	default:
 		mLogger = new Logger(*mClock);
