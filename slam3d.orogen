@@ -96,7 +96,7 @@ task_context "PointcloudMapper" do
 
 	property('gicp_coarse_config', '/slam3d/GICPConfiguration')
 	.doc("Parameters for coarse Generalized ICP when doing loop closures.")
-	
+
 	property('log_type', '/int', 0)
 	.doc("Standard(0), Base(1), File(2)")
 	
@@ -174,6 +174,13 @@ task_context "PointcloudFilter" do
 		max_latency 0.5
 	end
 
+	property('log_type', '/int', 0)
+	.doc("Standard(0), Base(1), File(2)")
+
+	property('log_level', '/int', 2)
+	.dynamic()
+	.doc("Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
+
 	property('min_height', '/double', -1)
 	.doc("Remove all points below this height.")
 
@@ -188,10 +195,10 @@ task_context "PointcloudFilter" do
 	
 	property('pass_rate', '/int', 1)
 	.doc("Only pass every n'th scan.")
-	
+
 	property('resolution', '/double', 0.01)
 	.doc("Resolution of output cloud and OctoMap.")
-	
+
 	property('octo_map_config', 'slam3d/OctoMapConfiguration')
 	.doc("OctoMap specific configuration.")
 end

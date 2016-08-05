@@ -19,6 +19,7 @@ namespace slam3d
 	
 		// Callbacks
 		virtual void inputTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);
+		virtual bool setLog_level(boost::int32_t value);
 
 		// Internal methods
 		PointCloud::Ptr downsample(PointCloud::Ptr source, float leaf_size);
@@ -28,6 +29,8 @@ namespace slam3d
 		octomap::OcTree* mOcTree;
 		OctoMapConfiguration mOctoConfig;
 		unsigned mScanCount;
+		Clock* mClock;
+		Logger* mLogger;
 
 		// Parameters
 		double mMinHeight;
