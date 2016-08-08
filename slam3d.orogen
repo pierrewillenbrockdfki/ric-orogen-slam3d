@@ -162,8 +162,30 @@ task_context "PointcloudToBinary" do
 	periodic 0.1
 end
 
-## Filter to reduce velodyne-scans taking indoor
+## Filter for pointclouds 
 task_context "PointcloudFilter" do
+	input_port 'input', '/base/samples/Pointcloud'
+	output_port 'output', '/base/samples/Pointcloud'
+	port_driven 'input'
+
+	property('min_height', '/double', -1)
+	.doc("Remove all points below this height.")
+
+	property('max_height', '/double', 1)
+	.doc("Remove all points above this height.")
+
+	property('min_distance', '/double', 0.5)
+	.doc("Remove all points within this radius of the sensor.")
+
+	property('max_distance', '/double', 10)
+	.doc("Remove all points beyond this radius of the sensor.")
+	
+	property('pass_rate', '/int', 1)
+	.doc("Only pass every n'th scan.")
+end
+
+## Filter to remove outliers and moving objects
+task_context "OcTreeFilter" do
 	input_port 'input', '/base/samples/Pointcloud'
 	output_port 'output', '/base/samples/Pointcloud'
 	port_driven 'input'
