@@ -4,6 +4,7 @@
 
 #include <base/samples/RigidBodyState.hpp>
 #include <base-logging/Logging.hpp>
+#include <boost/format.hpp>
 
 namespace slam3d
 {
