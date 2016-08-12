@@ -47,6 +47,7 @@
     <File Name="manifest.xml"/>
     <File Name="slam3d.orogen"/>
     <File Name="OctoMapConfiguration.hpp"/>
+    <File Name="tasks/CMakeLists.txt"/>
   </VirtualDirectory>
   <VirtualDirectory Name="scripts">
     <File Name="scripts/transforms.rb"/>

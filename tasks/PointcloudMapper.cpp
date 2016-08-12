@@ -1,6 +1,7 @@
 #include "PointcloudMapper.hpp"
 #include "RockOdometry.hpp"
 #include "BaseLogger.hpp"
+#include "Common.hpp"
 
 #include <base/samples/Pointcloud.hpp>
 #include <base/samples/RigidBodyState.hpp>
@@ -279,6 +280,16 @@ bool PointcloudMapper::configureHook()
 	unsigned range = _patch_building_range.get();
 	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
 	mMapper->setPatchBuildingRange(range);
+	
+	base::Pose pose = _start_pose.get();
+	base::Position p = pose.position;
+	base::Orientation o = pose.orientation;
+	mLogger->message(INFO, (boost::format("start_pose:             pos: (%1%, %2%, %3%) / quat: (%4%, %5%, %6%, %7%)")
+	 % p[0] % p[1] % p[2] % o.x() % o.y() % o.z() % o.w()).str());
+	mMapper->setCurrentPose(pose2transform(pose));
+	
+	mMapper->useOdometryHeading(_use_odometry_heading.get());
+	mLogger->message(INFO, (boost::format("use_odometry_heading:   %1%") % _use_odometry_heading.get()).str());
 	
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());

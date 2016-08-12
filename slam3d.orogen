@@ -91,6 +91,12 @@ task_context "PointcloudMapper" do
 	property('add_odometry_edges', '/bool', true)
 	.doc("Whether to add odometry edges to the graph.")
 
+	property('start_pose', '/base/Pose')
+	.doc("Start pose of the robot in map coordinates.")
+
+	property('use_odometry_heading', '/bool', false)
+	.doc("Whether to initialize the robot's pose from odometry.")
+
 	property('gicp_config', '/slam3d/GICPConfiguration')
 	.doc("Parameters for Generalized ICP.")
 

@@ -1,5 +1,7 @@
 #include "Common.hpp"
 
+using namespace slam3d;
+
 long slam3d::timevaldiff(const timeval& start, const timeval& end)
 {
 	long msec;
@@ -9,4 +11,13 @@ long slam3d::timevaldiff(const timeval& start, const timeval& end)
 		return msec;
 	else
 		return -msec;
+}
+
+Transform slam3d::pose2transform(const base::Pose& pose)
+{
+	Eigen::Affine3d affine = pose.toTransform();
+	Transform tf;
+	tf.linear() = affine.linear();
+	tf.translation() = affine.translation();
+	return tf;
 }
