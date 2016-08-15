@@ -43,7 +43,6 @@ bool PointcloudMapper::optimize()
 		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
 		if(mMapper->optimize())
 		{
-			sendRobotPose();
 			mRebuildMap = true;
 			return true;
 		}
@@ -412,12 +411,13 @@ void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::sampl
 void PointcloudMapper::sendRobotPose()
 {
 	// Publish the robot pose in map
+	mCurrentPose = mMapper->getCurrentPose();
 	base::samples::RigidBodyState rbs;
 	rbs.setTransform(mCurrentPose);
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = mRobotFrame;
 	rbs.targetFrame = mMapFrame;
-	rbs.time = mCurrentTime;
+	rbs.time = timeval2time(mClock->now()); //mCurrentTime;
 	_map2robot.write(rbs);
 	
 	// Publish the odometry drift
@@ -493,8 +493,6 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 				generate_map();
 			}
 		}
-		mCurrentPose = mMapper->getCurrentPose();
-		sendRobotPose();
 	}catch(std::exception& e)
 	{
 		mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
@@ -504,6 +502,7 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 void PointcloudMapper::updateHook()
 {
 	PointcloudMapperBase::updateHook();
+	sendRobotPose();
 }
 
 void PointcloudMapper::errorHook()
