@@ -1,4 +1,5 @@
 #include "PointcloudMapper2D.hpp"
+#include "Common.hpp"
 
 #include <envire/Core.hpp>
 #include <envire/Orocos.hpp>
@@ -155,7 +156,7 @@ bool PointcloudMapper2D::generate_map()
 	delete[] occ;
 	delete[] hit;
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
-	emitter.setTime(mCurrentTime);
+	emitter.setTime(timeval2time(mClock->now()));
 	emitter.flush();
 	
 	timeval finish = mClock->now();

@@ -36,7 +36,6 @@ namespace slam3d
 		// Internal methods
 		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
 		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
-		void sendRobotPose();
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
 		virtual void handleNewScan(const VertexObject& scan);
@@ -88,10 +87,7 @@ namespace slam3d
 		bool mRebuildMap;
 		
 		// Current state of transformations
-		base::Time mCurrentTime;
-		Eigen::Affine3d mCurrentPose;
 		Eigen::Affine3d mCurrentOdometry;
-		Eigen::Affine3d mLastOdometry;
 
 	public:
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");

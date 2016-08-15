@@ -408,32 +408,9 @@ void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::sampl
 	}
 }
 
-void PointcloudMapper::sendRobotPose()
-{
-	// Publish the robot pose in map
-	mCurrentPose = mMapper->getCurrentPose();
-	base::samples::RigidBodyState rbs;
-	rbs.setTransform(mCurrentPose);
-	rbs.invalidateCovariances();
-	rbs.sourceFrame = mRobotFrame;
-	rbs.targetFrame = mMapFrame;
-	rbs.time = timeval2time(mClock->now()); //mCurrentTime;
-	_map2robot.write(rbs);
-	
-	// Publish the odometry drift
-	if(mOdometry)
-	{
-		Eigen::Affine3d drift = mCurrentPose * mCurrentOdometry.inverse();
-		rbs.setTransform(drift);
-		rbs.sourceFrame = mOdometryFrame;
-		_map2odometry.write(rbs);
-	}
-}
-
 void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
 {
 	++mScansReceived;
-	mCurrentTime = ts;
 	if(mOdometry)
 	{
 		try
@@ -502,7 +479,25 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 void PointcloudMapper::updateHook()
 {
 	PointcloudMapperBase::updateHook();
-	sendRobotPose();
+
+	// Publish the robot pose in map
+	Transform currentPose = mMapper->getCurrentPose();
+	base::samples::RigidBodyState rbs;
+	rbs.setTransform(currentPose);
+	rbs.invalidateCovariances();
+	rbs.sourceFrame = mRobotFrame;
+	rbs.targetFrame = mMapFrame;
+	rbs.time = timeval2time(mClock->now());
+	_map2robot.write(rbs);
+	
+	// Publish the odometry drift
+	if(mOdometry)
+	{
+		Eigen::Affine3d drift = currentPose * mCurrentOdometry.inverse();
+		rbs.setTransform(drift);
+		rbs.sourceFrame = mOdometryFrame;
+		_map2odometry.write(rbs);
+	}
 }
 
 void PointcloudMapper::errorHook()
