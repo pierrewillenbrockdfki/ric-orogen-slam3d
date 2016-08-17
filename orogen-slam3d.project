@@ -22,9 +22,6 @@
   <VirtualDirectory Name="tasks">
     <File Name="tasks/PointcloudMapper.cpp"/>
     <File Name="tasks/PointcloudMapper.hpp"/>
-    <File Name="tasks/rock-common.hpp"/>
-    <File Name="tasks/PointcloudFilter.cpp"/>
-    <File Name="tasks/PointcloudFilter.hpp"/>
     <File Name="tasks/ScanConverter.hpp"/>
     <File Name="tasks/ScanConverter.cpp"/>
     <File Name="tasks/PointcloudToBinary.cpp"/>
@@ -35,11 +32,22 @@
     <File Name="tasks/PointcloudMapper2D.hpp"/>
     <File Name="tasks/OcTreeMapper.cpp"/>
     <File Name="tasks/OcTreeMapper.hpp"/>
+    <File Name="tasks/Common.hpp"/>
+    <File Name="tasks/Common.cpp"/>
+    <File Name="tasks/RockOdometry.cpp"/>
+    <File Name="tasks/RockOdometry.hpp"/>
+    <File Name="tasks/BaseLogger.hpp"/>
+    <File Name="tasks/BaseLogger.cpp"/>
+    <File Name="tasks/OcTreeFilter.cpp"/>
+    <File Name="tasks/OcTreeFilter.hpp"/>
+    <File Name="tasks/PointcloudFilter.cpp"/>
+    <File Name="tasks/PointcloudFilter.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
     <File Name="slam3d.orogen"/>
     <File Name="OctoMapConfiguration.hpp"/>
+    <File Name="tasks/CMakeLists.txt"/>
   </VirtualDirectory>
   <VirtualDirectory Name="scripts">
     <File Name="scripts/transforms.rb"/>

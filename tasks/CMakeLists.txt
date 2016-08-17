@@ -2,7 +2,11 @@
 
 include(slam3dTaskLib)
 ADD_LIBRARY(${SLAM3D_TASKLIB_NAME} SHARED 
-    ${SLAM3D_TASKLIB_SOURCES})
+    ${SLAM3D_TASKLIB_SOURCES}
+    BaseLogger.cpp
+    RockOdometry.cpp
+    Common.cpp)
+
 add_dependencies(${SLAM3D_TASKLIB_NAME}
     regen-typekit)
 
@@ -18,6 +22,12 @@ INSTALL(TARGETS ${SLAM3D_TASKLIB_NAME}
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib/orocos)
 
-INSTALL(FILES ${SLAM3D_TASKLIB_HEADERS}
-    DESTINATION include/orocos/slam3d)
+INSTALL(
+FILES
+    ${SLAM3D_TASKLIB_HEADERS}
+    BaseLogger.hpp
+    RockOdometry.hpp
+    Common.hpp
+DESTINATION
+    include/orocos/slam3d)
 

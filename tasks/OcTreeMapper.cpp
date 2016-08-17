@@ -122,7 +122,7 @@ void OcTreeMapper::sendMap()
 {
 	// Build and publish the MLS-Map
 	mOcTree->updateInnerOccupancy();
-	mOcTree->writeBinary("slam3d_octomap.bt");
+	mOcTree->writeBinaryConst("slam3d_octomap.bt");
 	buildMLS();
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
 	emitter.flush();

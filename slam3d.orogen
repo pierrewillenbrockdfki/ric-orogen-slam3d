@@ -91,12 +91,18 @@ task_context "PointcloudMapper" do
 	property('add_odometry_edges', '/bool', true)
 	.doc("Whether to add odometry edges to the graph.")
 
+	property('start_pose', '/base/Pose')
+	.doc("Start pose of the robot in map coordinates.")
+
+	property('use_odometry_heading', '/bool', false)
+	.doc("Whether to initialize the robot's pose from odometry.")
+
 	property('gicp_config', '/slam3d/GICPConfiguration')
 	.doc("Parameters for Generalized ICP.")
 
 	property('gicp_coarse_config', '/slam3d/GICPConfiguration')
 	.doc("Parameters for coarse Generalized ICP when doing loop closures.")
-	
+
 	property('log_type', '/int', 0)
 	.doc("Standard(0), Base(1), File(2)")
 	
@@ -162,11 +168,11 @@ task_context "PointcloudToBinary" do
 	periodic 0.1
 end
 
-## Filter to reduce velodyne-scans taking indoor
+## Filter for pointclouds 
 task_context "PointcloudFilter" do
-	input_port 'cloud_in', '/base/samples/Pointcloud'
-	output_port 'cloud_out', '/base/samples/Pointcloud'
-	port_driven 'cloud_in'
+	input_port 'input', '/base/samples/Pointcloud'
+	output_port 'output', '/base/samples/Pointcloud'
+	port_driven 'input'
 
 	property('min_height', '/double', -1)
 	.doc("Remove all points below this height.")
@@ -182,6 +188,47 @@ task_context "PointcloudFilter" do
 	
 	property('pass_rate', '/int', 1)
 	.doc("Only pass every n'th scan.")
+end
+
+## Filter to remove outliers and moving objects
+task_context "OcTreeFilter" do
+	input_port 'input', '/base/samples/Pointcloud'
+	output_port 'output', '/base/samples/Pointcloud'
+	port_driven 'input'
+
+	transformer do
+		transform "laser", "odometry"
+		align_port 'input'
+		max_latency 0.5
+	end
+
+	property('log_type', '/int', 0)
+	.doc("Standard(0), Base(1), File(2)")
+
+	property('log_level', '/int', 2)
+	.dynamic()
+	.doc("Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
+
+	property('min_height', '/double', -1)
+	.doc("Remove all points below this height.")
+
+	property('max_height', '/double', 1)
+	.doc("Remove all points above this height.")
+
+	property('min_distance', '/double', 0.5)
+	.doc("Remove all points within this radius of the sensor.")
+
+	property('max_distance', '/double', 10)
+	.doc("Remove all points beyond this radius of the sensor.")
+	
+	property('pass_rate', '/int', 1)
+	.doc("Only pass every n'th scan.")
+
+	property('resolution', '/double', 0.01)
+	.doc("Resolution of output cloud and OctoMap.")
+
+	property('octo_map_config', 'slam3d/OctoMapConfiguration')
+	.doc("OctoMap specific configuration.")
 end
 
 ## Convert MultilevelLaserScan (deprecated format)

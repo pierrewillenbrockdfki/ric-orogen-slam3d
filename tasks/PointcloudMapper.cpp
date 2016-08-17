@@ -1,5 +1,7 @@
 #include "PointcloudMapper.hpp"
-#include "rock-common.hpp"
+#include "RockOdometry.hpp"
+#include "BaseLogger.hpp"
+#include "Common.hpp"
 
 #include <base/samples/Pointcloud.hpp>
 #include <base/samples/RigidBodyState.hpp>
@@ -41,7 +43,6 @@ bool PointcloudMapper::optimize()
 		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
 		if(mMapper->optimize())
 		{
-			sendRobotPose();
 			mRebuildMap = true;
 			return true;
 		}
@@ -279,6 +280,16 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
 	mMapper->setPatchBuildingRange(range);
 	
+	base::Pose pose = _start_pose.get();
+	base::Position p = pose.position;
+	base::Orientation o = pose.orientation;
+	mLogger->message(INFO, (boost::format("start_pose:             pos: (%1%, %2%, %3%) / quat: (%4%, %5%, %6%, %7%)")
+	 % p[0] % p[1] % p[2] % o.x() % o.y() % o.z() % o.w()).str());
+	mMapper->setCurrentPose(pose2transform(pose));
+	
+	mMapper->useOdometryHeading(_use_odometry_heading.get());
+	mLogger->message(INFO, (boost::format("use_odometry_heading:   %1%") % _use_odometry_heading.get()).str());
+	
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
 	
@@ -397,31 +408,9 @@ void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::sampl
 	}
 }
 
-void PointcloudMapper::sendRobotPose()
-{
-	// Publish the robot pose in map
-	base::samples::RigidBodyState rbs;
-	rbs.setTransform(mCurrentPose);
-	rbs.invalidateCovariances();
-	rbs.sourceFrame = mRobotFrame;
-	rbs.targetFrame = mMapFrame;
-	rbs.time = mCurrentTime;
-	_map2robot.write(rbs);
-	
-	// Publish the odometry drift
-	if(mOdometry)
-	{
-		Eigen::Affine3d drift = mCurrentPose * mCurrentOdometry.inverse();
-		rbs.setTransform(drift);
-		rbs.sourceFrame = mOdometryFrame;
-		_map2odometry.write(rbs);
-	}
-}
-
 void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
 {
 	++mScansReceived;
-	mCurrentTime = ts;
 	if(mOdometry)
 	{
 		try
@@ -481,8 +470,6 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 				generate_map();
 			}
 		}
-		mCurrentPose = mMapper->getCurrentPose();
-		sendRobotPose();
 	}catch(std::exception& e)
 	{
 		mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
@@ -492,6 +479,25 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 void PointcloudMapper::updateHook()
 {
 	PointcloudMapperBase::updateHook();
+
+	// Publish the robot pose in map
+	Transform currentPose = mMapper->getCurrentPose();
+	base::samples::RigidBodyState rbs;
+	rbs.setTransform(currentPose);
+	rbs.invalidateCovariances();
+	rbs.sourceFrame = mRobotFrame;
+	rbs.targetFrame = mMapFrame;
+	rbs.time = timeval2time(mClock->now());
+	_map2robot.write(rbs);
+	
+	// Publish the odometry drift
+	if(mOdometry)
+	{
+		Eigen::Affine3d drift = currentPose * mCurrentOdometry.inverse();
+		rbs.setTransform(drift);
+		rbs.sourceFrame = mOdometryFrame;
+		_map2odometry.write(rbs);
+	}
 }
 
 void PointcloudMapper::errorHook()

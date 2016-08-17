@@ -46,7 +46,7 @@ void PointcloudFilter::updateHook()
 	
 	// Read the scan from the port
 	base::samples::Pointcloud cloud;
-	while(_cloud_in.read(cloud, false) == RTT::NewData)
+	while(_input.read(cloud, false) == RTT::NewData)
 	{
 		mSkipCount++;
 		if(mSkipCount < mPassRate)
@@ -62,7 +62,7 @@ void PointcloudFilter::updateHook()
 				filtered_cloud.points.push_back(*it);
 		}
 		filtered_cloud.time = cloud.time;
-		_cloud_out.write(filtered_cloud);
+		_output.write(filtered_cloud);
 	}
 }
 
