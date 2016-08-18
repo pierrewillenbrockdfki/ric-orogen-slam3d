@@ -5,6 +5,7 @@
 #include <envire/Orocos.hpp>
 
 #include <pcl/common/transforms.h>
+#include <boost/format.hpp>
 
 using namespace slam3d;
 
