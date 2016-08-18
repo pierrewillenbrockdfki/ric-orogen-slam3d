@@ -28,6 +28,7 @@ namespace slam3d
 		virtual bool generate_map();
 		virtual bool optimize();
 		virtual bool write_graph();
+		virtual bool write_envire();
 		
 		// Callbacks
 		virtual void scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);

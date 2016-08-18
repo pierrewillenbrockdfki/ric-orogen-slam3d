@@ -52,6 +52,10 @@ task_context "PointcloudMapper" do
 	.returns('/bool')
 	.doc("Writes internal graph structure to file.")
 
+	operation('write_envire')
+	.returns('/bool')
+	.doc("Writes the serialized envire object to 'envire_path'.")
+
 	property('scan_resolution', '/double', 0.01)
 	.doc("Pointclouds are downsampled to this resolution before being added to the map.")
 
@@ -142,6 +146,9 @@ task_context "PointcloudMapper" do
 	
 	property('grid_mls_config', '/envire/MLSConfiguration')
 	.doc("Multi-Layer-Surface-Map specific configuration.")
+
+	property('envire_path', '/std/string', "slam3d_envire")
+	.doc("The path where to write the serialized envire map.")
 end
 
 ## Mapper that creates a Multi-Level-Surface-Map from an OcTree

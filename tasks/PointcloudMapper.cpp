@@ -76,6 +76,12 @@ bool PointcloudMapper::generate_map()
 	return true;
 }
 
+bool PointcloudMapper::write_envire()
+{
+	mEnvironment.serialize(_envire_path.get());
+	return true;
+}
+
 bool PointcloudMapper::write_graph()
 {
 	mMapper->writeGraphToFile("slam3d_graph");
@@ -355,6 +361,7 @@ bool PointcloudMapper::configureHook()
 	
 	// Add point cloud to environment
 	mPointcloud = new envire::Pointcloud();
+	mPointcloud->setUniqueId("slam3d-pointcloud");
 	envire::FrameNode* cloud_node = new envire::FrameNode();
 	mEnvironment.addChild(mEnvironment.getRootNode(), cloud_node);
 	mEnvironment.setFrameNode(mPointcloud, cloud_node);
