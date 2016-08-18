@@ -111,6 +111,7 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 		return;
 	}
 	base::samples::Pointcloud mapCloud;
+	mPointcloud->vertices.clear();
 	for(PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
 	{
 		base::Vector3d vec;
@@ -118,6 +119,7 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 		vec[1] = it->y;
 		vec[2] = it->z;
 		mapCloud.points.push_back(vec);
+		mPointcloud->vertices.push_back(vec);
 	}
 	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
 	_cloud.write(mapCloud);	
@@ -350,6 +352,12 @@ bool PointcloudMapper::configureHook()
 	envire::FrameNode* mls_node = new envire::FrameNode();
 	mEnvironment.addChild(mEnvironment.getRootNode(), mls_node);
 	mEnvironment.setFrameNode(mMultiLayerMap, mls_node);
+	
+	// Add point cloud to environment
+	mPointcloud = new envire::Pointcloud();
+	envire::FrameNode* cloud_node = new envire::FrameNode();
+	mEnvironment.addChild(mEnvironment.getRootNode(), cloud_node);
+	mEnvironment.setFrameNode(mPointcloud, cloud_node);
 	
 	return true;
 }

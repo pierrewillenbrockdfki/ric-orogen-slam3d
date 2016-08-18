@@ -9,7 +9,7 @@
 #include <slam3d/Solver.hpp>
 
 #include <envire/maps/MLSGrid.hpp>
-#include <envire/operators/MLSProjection.hpp>
+#include <envire/maps/Pointcloud.hpp>
 
 #include <queue>
 #include <boost/thread/shared_mutex.hpp>
@@ -75,6 +75,7 @@ namespace slam3d
 		// Parameters for creation of MLS
 		envire::Environment mEnvironment;
 		envire::MLSGrid* mMultiLayerMap;
+		envire::Pointcloud* mPointcloud;
 		
 		double mGridSizeX;
 		double mGridSizeY;
