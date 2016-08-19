@@ -7,7 +7,13 @@ require_relative 'visualize'
 
 include Orocos
 
-log = Orocos::Log::Replay.open("/media/data/replays/aila_02")
+## Setup replay
+unless ARGV.length >= 1
+	puts "Supply path to replay!"
+	exit
+end
+
+log = Orocos::Log::Replay.open(ARGV[0])
 log.use_sample_time = false
 
 ## Initialize orocos ##
@@ -23,6 +29,14 @@ end
 #odometry_ports.each do |port|
 #	port.tracked = true
 #end
+
+state_ports = log.find_all_output_ports("/int32_t", "state")
+state_ports.each do |port|
+    port.tracked = true
+end
+
+log.transformer_broadcaster.track(false)
+log.transformer_broadcaster.rename("foo")
 
 ## Execute the task 'message_producer::Task' ##
 Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
@@ -75,7 +89,7 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 		mapper.map_publish_rate = 0
 	
 		mapper.gicp_config do |c|
-			c.max_correspondence_distance = 0.1
+			c.max_correspondence_distance = 0.25
 			c.max_fitness_score = 30
 			c.point_cloud_density = 0.1
 			c.maximum_iterations = 20
@@ -87,7 +101,7 @@ Orocos.run 'laserscan_fusion::MergeTwoScans' => 'fusion',
 		mapper.grid_offset_y = -10
 		mapper.grid_min_z = -5;
 		mapper.grid_max_z = 5;
-		mapper.grid_resolution = 0.01
+		mapper.grid_resolution = 0.05
 		mapper.configure
 
 		fusion.cloud.connect_to mapper.scan,              :type => :buffer, :size => 10
