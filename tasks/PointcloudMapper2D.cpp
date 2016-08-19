@@ -9,8 +9,6 @@
 
 using namespace slam3d;
 
-typedef uint16_t grid_t;
-
 // https://de.wikipedia.org/wiki/Bresenham-Algorithmus#Kompakte_Variante
 void line(unsigned x0, unsigned y0, unsigned x1, unsigned y1, grid_t* hit, grid_t* occ, unsigned sizex, unsigned sizey)
 {
@@ -75,74 +73,76 @@ PointcloudMapper2D::~PointcloudMapper2D()
 {
 }
 
-bool PointcloudMapper2D::generate_map()
+void PointcloudMapper2D::addScanToMap(const VertexObject& scan)
 {
-	mLogger->message(INFO, "Requested traversability-grid generation.");
-	timeval start = mClock->now();
+	// Cast to correct type
+	PointCloudMeasurement::Ptr pcl = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
+	if(!pcl)
+	{
+		mLogger->message(ERROR, "Vertex given to addScanToMap is not a Pointcloud!");
+		return;
+	}
 
-	// Setup a temporary array
-	size_t size_x = mGrid->getCellSizeX();
-	size_t size_y = mGrid->getCellSizeY();
-	size_t arr_size = size_x * size_y;
-	mLogger->message(DEBUG, (boost::format("Grid size: %1% * %2%") % size_x % size_y).str());
+	// Get sensor's pose in map coordinates
+	Transform sensorPose = scan.corrected_pose * pcl->getSensorPose();
 	
-	grid_t* occ = new grid_t[arr_size];
-	grid_t* hit = new grid_t[arr_size];
-	memset(occ, 0, arr_size * sizeof(grid_t));
-	memset(hit, 0, arr_size * sizeof(grid_t));
-	mLogger->message(DEBUG, (boost::format("Initialized array with size: %1%") % arr_size ).str());
-	
-	// Project pointclouds to temporary array
-	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+	size_t sensorX, sensorY, pointX, pointY;
+
+	PointCloud::Ptr cloud(new PointCloud);
+	transformPointCloudWithViewPoints(*(pcl->getPointCloud()), *cloud, sensorPose);
+
 	int count = 0;
 	int valid = 0;
-	for(VertexObjectList::const_iterator it = vertices.begin(); it < vertices.end(); it++)
+	for(PointCloud::const_iterator point = cloud->begin(); point != cloud->end(); ++point)
 	{
-		PointCloudMeasurement::Ptr pcl = boost::dynamic_pointer_cast<PointCloudMeasurement>(it->measurement);
-		if(!pcl)
-		{
-			mLogger->message(ERROR, "Measurement from PCL-Sensor is not a point cloud!");
-			return false;
-		}
-
-		// Get sensor's pose in map coordinates
-		Transform sensorPose = it->corrected_pose * pcl->getSensorPose();
+		count++;
+		if(!mGrid->toGrid(Eigen::Vector3d(point->x, point->y, 0), pointX, pointY))
+			continue;
 		
-		size_t sensorX, sensorY, pointX, pointY;
-
-		PointCloud::Ptr cloud(new PointCloud);
-		transformPointCloudWithViewPoints(*(pcl->getPointCloud()), *cloud, sensorPose);
-		for(PointCloud::const_iterator point = cloud->begin(); point != cloud->end(); ++point)
+		if(mUseColorsAsViewpoints)
 		{
-			count++;
-			if(!mGrid->toGrid(Eigen::Vector3d(point->x, point->y, 0), pointX, pointY))
+			if(!mGrid->toGrid(Eigen::Vector3d(point->vp_x, point->vp_y, 0), sensorX, sensorY))
 				continue;
-			
-			if(mUseColorsAsViewpoints)
-			{
-				if(!mGrid->toGrid(Eigen::Vector3d(point->vp_x, point->vp_y, 0), sensorX, sensorY))
-					continue;
-			}else
-			{
-				if(!mGrid->toGrid(sensorPose.translation(), sensorX, sensorY))
-					continue;
-			}
-			line(sensorX, sensorY, pointX, pointY, hit, occ, size_x, size_y);
-			valid++;
+		}else
+		{
+			if(!mGrid->toGrid(sensorPose.translation(), sensorX, sensorY))
+				continue;
 		}
+		line(sensorX, sensorY, pointX, pointY, mHitCells, mOccCells, mGrid->getCellSizeX(), mGrid->getCellSizeY());
+		valid++;
 	}
 	mLogger->message(DEBUG, (boost::format("Projected %1% out of %2% points to the grid.") % valid % count).str());
+}
 
+void PointcloudMapper2D::rebuildMap(const VertexObjectList& vertices)
+{
+	size_t arr_size = mGrid->getCellSizeX() * mGrid->getCellSizeY();
+	memset(mOccCells, 0, arr_size * sizeof(grid_t));
+	memset(mHitCells, 0, arr_size * sizeof(grid_t));
+	
+	boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
+	for(VertexObjectList::const_iterator v = vertices.begin(); v != vertices.end(); ++v)
+	{
+		addScanToMap(*v);
+	}
+	mRebuildMap = false;
+	sendMap();
+}
+
+void PointcloudMapper2D::sendMap()
+{
 	// Write temporary array to traversability map
+	size_t size_x = mGrid->getCellSizeX();
+	size_t size_y = mGrid->getCellSizeY();
 	size_t index = 0;
 	for(size_t y = 0; y < size_y; y++)
 	{
 		for(size_t x = 0; x < size_x; x++, index++)
 		{
 			int k = 0;
-			if(hit[index] > 0)
+			if(mHitCells[index] > 0)
 			{
-				if((occ[index] / hit[index]) > 0.1)
+				if((mOccCells[index] / mHitCells[index]) > 0.1)
 				{
 					k = 1;
 				}else
@@ -154,16 +154,10 @@ bool PointcloudMapper2D::generate_map()
 			mGrid->setTraversabilityAndProbability(k, 1.0, x, y);
 		}
 	}
-	delete[] occ;
-	delete[] hit;
+	
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
 	emitter.setTime(timeval2time(mClock->now()));
 	emitter.flush();
-	
-	timeval finish = mClock->now();
-	int duration = finish.tv_sec - start.tv_sec;
-	mLogger->message(INFO, (boost::format("Generated Traversability-Grid from %1% scans in %2% seconds.") % vertices.size() % duration).str());
-	return true;
 }
 
 bool PointcloudMapper2D::configureHook()
@@ -183,6 +177,15 @@ bool PointcloudMapper2D::configureHook()
 	envire::FrameNode* grid_node = new envire::FrameNode();
 	mEnvironment.addChild(mEnvironment.getRootNode(), grid_node);
 	mEnvironment.setFrameNode(mGrid, grid_node);
+	
+	// Setup the temporary arrays for raytracing
+	size_t arr_size = x_size * y_size;
+	mOccCells = new grid_t[arr_size];
+	mHitCells = new grid_t[arr_size];
+	memset(mOccCells, 0, arr_size * sizeof(grid_t));
+	memset(mHitCells, 0, arr_size * sizeof(grid_t));
+	mLogger->message(DEBUG, (boost::format("Initialized array with size %1% * %2%") % x_size % y_size).str());
+		
 	return true;
 }
 
@@ -211,4 +214,6 @@ void PointcloudMapper2D::stopHook()
 void PointcloudMapper2D::cleanupHook()
 {
 	PointcloudMapper2DBase::cleanupHook();
+	delete[] mOccCells;
+	delete[] mHitCells;
 }

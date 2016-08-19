@@ -7,20 +7,29 @@
 
 namespace slam3d
 {
+	typedef uint16_t grid_t;
+
 	class PointcloudMapper2D : public PointcloudMapper2DBase
 	{
 	friend class PointcloudMapper2DBase;
 
 	protected:
-		// Operations
-		virtual bool generate_map();
 
 		// Envire stuff for Traversability-Grid
 		typedef std::vector<envire::BinaryEvent> EnvireEvents;
 		typedef RTT::extras::ReadOnlyPointer<EnvireEvents> EnvirePointer;
 
-		envire::TraversabilityGrid* mGrid;
+		// Internal methods
+		virtual void addScanToMap(const VertexObject& scan);
+		virtual void rebuildMap(const VertexObjectList& vertices);
+		virtual void sendMap();
 
+		// Members
+		envire::TraversabilityGrid* mGrid;
+		grid_t* mOccCells;
+		grid_t* mHitCells;
+
+		// Parameters
 		double mSizeX;
 		double mSizeY;
 		double mOffsetX;
