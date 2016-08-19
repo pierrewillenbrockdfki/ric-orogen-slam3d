@@ -141,7 +141,7 @@ void PointcloudMapper::addScanToMap(const VertexObject& scan)
 	PointCloudMeasurement::Ptr m = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
 	if(!m)
 	{
-		mLogger->message(WARNING, "Vertex given to addScanToMap is not a Pointcloud!");
+		mLogger->message(ERROR, "Vertex given to addScanToMap is not a Pointcloud!");
 		return;
 	}
 	
@@ -174,6 +174,7 @@ void PointcloudMapper::sendMap()
 {
 	// Publish the MLS-Map	
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
+	emitter.setTime(timeval2time(mClock->now()));
 	emitter.flush();
 }	
 
