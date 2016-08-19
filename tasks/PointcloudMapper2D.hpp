@@ -19,7 +19,6 @@ namespace slam3d
 		typedef std::vector<envire::BinaryEvent> EnvireEvents;
 		typedef RTT::extras::ReadOnlyPointer<EnvireEvents> EnvirePointer;
 
-		envire::Environment mEnvironment;
 		envire::TraversabilityGrid* mGrid;
 
 		double mSizeX;
