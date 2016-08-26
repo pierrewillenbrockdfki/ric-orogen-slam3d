@@ -1,5 +1,5 @@
 #include "RockOdometry.hpp"
-
+#include <boost/format.hpp>
 using namespace slam3d;
 
 RockOdometry::RockOdometry(transformer::Transformation& tf, Logger* logger)
