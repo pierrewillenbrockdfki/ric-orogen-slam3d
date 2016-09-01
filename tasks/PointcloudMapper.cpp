@@ -174,7 +174,7 @@ void PointcloudMapper::sendMap()
 {
 	// Publish the MLS-Map	
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
-	emitter.setTime(timeval2time(mClock->now()));
+	emitter.setTime(mLastScanTime);
 	emitter.flush();
 }	
 
@@ -476,6 +476,7 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 		if(mMapper->addReading(measurement))
 		{
 			mScansAdded++;
+			mLastScanTime = ts;
 			handleNewScan(mMapper->getLastVertex());
 			if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
 			{
@@ -503,7 +504,7 @@ void PointcloudMapper::updateHook()
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = mRobotFrame;
 	rbs.targetFrame = mMapFrame;
-	rbs.time = timeval2time(mClock->now());
+	rbs.time = mLastScanTime;
 	_map2robot.write(rbs);
 	
 	// Publish the odometry drift

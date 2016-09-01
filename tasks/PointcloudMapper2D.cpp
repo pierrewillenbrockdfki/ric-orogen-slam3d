@@ -156,7 +156,7 @@ void PointcloudMapper2D::sendMap()
 	}
 	
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
-	emitter.setTime(timeval2time(mClock->now()));
+	emitter.setTime(mLastScanTime);
 	emitter.flush();
 }
 
