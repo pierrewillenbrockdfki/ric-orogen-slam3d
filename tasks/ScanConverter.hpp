@@ -13,7 +13,7 @@ namespace slam3d
 	
 	protected:
 
-
+                void copyPointCloud(const std::vector< Eigen::Vector3d >& pc_eigen, std::vector< base::Point >& pc_base) const;
 
 	public:
 		ScanConverter(std::string const& name = "slam3d::ScanConverter", TaskCore::TaskState initial_state = Stopped);
