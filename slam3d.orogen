@@ -60,6 +60,11 @@ task_context "PointcloudMapper" do
 	.returns('/bool')
 	.doc("Writes the serialized envire object to 'envire_path'.")
 
+        operation('write_ply')
+        .argument('folder_path', '/std/string')
+        .returns('/bool')
+        .doc("Writes the accumulated pointcloud as ply to the given folder.")
+
 	property('scan_resolution', '/double', 0.01)
 	.doc("Pointclouds are downsampled to this resolution before being added to the map.")
 

@@ -14,6 +14,7 @@
 #include <boost/thread.hpp>
 
 #include <pcl/common/transforms.h>
+#include <pcl/io/ply_io.h>
 
 #include <envire/Orocos.hpp>
 
@@ -92,6 +93,31 @@ bool PointcloudMapper::write_graph()
 {
 	mMapper->writeGraphToFile("slam3d_graph");
 	return true;
+}
+
+bool PointcloudMapper::write_ply(const std::string& folder)
+{
+    mLogger->message(INFO, "Write pointcloud to PLY file.");
+    VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+    PointCloud::Ptr accCloud;
+    try
+    {
+        accCloud = buildPointcloud(vertices);
+    }
+    catch (boost::lock_error &e)
+    {
+        mLogger->message(ERROR, "Could not access the pose graph to build Pointcloud!");
+        return false;
+    }
+
+    boost::filesystem::path ply_path(folder);
+    boost::filesystem::create_directories(ply_path);
+    ply_path += "pointcloud-";
+    ply_path += base::Time::now().toString(base::Time::Seconds, "%Y%m%d-%H%M");
+    ply_path += ".ply";
+
+    pcl::PLYWriter ply_writer;
+    return ply_writer.write(ply_path.string(), *accCloud) >= 0;
 }
 
 PointCloud::Ptr PointcloudMapper::buildPointcloud(const VertexObjectList& vertices)
