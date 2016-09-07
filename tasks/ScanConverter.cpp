@@ -24,9 +24,9 @@ ScanConverter::~ScanConverter()
 
 void ScanConverter::copyPointCloud(const std::vector< Eigen::Vector3d >& pc_eigen, std::vector< base::Point >& pc_base) const
 {
-    pc_base.resize(pc_eigen.size());
-    for(unsigned i = 0; i < pc_eigen.size(); i++)
-        pc_base[i] = pc_eigen[i];
+	pc_base.resize(pc_eigen.size());
+	for(unsigned i = 0; i < pc_eigen.size(); i++)
+		pc_base[i] = pc_eigen[i];
 }
 
 bool ScanConverter::configureHook()
@@ -61,20 +61,20 @@ void ScanConverter::updateHook()
 	while(_scan.read(scan, false) == RTT::NewData)
 	{
 		// Convert to PointCloud
-                cloud.points.clear();
-                std::vector<Eigen::Vector3d> pc;
-                velodyne_lidar::ConvertHelper::convertScanToPointCloud(scan, pc);
-                copyPointCloud(pc, cloud.points);
-                cloud.time = scan.time;
-                _cloud.write(cloud);
+		cloud.points.clear();
+		std::vector<Eigen::Vector3d> pc;
+		velodyne_lidar::ConvertHelper::convertScanToPointCloud(scan, pc);
+		copyPointCloud(pc, cloud.points);
+		cloud.time = scan.time;
+		_cloud.write(cloud);
 	}
 
 	base::samples::DepthMap depthMap;
 	while(_depth_map.read(depthMap, false) == RTT::NewData)
 	{
-                depthMap.convertDepthMapToPointCloud(cloud.points, true);
-                cloud.time = depthMap.time;
-                _cloud.write(cloud);
+		depthMap.convertDepthMapToPointCloud(cloud.points, true);
+		cloud.time = depthMap.time;
+		_cloud.write(cloud);
 	}
 }
 
