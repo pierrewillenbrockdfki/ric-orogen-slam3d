@@ -497,6 +497,10 @@ void PointcloudMapper::updateHook()
 {
 	PointcloudMapperBase::updateHook();
 
+	// Check if we received anything yet
+	if(mLastScanTime.isNull())
+		return;
+
 	// Publish the robot pose in map
 	Transform currentPose = mMapper->getCurrentPose();
 	base::samples::RigidBodyState rbs;
