@@ -605,6 +605,8 @@ void PointcloudMapper::cleanupHook()
 	PointcloudMapperBase::cleanupHook();
 	delete mMapper;
 	delete mPclSensor;
+	if(mOdometry)
+		delete mOdometry;
 	delete mSolver;
 	delete mLogger;
 	delete mClock;
