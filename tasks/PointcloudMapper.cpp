@@ -449,6 +449,7 @@ PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Poi
 {
 	PointCloud::Ptr cloud_out(new PointCloud);
 	cloud_out->header.stamp = cloud_in.time.toMicroseconds();
+	cloud_out->reserve(cloud_in.points.size());
 	
 	if(mUseColorsAsViewpoints)
 	{
@@ -482,6 +483,7 @@ PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Poi
 void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud)
 {
 	base_cloud.time.fromMicroseconds(pcl_cloud->header.stamp);
+	base_cloud.points.reserve(pcl_cloud->size());
 	for(PointCloud::const_iterator it = pcl_cloud->begin(); it < pcl_cloud->end(); it++)
 	{
 		base::Point p;
