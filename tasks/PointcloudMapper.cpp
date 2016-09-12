@@ -513,15 +513,18 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 	try
 	{
 		Eigen::Affine3d affine;
-		_laser2robot.get(ts, affine, true);
-		if((affine.matrix().array() == affine.matrix().array()).all())
+		if(!_laser2robot.get(ts, affine, true) || !affine.matrix().allFinite())
 		{
-			laserPose.linear() = affine.linear();
-			laserPose.translation() = affine.translation();
+			mLogger->message(ERROR, "Failed to receive a valid laserInRobot pose!");
+			return;
 		}
-	}catch(std::exception &e)
+		laserPose.linear() = affine.linear();
+		laserPose.translation() = affine.translation();
+	}
+	catch(std::exception &e)
 	{
 		mLogger->message(ERROR, e.what());
+		return;
 	}
 
 	// Transform base::samples::Pointcloud --> Pointcloud
