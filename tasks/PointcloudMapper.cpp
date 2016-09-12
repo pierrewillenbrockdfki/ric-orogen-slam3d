@@ -23,13 +23,11 @@ using namespace slam3d;
 PointcloudMapper::PointcloudMapper(std::string const& name)
     : PointcloudMapperBase(name)
 {
-	mCurrentOdometry = Eigen::Affine3d::Identity();
 }
 
 PointcloudMapper::PointcloudMapper(std::string const& name, RTT::ExecutionEngine* engine)
     : PointcloudMapperBase(name, engine)
 {
-	mCurrentOdometry = Eigen::Affine3d::Identity();
 }
 
 PointcloudMapper::~PointcloudMapper()
@@ -335,6 +333,7 @@ bool PointcloudMapper::configureHook()
 	{
 		mOdometry = NULL;
 	}
+	mCurrentOdometry = Eigen::Affine3d::Identity();
 	
 	double min_translation = _min_translation.get();
 	double min_rotation = _min_rotation.get();
