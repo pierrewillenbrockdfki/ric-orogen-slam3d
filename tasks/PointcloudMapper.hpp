@@ -64,7 +64,6 @@ namespace slam3d
 		
 		bool mUseColorsAsViewpoints;
 		
-		int mScansReceived;
 		int mScansAdded;
 		int mOptimizationRate;
 		int mMapPublishRate;

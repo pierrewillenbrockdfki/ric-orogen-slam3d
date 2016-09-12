@@ -405,7 +405,6 @@ bool PointcloudMapper::configureHook()
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
-	mScansReceived = 0;
 	mScansAdded = 0;
 	mRebuildMap = false;
 	mForceAdd = false;
@@ -496,7 +495,6 @@ void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::sampl
 
 void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
 {
-	++mScansReceived;
 	if(mOdometry)
 	{
 		try
