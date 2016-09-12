@@ -30,7 +30,7 @@ namespace slam3d
 		virtual bool force_add();
 		virtual bool write_graph();
 		virtual bool write_envire();
-                virtual bool write_ply(const std::string& folder);
+		virtual bool write_ply(const std::string& folder);
 		
 		// Callbacks
 		virtual void scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);
@@ -45,6 +45,7 @@ namespace slam3d
 		virtual void addScanToMap(const VertexObject& scan);
 		virtual void rebuildMap(const VertexObjectList& vertices);
 		virtual void sendMap();
+		bool loadPLYMap(const std::string& path);
 	
 		// Members
 		slam3d::Clock* mClock;

@@ -208,7 +208,37 @@ void PointcloudMapper::sendMap()
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
 	emitter.setTime(mLastScanTime);
 	emitter.flush();
-}	
+}
+
+bool PointcloudMapper::loadPLYMap(const std::string& path)
+{
+	BoostMapper* boost_mapper = dynamic_cast<BoostMapper*>(mMapper);
+	if(boost_mapper == NULL)
+	{
+		mLogger->message(ERROR, "GraphMapper is not of class BoostMapper. Failed to load a-priori PLY map!");
+		return false;
+	}
+	PointCloud::Ptr pcl_cloud(new PointCloud());
+	pcl::PLYReader ply_reader;
+	if(ply_reader.read(path, *pcl_cloud) >= 0)
+	{
+		Transform pc_tr(pcl_cloud->sensor_orientation_.cast<double>());
+		pc_tr.translation() = pcl_cloud->sensor_origin_.block(0,0,3,1).cast<double>();
+		PointCloudMeasurement::Ptr initial_map(new PointCloudMeasurement(pcl_cloud, mRobotName, mPclSensor->getName(), pc_tr));
+		try
+		{
+			if(boost_mapper->addPointCloudMeasurement(initial_map, TransformWithCovariance(Transform::Identity(), Covariance::Identity())) > 0)
+				return true;
+		}
+		catch(std::exception& e)
+		{
+			mLogger->message(ERROR, (boost::format("Adding initial point cloud failed: %1%") % e.what()).str());
+		}
+	}
+	else
+		mLogger->message(ERROR, (boost::format("Failed to load a-priori PLY map %1%") % path).str());
+	return false;
+}
 
 bool PointcloudMapper::setLog_level(boost::int32_t value)
 {
@@ -399,6 +429,12 @@ bool PointcloudMapper::configureHook()
 	envire::FrameNode* cloud_node = new envire::FrameNode();
 	mEnvironment.addChild(mEnvironment.getRootNode(), cloud_node);
 	mEnvironment.setFrameNode(mPointcloud, cloud_node);
+
+	// load a-priori map file
+	if(!_apriori_ply_map.value().empty() && loadPLYMap(_apriori_ply_map.value()))
+	{
+		mScansAdded++;
+	}
 	
 	return true;
 }
