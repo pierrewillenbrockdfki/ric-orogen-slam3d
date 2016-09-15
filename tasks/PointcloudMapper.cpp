@@ -509,7 +509,7 @@ void PointcloudMapper::updateHook()
 	rbs.sourceFrame = mRobotFrame;
 	rbs.targetFrame = mMapFrame;
 	rbs.time = mLastScanTime;
-	_map2robot.write(rbs);
+	_robot2map.write(rbs);
 	
 	// Publish the odometry drift
 	if(mOdometry)
@@ -517,7 +517,7 @@ void PointcloudMapper::updateHook()
 		Eigen::Affine3d drift = currentPose * mCurrentOdometry.inverse();
 		rbs.setTransform(drift);
 		rbs.sourceFrame = mOdometryFrame;
-		_map2odometry.write(rbs);
+		_odometry2map.write(rbs);
 	}
 }
 

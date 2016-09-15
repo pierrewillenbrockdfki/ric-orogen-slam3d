@@ -20,8 +20,8 @@ task_context "PointcloudMapper" do
 	input_port 'scan', '/base/samples/Pointcloud'
 	output_port 'cloud', '/base/samples/Pointcloud'
 	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
-	output_port 'map2robot', 'base/samples/RigidBodyState'
-	output_port 'map2odometry', 'base/samples/RigidBodyState'
+	output_port 'robot2map', 'base/samples/RigidBodyState'
+	output_port 'odometry2map', 'base/samples/RigidBodyState'
 
 	periodic 0.1
 
@@ -32,8 +32,8 @@ task_context "PointcloudMapper" do
 
 		transform "laser", "robot"
 
-		transform_output "map2robot", "robot" => "map"
-		transform_output "map2odometry", "odometry" => "map"
+		transform_output "robot2map", "robot" => "map"
+		transform_output "odometry2map", "odometry" => "map"
 	end
 
 	operation('generate_cloud')
