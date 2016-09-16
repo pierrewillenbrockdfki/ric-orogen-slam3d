@@ -48,6 +48,10 @@ task_context "PointcloudMapper" do
 	.returns('/bool')
 	.doc("Starts the global optimization using the current SLAM backend.")
 
+	operation('force_add')
+	.returns('/bool')
+	.doc("Force to add one scan to the graph regardless of change in pose.")
+
 	operation('write_graph')
 	.returns('/bool')
 	.doc("Writes internal graph structure to file.")

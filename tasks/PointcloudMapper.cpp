@@ -76,6 +76,12 @@ bool PointcloudMapper::generate_map()
 	return true;
 }
 
+bool PointcloudMapper::force_add()
+{
+	mForceAdd = true;
+	return true;
+}
+
 bool PointcloudMapper::write_envire()
 {
 	mEnvironment.serialize(_envire_path.get());
@@ -347,6 +353,7 @@ bool PointcloudMapper::configureHook()
 	mScansReceived = 0;
 	mScansAdded = 0;
 	mRebuildMap = false;
+	mForceAdd = false;
 	
 	// Initialize MLS-Map
 	size_t x_size = mGridSizeX / mGridResolution;
@@ -473,9 +480,10 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), laserPose));
 		}
 
-		if(mMapper->addReading(measurement))
+		if(mMapper->addReading(measurement, mForceAdd))
 		{
 			mScansAdded++;
+			mForceAdd = false;
 			mLastScanTime = ts;
 			handleNewScan(mMapper->getLastVertex());
 			if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)

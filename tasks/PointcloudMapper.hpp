@@ -27,6 +27,7 @@ namespace slam3d
 		virtual bool generate_cloud();
 		virtual bool generate_map();
 		virtual bool optimize();
+		virtual bool force_add();
 		virtual bool write_graph();
 		virtual bool write_envire();
 		
@@ -88,6 +89,7 @@ namespace slam3d
 		double mGridResolution;
 		
 		bool mRebuildMap;
+		bool mForceAdd;
 		
 		// Current state of transformations
 		Eigen::Affine3d mCurrentOdometry;
