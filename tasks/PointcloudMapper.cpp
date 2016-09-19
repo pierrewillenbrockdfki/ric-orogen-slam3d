@@ -210,12 +210,6 @@ void PointcloudMapper::sendMap()
 
 bool PointcloudMapper::loadPLYMap(const std::string& path)
 {
-	BoostMapper* boost_mapper = dynamic_cast<BoostMapper*>(mMapper);
-	if(boost_mapper == NULL)
-	{
-		mLogger->message(ERROR, "GraphMapper is not of class BoostMapper. Failed to load a-priori PLY map!");
-		return false;
-	}
 	PointCloud::Ptr pcl_cloud(new PointCloud());
 	pcl::PLYReader ply_reader;
 	if(ply_reader.read(path, *pcl_cloud) >= 0)
@@ -225,8 +219,9 @@ bool PointcloudMapper::loadPLYMap(const std::string& path)
 		PointCloudMeasurement::Ptr initial_map(new PointCloudMeasurement(pcl_cloud, mRobotName, mPclSensor->getName(), pc_tr));
 		try
 		{
-			if(boost_mapper->addPointCloudMeasurement(initial_map, TransformWithCovariance(Transform::Identity(), Covariance::Identity())) > 0)
-				return true;
+			VertexObject root_node = mMapper->getVertex(0);
+			mMapper->addExternalReading(initial_map, root_node.measurement->getUniqueId(), Transform::Identity(), Covariance::Identity(), "none");
+			return true;
 		}
 		catch(std::exception& e)
 		{
