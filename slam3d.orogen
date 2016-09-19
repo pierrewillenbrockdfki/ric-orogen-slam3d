@@ -259,3 +259,34 @@ task_context "LineScanConverter" do
 	output_port 'cloud', '/base/samples/Pointcloud'
 	port_driven 'scan'
 end
+
+## Task to create Multi-Layer-Surface-Map
+task_context "MLSMapProjector" do
+	input_port 'cloud', '/base/samples/Pointcloud'
+	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
+	port_driven 'cloud'
+
+	property('size_x', '/double', 10)
+	.doc("Map size in x-direction (meter).")
+
+	property('size_y', '/double', 10)
+	.doc("Map size in y-direction (meter).")
+
+	property('offset_x', '/double', -5)
+	.doc("Position of grid origin in x-direction (meter).")
+
+	property('offset_y', '/double', -5)
+	.doc("Position  of grid origin in y-direction (meter).")
+
+	property('min_z', '/double', -3)
+	.doc("Minimum z-value for grid cells (meter).")
+
+	property('max_z', 'double', 3)
+	.doc("Maximum z-value for grid cells (meter).")
+
+	property('resolution', '/double', 0.05)
+	.doc("Resolution (size of grid-cell) of the map (meter).")
+
+	property('mls_config', '/envire/MLSConfiguration')
+	.doc("Multi-Layer-Surface-Map specific configuration.")
+end

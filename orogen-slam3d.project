@@ -42,6 +42,8 @@
     <File Name="tasks/OcTreeFilter.hpp"/>
     <File Name="tasks/PointcloudFilter.cpp"/>
     <File Name="tasks/PointcloudFilter.hpp"/>
+    <File Name="tasks/MLSMapProjector.cpp"/>
+    <File Name="tasks/MLSMapProjector.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
