@@ -1,4 +1,5 @@
 #include "MLSMapProjector.hpp"
+#include "GridConfiguration.hpp"
 
 #include <base/Logging.hpp>
 #include <envire/Orocos.hpp>
@@ -24,33 +25,15 @@ bool MLSMapProjector::configureHook()
 	if (! MLSMapProjectorBase::configureHook())
 		return false;
 
-	// Read parameters
-	mSizeX = _size_x.get();
-	mSizeY = _size_y.get();
-	mOffsetX = _offset_x.get();
-	mOffsetY = _offset_y.get();
-	mMinZ = _min_z.get();
-	mMaxZ = _max_z.get();
-	mResolution = _resolution.get();
-	
-	// Do some input validation
-	if(mSizeX <= 0 || mSizeY <= 0 || mMaxZ <= mMinZ)
-	{
-		LOG_ERROR("Invalid map dimension! (Size: %.2f, %.2f, Height: %.2f - %.2f)!", mSizeX, mSizeY, mMinZ, mMaxZ);
-		return false;
-	}
-	if(mResolution <= 0)
-	{
-		LOG_ERROR("Invalid map resolution: %.2f", mResolution);
-		return false;
-	}
-	
 	// Initialize MLS-Map
-	size_t x_size = mSizeX / mResolution;
-	size_t y_size = mSizeY / mResolution;
-	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(x_size, y_size, mResolution, mResolution, mOffsetX, mOffsetY);
-	mMultiLayerMap->setUniqueId("/slam3d-mls");
+	GridConfiguration grid = _grid_config.get();
+	size_t x_size = (grid.max_x - grid.min_x) / grid.resolution;
+	size_t y_size = (grid.max_y - grid.min_y) / grid.resolution;
+	
+	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(x_size, y_size, grid.resolution, grid.resolution, grid.min_x, grid.min_y);
+	mMultiLayerMap->setUniqueId("/slam3d-proj-mls");
 	mMultiLayerMap->getConfig() = _mls_config.get();
+	
 	mPointcloud = new envire::Pointcloud();
 	mProjection = new envire::MLSProjection();
 

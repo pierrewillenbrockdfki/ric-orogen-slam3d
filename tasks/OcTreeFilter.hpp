@@ -37,7 +37,6 @@ namespace slam3d
 		double mMaxHeight;
 		double mSqMinDistance;
 		double mSqMaxDistance;
-		double mResolution;
 		unsigned mPassRate;
 
 	public:

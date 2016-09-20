@@ -50,6 +50,7 @@
     <File Name="slam3d.orogen"/>
     <File Name="OctoMapConfiguration.hpp"/>
     <File Name="tasks/CMakeLists.txt"/>
+    <File Name="GridConfiguration.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="scripts">
     <File Name="scripts/transforms.rb"/>

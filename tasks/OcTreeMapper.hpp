@@ -26,7 +26,7 @@ namespace slam3d
 
 		// Members
 		octomap::OcTree* mOcTree;
-		OctoMapConfiguration mConfiguration;
+		OctoMapConfiguration mOctreeConf;
 		
 	public:
 		OcTreeMapper(std::string const& name = "slam3d::OcTreeMapper");

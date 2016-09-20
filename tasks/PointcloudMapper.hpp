@@ -14,6 +14,8 @@
 #include <queue>
 #include <boost/thread/shared_mutex.hpp>
 
+#include "GridConfiguration.hpp"
+
 namespace slam3d
 {	
 	class RockOdometry;
@@ -79,14 +81,7 @@ namespace slam3d
 		envire::Environment mEnvironment;
 		envire::MLSGrid* mMultiLayerMap;
 		envire::Pointcloud* mPointcloud;
-		
-		double mGridSizeX;
-		double mGridSizeY;
-		double mGridOffsetX;
-		double mGridOffsetY;
-		double mGridMinZ;
-		double mGridMaxZ;
-		double mGridResolution;
+		GridConfiguration mGridConf;
 		
 		bool mRebuildMap;
 		bool mForceAdd;

@@ -9,9 +9,9 @@
 
 using namespace slam3d;
 
-octomap::OcTree* initOcTree(const OctoMapConfiguration &conf, double res)
+octomap::OcTree* initOcTree(const OctoMapConfiguration &conf)
 {
-	octomap::OcTree* tree = new octomap::OcTree(res);
+	octomap::OcTree* tree = new octomap::OcTree(conf.resolution);
 	tree->setOccupancyThres(conf.occupancyThres);
 	tree->setProbHit(conf.probHit);
 	tree->setProbMiss(conf.probMiss);
@@ -52,14 +52,14 @@ void OcTreeMapper::addScanToMap(const VertexObject& scan)
 		octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
 	}
 	Vector3 origin = scan.corrected_pose.translation();
-	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), mConfiguration.rangeMax, true, true);
+	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), mOctreeConf.rangeMax, true, true);
 }
 
 void OcTreeMapper::rebuildMap(const VertexObjectList& vertices)
 {
 	// Reset OctoMap (OcTree::clear is currently not working)
 	delete mOcTree;
-	mOcTree = initOcTree(mConfiguration, mGridResolution);
+	mOcTree = initOcTree(mOctreeConf);
 
 	mLogger->message(DEBUG, "Rebuilding OcTree from all scans.");
 	
@@ -96,18 +96,18 @@ void OcTreeMapper::buildMLS()
 			continue;
 		}
 		double half_size = leaf.getSize() / 2.0;
-		double half_res = mGridResolution / 2.0;
+		double half_res = mGridConf.resolution / 2.0;
 		double x_min = leaf.getX() - half_size + half_res;
 		double y_min = leaf.getY() - half_size + half_res;
 		double x_max = leaf.getX() + half_size;
 		double y_max = leaf.getY() + half_size;
 		
-		for(double y = y_min; y < y_max; y += mGridResolution)
+		for(double y = y_min; y < y_max; y += mGridConf.resolution)
 		{
-			for(double x = x_min; x < x_max; x += mGridResolution)
+			for(double x = x_min; x < x_max; x += mGridConf.resolution)
 			{
-				double z_low  = std::max(mGridMinZ, leaf.getZ() - half_size);
-				double z_high = std::min(mGridMaxZ, leaf.getZ() + half_size);
+				double z_low  = std::max(mGridConf.min_z, leaf.getZ() - half_size);
+				double z_high = std::min(mGridConf.max_z, leaf.getZ() + half_size);
 				if(z_high > z_low)
 				{
 					envire::SurfacePatch patch(z_high, 0, z_high - z_low, envire::SurfacePatch::VERTICAL);
@@ -171,16 +171,17 @@ bool OcTreeMapper::configureHook()
 	if (! OcTreeMapperBase::configureHook())
 		return false;
 		
-	mConfiguration  = _octo_map_config.get();
-	mOcTree = initOcTree(mConfiguration, mGridResolution);
+	mOctreeConf  = _octo_map_config.get();
+	mOcTree = initOcTree(mOctreeConf);
 	
 	mLogger->message(INFO, " = OctoMap - Parameters =");
-	mLogger->message(INFO, (boost::format("occupancyThres:   %1%") % mConfiguration.occupancyThres).str());
-	mLogger->message(INFO, (boost::format("probHit:          %1%") % mConfiguration.probHit).str());
-	mLogger->message(INFO, (boost::format("probMiss:         %1%") % mConfiguration.probMiss).str());
-	mLogger->message(INFO, (boost::format("clampingThresMin: %1%") % mConfiguration.clampingThresMin).str());
-	mLogger->message(INFO, (boost::format("clampingThresMax: %1%") % mConfiguration.clampingThresMax).str());
-	mLogger->message(INFO, (boost::format("rangeMax:         %1%") % mConfiguration.rangeMax).str());
+	mLogger->message(INFO, (boost::format("resolution:       %1%") % mOctreeConf.resolution).str());
+	mLogger->message(INFO, (boost::format("occupancyThres:   %1%") % mOctreeConf.occupancyThres).str());
+	mLogger->message(INFO, (boost::format("probHit:          %1%") % mOctreeConf.probHit).str());
+	mLogger->message(INFO, (boost::format("probMiss:         %1%") % mOctreeConf.probMiss).str());
+	mLogger->message(INFO, (boost::format("clampingThresMin: %1%") % mOctreeConf.clampingThresMin).str());
+	mLogger->message(INFO, (boost::format("clampingThresMax: %1%") % mOctreeConf.clampingThresMax).str());
+	mLogger->message(INFO, (boost::format("rangeMax:         %1%") % mOctreeConf.rangeMax).str());
 	
 	return true;
 }

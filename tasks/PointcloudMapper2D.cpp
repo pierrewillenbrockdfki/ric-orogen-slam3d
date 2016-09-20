@@ -166,9 +166,9 @@ bool PointcloudMapper2D::configureHook()
 		return false;
 
 	// Initialize envire stuff
-	size_t x_size = mGridSizeX / mGridResolution;
-	size_t y_size = mGridSizeY / mGridResolution;
-	mGrid = new envire::TraversabilityGrid(x_size, y_size, mGridResolution, mGridResolution, mGridOffsetX, mGridOffsetY, "slam3d-grid");
+	size_t x_size = (mGridConf.max_x - mGridConf.min_x) / mGridConf.resolution;
+	size_t y_size = (mGridConf.max_y - mGridConf.min_y) / mGridConf.resolution;
+	mGrid = new envire::TraversabilityGrid(x_size, y_size, mGridConf.resolution, mGridConf.resolution, mGridConf.min_x, mGridConf.min_y, "slam3d-grid");
 	mGrid->setTraversabilityClass(0, envire::TraversabilityClass(0.5));
 	mGrid->setTraversabilityClass(1, envire::TraversabilityClass(0.0));
 	mGrid->setTraversabilityClass(2, envire::TraversabilityClass(1.0));
