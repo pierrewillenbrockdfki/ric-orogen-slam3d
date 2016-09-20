@@ -14,6 +14,7 @@
 #include <boost/thread.hpp>
 
 #include <pcl/common/transforms.h>
+#include <pcl/io/ply_io.h>
 
 #include <envire/Orocos.hpp>
 
@@ -22,13 +23,11 @@ using namespace slam3d;
 PointcloudMapper::PointcloudMapper(std::string const& name)
     : PointcloudMapperBase(name)
 {
-	mCurrentOdometry = Eigen::Affine3d::Identity();
 }
 
 PointcloudMapper::PointcloudMapper(std::string const& name, RTT::ExecutionEngine* engine)
     : PointcloudMapperBase(name, engine)
 {
-	mCurrentOdometry = Eigen::Affine3d::Identity();
 }
 
 PointcloudMapper::~PointcloudMapper()
@@ -92,6 +91,31 @@ bool PointcloudMapper::write_graph()
 {
 	mMapper->writeGraphToFile("slam3d_graph");
 	return true;
+}
+
+bool PointcloudMapper::write_ply(const std::string& folder)
+{
+	mLogger->message(INFO, "Write pointcloud to PLY file.");
+	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+	PointCloud::Ptr accCloud;
+	try
+	{
+		accCloud = buildPointcloud(vertices);
+	}
+	catch (boost::lock_error &e)
+	{
+		mLogger->message(ERROR, "Could not access the pose graph to build Pointcloud!");
+		return false;
+	}
+
+	boost::filesystem::path ply_path(folder);
+	boost::filesystem::create_directories(ply_path);
+	ply_path += "pointcloud-";
+	ply_path += base::Time::now().toString(base::Time::Seconds, "%Y%m%d-%H%M");
+	ply_path += ".ply";
+
+	pcl::PLYWriter ply_writer;
+	return ply_writer.write(ply_path.string(), *accCloud) >= 0;
 }
 
 PointCloud::Ptr PointcloudMapper::buildPointcloud(const VertexObjectList& vertices)
@@ -182,7 +206,32 @@ void PointcloudMapper::sendMap()
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
 	emitter.setTime(mLastScanTime);
 	emitter.flush();
-}	
+}
+
+bool PointcloudMapper::loadPLYMap(const std::string& path)
+{
+	PointCloud::Ptr pcl_cloud(new PointCloud());
+	pcl::PLYReader ply_reader;
+	if(ply_reader.read(path, *pcl_cloud) >= 0)
+	{
+		Transform pc_tr(pcl_cloud->sensor_orientation_.cast<double>());
+		pc_tr.translation() = pcl_cloud->sensor_origin_.block(0,0,3,1).cast<double>();
+		PointCloudMeasurement::Ptr initial_map(new PointCloudMeasurement(pcl_cloud, mRobotName, mPclSensor->getName(), pc_tr));
+		try
+		{
+			VertexObject root_node = mMapper->getVertex(0);
+			mMapper->addExternalReading(initial_map, root_node.measurement->getUniqueId(), Transform::Identity(), Covariance::Identity(), "none");
+			return true;
+		}
+		catch(std::exception& e)
+		{
+			mLogger->message(ERROR, (boost::format("Adding initial point cloud failed: %1%") % e.what()).str());
+		}
+	}
+	else
+		mLogger->message(ERROR, (boost::format("Failed to load a-priori PLY map %1%") % path).str());
+	return false;
+}
 
 bool PointcloudMapper::setLog_level(boost::int32_t value)
 {
@@ -279,6 +328,7 @@ bool PointcloudMapper::configureHook()
 	{
 		mOdometry = NULL;
 	}
+	mCurrentOdometry = Eigen::Affine3d::Identity();
 	
 	double min_translation = _min_translation.get();
 	double min_rotation = _min_rotation.get();
@@ -350,7 +400,6 @@ bool PointcloudMapper::configureHook()
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
-	mScansReceived = 0;
 	mScansAdded = 0;
 	mRebuildMap = false;
 	mForceAdd = false;
@@ -373,6 +422,12 @@ bool PointcloudMapper::configureHook()
 	envire::FrameNode* cloud_node = new envire::FrameNode();
 	mEnvironment.addChild(mEnvironment.getRootNode(), cloud_node);
 	mEnvironment.setFrameNode(mPointcloud, cloud_node);
+
+	// load a-priori map file
+	if(!_apriori_ply_map.value().empty() && loadPLYMap(_apriori_ply_map.value()))
+	{
+		mScansAdded++;
+	}
 	
 	return true;
 }
@@ -388,6 +443,7 @@ PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Poi
 {
 	PointCloud::Ptr cloud_out(new PointCloud);
 	cloud_out->header.stamp = cloud_in.time.toMicroseconds();
+	cloud_out->reserve(cloud_in.points.size());
 	
 	if(mUseColorsAsViewpoints)
 	{
@@ -421,6 +477,7 @@ PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Poi
 void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud)
 {
 	base_cloud.time.fromMicroseconds(pcl_cloud->header.stamp);
+	base_cloud.points.reserve(pcl_cloud->size());
 	for(PointCloud::const_iterator it = pcl_cloud->begin(); it < pcl_cloud->end(); it++)
 	{
 		base::Point p;
@@ -433,7 +490,6 @@ void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::sampl
 
 void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
 {
-	++mScansReceived;
 	if(mOdometry)
 	{
 		try
@@ -452,15 +508,18 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 	try
 	{
 		Eigen::Affine3d affine;
-		_laser2robot.get(ts, affine, true);
-		if((affine.matrix().array() == affine.matrix().array()).all())
+		if(!_laser2robot.get(ts, affine, true) || !affine.matrix().allFinite())
 		{
-			laserPose.linear() = affine.linear();
-			laserPose.translation() = affine.translation();
+			mLogger->message(ERROR, "Failed to receive a valid laserInRobot pose!");
+			return;
 		}
-	}catch(std::exception &e)
+		laserPose.linear() = affine.linear();
+		laserPose.translation() = affine.translation();
+	}
+	catch(std::exception &e)
 	{
 		mLogger->message(ERROR, e.what());
+		return;
 	}
 
 	// Transform base::samples::Pointcloud --> Pointcloud
@@ -544,6 +603,8 @@ void PointcloudMapper::cleanupHook()
 	PointcloudMapperBase::cleanupHook();
 	delete mMapper;
 	delete mPclSensor;
+	if(mOdometry)
+		delete mOdometry;
 	delete mSolver;
 	delete mLogger;
 	delete mClock;
