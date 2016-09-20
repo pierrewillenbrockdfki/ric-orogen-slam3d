@@ -180,7 +180,7 @@ void PointcloudMapper::addScanToMap(const VertexObject& scan)
 	for(PointCloud::const_iterator it = pcl->begin(); it != pcl->end(); ++it)
 	{
 		Eigen::Vector3d p = sensor_pose * Eigen::Vector3d(it->x, it->y, it->z);
-		if(p[2] >= mGridMinZ && p[2] <= mGridMaxZ)
+		if(p[2] >= mGridConf.min_z && p[2] <= mGridConf.max_z)
 		{
 			envire::MLSGrid::SurfacePatch patch( p[2], 0.1 );
 			mMultiLayerMap->update(Eigen::Vector2d(p[0], p[1]) , patch );
@@ -388,15 +388,6 @@ bool PointcloudMapper::configureHook()
 	mUseColorsAsViewpoints = _use_colors_as_viewpoints.get();
 	mLogger->message(INFO, (boost::format("use_viewpoints:         %1%") % mUseColorsAsViewpoints).str());
 
-	// MLS
-	mGridSizeX = _grid_size_x.get();
-	mGridSizeY = _grid_size_y.get();
-	mGridOffsetX = _grid_offset_x.get();
-	mGridOffsetY = _grid_offset_y.get();
-	mGridMinZ = _grid_min_z.get();
-	mGridMaxZ = _grid_max_z.get();
-	mGridResolution = _grid_resolution.get();
-
 	mMapper->registerSensor(mPclSensor);
 	mMapper->setSolver(mSolver);
 	
@@ -405,9 +396,11 @@ bool PointcloudMapper::configureHook()
 	mForceAdd = false;
 	
 	// Initialize MLS-Map
-	size_t x_size = mGridSizeX / mGridResolution;
-	size_t y_size = mGridSizeY / mGridResolution;
-	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(x_size, y_size, mGridResolution, mGridResolution, mGridOffsetX, mGridOffsetY);
+	mGridConf = _grid_config.get();
+	size_t x_size = (mGridConf.max_x - mGridConf.min_x) / mGridConf.resolution;
+	size_t y_size = (mGridConf.max_y - mGridConf.min_y) / mGridConf.resolution;
+	
+	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(x_size, y_size, mGridConf.resolution, mGridConf.resolution, mGridConf.min_x, mGridConf.min_y);
 	mMultiLayerMap->setUniqueId("/slam3d-mls");
 	mMultiLayerMap->getConfig() = _grid_mls_config.get();
 	

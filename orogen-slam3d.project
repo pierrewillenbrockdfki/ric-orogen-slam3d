@@ -42,12 +42,15 @@
     <File Name="tasks/OcTreeFilter.hpp"/>
     <File Name="tasks/PointcloudFilter.cpp"/>
     <File Name="tasks/PointcloudFilter.hpp"/>
+    <File Name="tasks/MLSMapProjector.cpp"/>
+    <File Name="tasks/MLSMapProjector.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
     <File Name="manifest.xml"/>
     <File Name="slam3d.orogen"/>
     <File Name="OctoMapConfiguration.hpp"/>
     <File Name="tasks/CMakeLists.txt"/>
+    <File Name="GridConfiguration.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="scripts">
     <File Name="scripts/transforms.rb"/>

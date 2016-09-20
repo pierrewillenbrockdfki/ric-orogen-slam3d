@@ -12,6 +12,7 @@ import_types_from 'slam3d/GICPConfiguration.hpp'
 import_types_from 'envire'
 import_types_from 'envire/maps/MLSConfiguration.hpp'
 import_types_from 'OctoMapConfiguration.hpp'
+import_types_from 'GridConfiguration.hpp'
 
 ## Mapper using Pointclouds
 task_context "PointcloudMapper" do
@@ -132,27 +133,9 @@ task_context "PointcloudMapper" do
 	property('use_colors_as_viewpoints', '/bool', false)
 	.doc("Whether to get viewpoints from pointcloud's color vector.")
 
-	property('grid_size_x', '/double', 10)
-	.doc("Map size in x-direction (meter).")
+	property('grid_config', 'slam3d/GridConfiguration')
+	.doc("Size and resolution of generated grid map.")
 
-	property('grid_size_y', '/double', 10)
-	.doc("Map size in y-direction (meter).")
-
-	property('grid_offset_x', '/double', -5)
-	.doc("Position of grid origin in x-direction (meter).")
-
-	property('grid_offset_y', '/double', -5)
-	.doc("Position  of grid origin in y-direction (meter).")
-
-	property('grid_min_z', '/double', -3)
-	.doc("Minimum z-value for grid cells (meter).")
-
-	property('grid_max_z', 'double', 3)
-	.doc("Maximum z-value for grid cells (meter).")
-
-	property('grid_resolution', '/double', 0.05)
-	.doc("Resolution (size of grid-cell) of the map (meter).")
-	
 	property('grid_mls_config', '/envire/MLSConfiguration')
 	.doc("Multi-Layer-Surface-Map specific configuration.")
 
@@ -243,9 +226,6 @@ task_context "OcTreeFilter" do
 	property('pass_rate', '/int', 1)
 	.doc("Only pass every n'th scan.")
 
-	property('resolution', '/double', 0.01)
-	.doc("Resolution of output cloud and OctoMap.")
-
 	property('octo_map_config', 'slam3d/OctoMapConfiguration')
 	.doc("OctoMap specific configuration.")
 end
@@ -266,4 +246,17 @@ task_context "LineScanConverter" do
 	input_port 'scan', '/base/samples/LaserScan'
 	output_port 'cloud', '/base/samples/Pointcloud'
 	port_driven 'scan'
+end
+
+## Task to create Multi-Layer-Surface-Map
+task_context "MLSMapProjector" do
+	input_port 'cloud', '/base/samples/Pointcloud'
+	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
+	port_driven 'cloud'
+
+	property('grid_config', 'slam3d/GridConfiguration')
+	.doc("Size and resolution of generated map.")
+
+	property('mls_config', '/envire/MLSConfiguration')
+	.doc("Multi-Layer-Surface-Map specific configuration.")
 end

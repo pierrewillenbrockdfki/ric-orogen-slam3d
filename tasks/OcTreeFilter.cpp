@@ -9,6 +9,8 @@
 
 using namespace slam3d;
 
+octomap::OcTree* initOcTree(const OctoMapConfiguration &conf);
+
 OcTreeFilter::OcTreeFilter(std::string const& name)
  : OcTreeFilterBase(name)
 {
@@ -80,7 +82,7 @@ void OcTreeFilter::inputTransformerCallback(const base::Time &ts, const ::base::
 		}
 	}
 	
-	PointCloud::Ptr t2 = downsample(t1, mResolution);
+	PointCloud::Ptr t2 = downsample(t1, mOctoConfig.resolution);
 	for(PointCloud::iterator p = t2->begin(); p != t2->end(); ++p)
 	{
 		base::Vector3d v = laser2odom * base::Vector3d(p->x, p->y, p->z);
@@ -111,7 +113,7 @@ void OcTreeFilter::inputTransformerCallback(const base::Time &ts, const ::base::
 	}
 	
 	// Downsample
-	PointCloud::Ptr downsampled = downsample(filtered_cloud, mResolution);
+	PointCloud::Ptr downsampled = downsample(filtered_cloud, mOctoConfig.resolution);
 	
 	// Transform to current pose
 	base::samples::Pointcloud result;
@@ -131,13 +133,7 @@ void OcTreeFilter::inputTransformerCallback(const base::Time &ts, const ::base::
 	
 	// Reset everything
 	delete mOcTree;
-	mOcTree = new octomap::OcTree(mResolution);
-	mOcTree->setOccupancyThres(mOctoConfig.occupancyThres);
-	mOcTree->setProbHit(mOctoConfig.probHit);
-	mOcTree->setProbMiss(mOctoConfig.probMiss);
-	mOcTree->setClampingThresMin(mOctoConfig.clampingThresMin);
-	mOcTree->setClampingThresMax(mOctoConfig.clampingThresMax);
-	
+	mOcTree = initOcTree(mOctoConfig);
 	mPointcloud.clear();
 	mLogger->message(DEBUG, (boost::format("Created output in %1% ms.") % timevaldiff(start, mClock->now())).str());
 }
@@ -171,15 +167,8 @@ bool OcTreeFilter::configureHook()
 	mSqMinDistance = _min_distance.get() * _min_distance.get();
 	mSqMaxDistance = _max_distance.get() * _max_distance.get();
 	mOctoConfig = _octo_map_config.get();
-	mResolution = _resolution.get();
 	mPassRate = _pass_rate.get();
-	
-	mOcTree = new octomap::OcTree(mResolution);
-	mOcTree->setOccupancyThres(mOctoConfig.occupancyThres);
-	mOcTree->setProbHit(mOctoConfig.probHit);
-	mOcTree->setProbMiss(mOctoConfig.probMiss);
-	mOcTree->setClampingThresMin(mOctoConfig.clampingThresMin);
-	mOcTree->setClampingThresMax(mOctoConfig.clampingThresMax);
+	mOcTree = initOcTree(mOctoConfig);
 	
 	mScanCount = 0;
 	return true;
