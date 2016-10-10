@@ -47,7 +47,7 @@ bool MLSMapProjector::configureHook()
 	mEnvironment.addChild(mEnvironment.getRootNode(), mls_node);
 	mEnvironment.setFrameNode(mMultiLayerMap, mls_node);
 	
-	mProjection->setAreaOfInterest(mOffsetX, mOffsetX+mSizeX, mOffsetY, mOffsetY+mSizeY, mMinZ, mMaxZ);
+	mProjection->setAreaOfInterest(grid.min_x, grid.max_x, grid.min_y, grid.max_y, grid.min_z, grid.max_z);
 	if(!mEnvironment.addInput(mProjection, mPointcloud))
 	{
 		LOG_ERROR("Failed to add Input to Envire!");

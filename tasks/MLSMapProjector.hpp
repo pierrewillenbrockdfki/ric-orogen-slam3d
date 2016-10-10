@@ -21,15 +21,6 @@ namespace slam3d
 		envire::Pointcloud* mPointcloud;
 		envire::MultiLevelSurfaceGrid* mMultiLayerMap;
 		envire::MLSProjection* mProjection;
-		envire::BinarySerialization mBinarySerialization;
-		
-		double mSizeX;
-		double mSizeY;
-		double mOffsetX;
-		double mOffsetY;
-		double mMinZ;
-		double mMaxZ;
-		double mResolution;
 
 	public:
 		MLSMapProjector(std::string const& name = "slam3d::MLSMapProjector", TaskCore::TaskState initial_state = Stopped);
