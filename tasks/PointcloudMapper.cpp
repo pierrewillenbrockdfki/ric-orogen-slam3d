@@ -214,22 +214,24 @@ bool PointcloudMapper::loadPLYMap(const std::string& path)
 	pcl::PLYReader ply_reader;
 	if(ply_reader.read(path, *pcl_cloud) >= 0)
 	{
-		Transform pc_tr(pcl_cloud->sensor_orientation_.cast<double>());
-		pc_tr.translation() = pcl_cloud->sensor_origin_.block(0,0,3,1).cast<double>();
+		Transform pc_tr(pcl_cloud->sensor_orientation_.cast<ScalarType>());
+		pc_tr.translation() = pcl_cloud->sensor_origin_.block(0,0,3,1).cast<ScalarType>();
 		PointCloudMeasurement::Ptr initial_map(new PointCloudMeasurement(pcl_cloud, mRobotName, mPclSensor->getName(), pc_tr));
 		try
 		{
 			VertexObject root_node = mMapper->getVertex(0);
 			mMapper->addExternalReading(initial_map, root_node.measurement->getUniqueId(), Transform::Identity(), Covariance::Identity(), "none");
+			addScanToMap(mMapper->getVertex(initial_map->getUniqueId()));
 			return true;
 		}
 		catch(std::exception& e)
 		{
 			mLogger->message(ERROR, (boost::format("Adding initial point cloud failed: %1%") % e.what()).str());
 		}
-	}
-	else
+	}else
+	{
 		mLogger->message(ERROR, (boost::format("Failed to load a-priori PLY map %1%") % path).str());
+	}
 	return false;
 }
 
