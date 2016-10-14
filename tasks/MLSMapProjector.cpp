@@ -1,7 +1,7 @@
 #include "MLSMapProjector.hpp"
 #include "GridConfiguration.hpp"
 
-#include <base/Logging.hpp>
+#include <base-logging/Logging.hpp>
 #include <envire/Orocos.hpp>
 
 using namespace slam3d;
