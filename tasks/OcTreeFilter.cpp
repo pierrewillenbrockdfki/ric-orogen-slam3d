@@ -6,6 +6,7 @@
 #include <slam3d/FileLogger.hpp>
 
 #include <pcl/filters/voxel_grid.h>
+#include <boost/format.hpp>
 
 using namespace slam3d;
 
