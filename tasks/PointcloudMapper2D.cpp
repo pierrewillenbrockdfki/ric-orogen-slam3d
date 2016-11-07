@@ -125,7 +125,6 @@ void PointcloudMapper2D::rebuildMap(const VertexObjectList& vertices)
 	{
 		addScanToMap(*v);
 	}
-	mRebuildMap = false;
 	sendMap();
 }
 

@@ -84,7 +84,6 @@ namespace slam3d
 		envire::Pointcloud* mPointcloud;
 		GridConfiguration mGridConf;
 		
-		bool mRebuildMap;
 		bool mForceAdd;
 		
 		// Current state of transformations

@@ -42,7 +42,6 @@ bool PointcloudMapper::optimize()
 		boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);
 		if(mMapper->optimize())
 		{
-			mRebuildMap = true;
 			return true;
 		}
 	}catch (boost::lock_error &e)
@@ -64,7 +63,7 @@ bool PointcloudMapper::generate_cloud()
 bool PointcloudMapper::generate_map()
 {
 	mLogger->message(INFO, "Requested map generation.");
-	if(mRebuildMap)
+	if(mMapper->optimized())
 	{
 		VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
 		boost::thread projThread(&PointcloudMapper::rebuildMap, this, vertices);
@@ -196,7 +195,6 @@ void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
 	{
 		addScanToMap(*v);
 	}
-	mRebuildMap = false;
 	sendMap();
 }
 
@@ -394,7 +392,6 @@ bool PointcloudMapper::configureHook()
 	mMapper->setSolver(mSolver);
 	
 	mScansAdded = 0;
-	mRebuildMap = false;
 	mForceAdd = false;
 	
 	// Initialize MLS-Map
