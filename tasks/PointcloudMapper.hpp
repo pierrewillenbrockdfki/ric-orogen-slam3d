@@ -1,8 +1,6 @@
 #ifndef SLAM3D_POINTCLOUDMAPPER_TASK_HPP
 #define SLAM3D_POINTCLOUDMAPPER_TASK_HPP
 
-#define PCL_WITH_VIEWPOINT
-
 #include <slam3d/PointcloudMapperBase.hpp>
 #include <slam3d/GraphMapper.hpp>
 #include <slam3d/PointCloudSensor.hpp>
