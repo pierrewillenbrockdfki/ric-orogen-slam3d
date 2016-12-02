@@ -376,6 +376,8 @@ bool PointcloudMapper::configureHook()
 	mRobotName = _robot_name.get();
 	mLogger->message(INFO, (boost::format("robot_name:             %1%") % mRobotName).str());
 	
+	mLogger->message(INFO, (boost::format("laser_frame:            %1%") % _laser_frame.get()).str());
+	
 	mRobotFrame = _robot_frame.get();
 	mLogger->message(INFO, (boost::format("robot_frame:            %1%") % mRobotFrame).str());
 	
