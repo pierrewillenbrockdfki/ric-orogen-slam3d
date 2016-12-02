@@ -27,11 +27,10 @@ task_context "PointcloudMapper" do
 	periodic 0.1
 
 	transformer do
+		transform "laser", "robot"
 		transform "robot", "odometry"
 		align_port 'scan'
 		max_latency 0.5
-
-		transform "laser", "robot"
 
 		transform_output "robot2map", "robot" => "map"
 		transform_output "odometry2map", "odometry" => "map"

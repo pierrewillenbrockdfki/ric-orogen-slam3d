@@ -500,9 +500,10 @@ void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::bas
 	try
 	{
 		Eigen::Affine3d affine;
-		if(!_laser2robot.get(ts, affine, true) || !affine.matrix().allFinite())
+		if(!_laser2robot.get(ts, affine, false) || !affine.matrix().allFinite())
 		{
-			mLogger->message(ERROR, "Failed to receive a valid laserInRobot pose!");
+			mLogger->message(ERROR, (boost::format("Failed to receive a valid transform from '%1%' to '%2%'!")
+				% _laser_frame % _robot_frame).str());
 			return;
 		}
 		laserPose.linear() = affine.linear();
