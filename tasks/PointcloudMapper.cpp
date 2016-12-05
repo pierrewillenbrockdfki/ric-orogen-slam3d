@@ -398,6 +398,15 @@ bool PointcloudMapper::configureHook()
 	
 	// Initialize MLS-Map
 	mGridConf = _grid_config.get();
+	mLogger->message(INFO, " = Grid - Parameters =");
+	mLogger->message(INFO, (boost::format("min_x: %1%") % mGridConf.min_x).str());
+	mLogger->message(INFO, (boost::format("max_x: %1%") % mGridConf.max_x).str());
+	mLogger->message(INFO, (boost::format("min_y: %1%") % mGridConf.min_y).str());
+	mLogger->message(INFO, (boost::format("max_y: %1%") % mGridConf.max_y).str());
+	mLogger->message(INFO, (boost::format("min_z: %1%") % mGridConf.min_z).str());
+	mLogger->message(INFO, (boost::format("max_z: %1%") % mGridConf.max_z).str());
+	mLogger->message(INFO, (boost::format("resolution: %1%") % mGridConf.resolution).str());
+	
 	size_t x_size = (mGridConf.max_x - mGridConf.min_x) / mGridConf.resolution;
 	size_t y_size = (mGridConf.max_y - mGridConf.min_y) / mGridConf.resolution;
 	
