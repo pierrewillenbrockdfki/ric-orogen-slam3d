@@ -1,3 +1,4 @@
+## Read in parameter set
 def get_params()
 	params = ['default']
 	if ARGV.length >= 1
@@ -9,9 +10,9 @@ def get_params()
 	return params
 end
 
-def setup_mapping(scan_port, mapper, params)
+## Setup the mapper
+def setup_mapper(scan_port, mapper, params)
 
-	## Setup the mapper
 	Orocos.conf.apply(mapper, params, true)
 	Bundles.transformer.setup(mapper)
 	mapper.configure
@@ -22,15 +23,24 @@ def setup_mapping(scan_port, mapper, params)
 
 end
 
-def setup_mapping_with_filter(scan_port, filter, mapper, params)
-
-	# Setup the pointcloud filter
+## Setup the pointcloud filter
+def setup_filter_mapper(scan_port, filter, mapper, params)
 	Orocos.conf.apply(filter, params, true)
 	filter.configure
 	filter.start
 
-	setup_mapping(filter.output, mapper, params)
+	scan_port.connect_to filter.input
+	setup_mapper(filter.output, mapper, params)
 
+end
+
+## Setup converter to convert from DepthMap to Pointcloud
+def setup_converter_filter_mapper(scan_port, converter, filter, mapper, params)
+	converter.configure
+	converter.start
+	
+	scan_port.connect_to converter.depth_map
+	setup_filter_mapper(converter.cloud, filter, mapper, params)
 end
 
 def setup_navigation(planner, follower, calc_pose, traversability, mapper, odo, motion_controller)
