@@ -202,7 +202,7 @@ void PointcloudMapper::sendMap()
 {
 	// Publish the MLS-Map	
 	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
-	emitter.setTime(mLastScanTime);
+	emitter.setTime(mCurrentTime);
 	emitter.flush();
 }
 
@@ -558,7 +558,7 @@ void PointcloudMapper::updateHook()
 			{
 				mScansAdded++;
 				mForceAdd = false;
-				mLastScanTime = scan_sample.time;
+				mCurrentTime = scan_sample.time;
 				handleNewScan(mMapper->getLastVertex());
 				if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
 				{
@@ -577,6 +577,10 @@ void PointcloudMapper::updateHook()
 		}
 	}
 	
+	// Return if nothing has been received yet
+	if(mCurrentTime == base::Time())
+		return;
+	
 	// Publish the robot pose in map
 	base::samples::RigidBodyState rbs;
 	rbs.setTransform(mCurrentPose);
@@ -591,6 +595,7 @@ void PointcloudMapper::updateHook()
 	{
 		rbs.setTransform(mCurrentDrift);
 		rbs.sourceFrame = mOdometryFrame;
+		rbs.time = mCurrentTime;
 		_odometry2map.write(rbs);
 	}
 }

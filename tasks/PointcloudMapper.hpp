@@ -55,7 +55,6 @@ namespace slam3d
 		slam3d::Solver* mSolver;
 		RockOdometry* mOdometry;
 		boost::shared_mutex mGraphMutex;
-		base::Time mLastScanTime;
 
 		std::string mRobotName;
 		std::string mRobotFrame;
