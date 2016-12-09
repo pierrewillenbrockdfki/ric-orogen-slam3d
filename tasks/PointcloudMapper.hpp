@@ -33,8 +33,8 @@ namespace slam3d
 		virtual bool write_ply(const std::string& folder);
 		
 		// Callbacks
-		virtual void scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample);
 		virtual bool setLog_level(boost::int32_t value);
+		void transformerCallback(const base::Time &time);
 
 		// Internal methods
 		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
@@ -86,6 +86,9 @@ namespace slam3d
 		
 		// Current state of transformations
 		Eigen::Affine3d mCurrentOdometry;
+		Eigen::Affine3d mCurrentPose;
+		Eigen::Affine3d mCurrentDrift;
+		base::Time mCurrentTime;
 
 	public:
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");

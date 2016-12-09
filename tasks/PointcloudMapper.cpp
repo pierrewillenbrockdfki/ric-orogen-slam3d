@@ -323,6 +323,7 @@ bool PointcloudMapper::configureHook()
 	{
 		mOdometry = new RockOdometry(_robot2odometry, mLogger);
 		mMapper->setOdometry(mOdometry, _add_odometry_edges.get());
+		_robot2odometry.registerUpdateCallback(boost::bind(&PointcloudMapper::transformerCallback, this, _1));
 		mLogger->message(INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges.get()).str());
 	}else
 	{
@@ -491,76 +492,21 @@ void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::sampl
 	}
 }
 
-void PointcloudMapper::scanTransformerCallback(const base::Time &ts, const ::base::samples::Pointcloud &scan_sample)
+void PointcloudMapper::transformerCallback(const base::Time &time)
 {
-	if(mOdometry)
-	{
-		try
-		{
-			mCurrentOdometry = mOdometry->getOdometricPose(ts);
-		}
-		catch(OdometryException &e)
-		{
-			mLogger->message(ERROR, e.what());
-			return;
-		}
-	}
-
-	// Get laser pose
-	Transform laserPose = Transform::Identity();
 	try
 	{
-		Eigen::Affine3d affine;
-		if(!_laser2robot.get(ts, affine, false) || !affine.matrix().allFinite())
+		mCurrentOdometry = mOdometry->getOdometricPose(time);
+		if(mCurrentTime == base::Time())
 		{
-			mLogger->message(ERROR, (boost::format("Failed to receive a valid transform from '%1%' to '%2%'!")
-				% _laser_frame % _robot_frame).str());
-			return;
+			mCurrentPose = mMapper->getCurrentPose();
+			mCurrentDrift = mCurrentPose * mCurrentOdometry.inverse();
 		}
-		laserPose.linear() = affine.linear();
-		laserPose.translation() = affine.translation();
+		mCurrentTime = time;
 	}
-	catch(std::exception &e)
+	catch(OdometryException &e)
 	{
 		mLogger->message(ERROR, e.what());
-		return;
-	}
-
-	// Transform base::samples::Pointcloud --> Pointcloud
-	PointCloud::Ptr cloud = createFromRockMessage(scan_sample);
-	
-	// Downsample and add to map
-	PointCloudMeasurement::Ptr measurement;
-	try
-	{
-		if(mScanResolution > 0)
-		{
-			PointCloud::Ptr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
-			mLogger->message(DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
-			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), laserPose));
-		}else
-		{
-			measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), laserPose));
-		}
-
-		if(mMapper->addReading(measurement, mForceAdd))
-		{
-			mScansAdded++;
-			mForceAdd = false;
-			mLastScanTime = ts;
-			handleNewScan(mMapper->getLastVertex());
-			if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
-			{
-				optimize();
-			}
-			if(mMapPublishRate > 0 && (mScansAdded % mMapPublishRate) == 0)
-			{
-				generate_map();
-			}
-		}
-	}catch(std::exception& e)
-	{
-		mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
 	}
 }
 
@@ -568,25 +514,82 @@ void PointcloudMapper::updateHook()
 {
 	PointcloudMapperBase::updateHook();
 
-	// Check if we received anything yet
-	if(mLastScanTime.isNull())
-		return;
+	base::samples::Pointcloud scan_sample;
+	while(_scan.read(scan_sample, false) == RTT::NewData)
+	{
+		// Get laser pose
+		Transform laserPose = Transform::Identity();
+		try
+		{
+			Eigen::Affine3d affine;
+			if(!_laser2robot.get(scan_sample.time, affine, false) || !affine.matrix().allFinite())
+			{
+				mLogger->message(ERROR, (boost::format("Failed to receive a valid transform from '%1%' to '%2%'!")
+					% _laser_frame % _robot_frame).str());
+				continue;
+			}
+			laserPose.linear() = affine.linear();
+			laserPose.translation() = affine.translation();
+		}
+		catch(std::exception &e)
+		{
+			mLogger->message(ERROR, e.what());
+			continue;
+		}
 
+		// Transform base::samples::Pointcloud --> Pointcloud
+		PointCloud::Ptr cloud = createFromRockMessage(scan_sample);
+		
+		// Downsample and add to map
+		PointCloudMeasurement::Ptr measurement;
+		try
+		{
+			if(mScanResolution > 0)
+			{
+				PointCloud::Ptr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
+				mLogger->message(DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
+				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), laserPose));
+			}else
+			{
+				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), laserPose));
+			}
+
+			if(mMapper->addReading(measurement, mForceAdd))
+			{
+				mScansAdded++;
+				mForceAdd = false;
+				mLastScanTime = scan_sample.time;
+				handleNewScan(mMapper->getLastVertex());
+				if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
+				{
+					optimize();
+				}
+				if(mMapPublishRate > 0 && (mScansAdded % mMapPublishRate) == 0)
+				{
+					generate_map();
+				}
+				mCurrentPose = mMapper->getCurrentPose();
+				mCurrentDrift = mCurrentPose * mCurrentOdometry.inverse();
+			}
+		}catch(std::exception& e)
+		{
+			mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
+		}
+	}
+	
 	// Publish the robot pose in map
-	Transform currentPose = mMapper->getCurrentPose();
 	base::samples::RigidBodyState rbs;
-	rbs.setTransform(currentPose);
+	rbs.setTransform(mCurrentPose);
 	rbs.invalidateCovariances();
 	rbs.sourceFrame = mRobotFrame;
 	rbs.targetFrame = mMapFrame;
-	rbs.time = mLastScanTime;
+	rbs.time = mCurrentTime;
 	_robot2map.write(rbs);
 	
 	// Publish the odometry drift
 	if(mOdometry)
 	{
-		Eigen::Affine3d drift = currentPose * mCurrentOdometry.inverse();
-		rbs.setTransform(drift);
+		rbs.setTransform(mCurrentDrift);
 		rbs.sourceFrame = mOdometryFrame;
 		_odometry2map.write(rbs);
 	}
