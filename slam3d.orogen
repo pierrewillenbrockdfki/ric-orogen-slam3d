@@ -71,65 +71,112 @@ task_context "PointcloudMapper" do
 	.doc("Map-Pointcloud is downsampled to this resolution before being published.")
 
 	property('optimization_rate', '/int', 0)
-	.doc("Optimize the graph every X scans, that are added to the map.")
+	.doc("Optimize the graph every X scans, that are added to the map. Optimization
+	is additionally run automatically after every successful loop-closure.")
 
 	property('map_publish_rate', '/int', 0)
 	.doc("Publish Map-Pointcloud every X scans, that are added to the map.")
 
 	property('neighbor_radius', '/double', 1.0)
-	.doc("Distance to search for neighbors when adding additional constraints to the graph.")
+	.doc("A new node is linked against neighbors within this radius, but not
+	more than max_neighbor_links.")
 
 	property('max_neighbor_links', '/int', 5)
-	.doc("Maximum number of additional constraints per node added to the graph.")
+	.doc("Maximum number of additional constraints per node added to the graph.
+	This can be used to limit the computational costs of adding a node.")
 
 	property('patch_building_range', '/int', 0)
-	.doc("Number of steps to follow BFS when building local patches for matching.")
+	.doc("If set to a value X > 0, pointclouds are matched against accumulated
+	pointclouds generated from all nodes in a local neighborhood of the target
+	scan. Local patches will include all nodes that are reachable by a maximum
+	of X edges from the target.")
 
 	property('map_outlier_radius', '/double', 0.2)
-	.doc("Map-Pointcloud outlier rejection radius.")
+	.doc("Outlier rejection is performed on the accumulated pointcloud. A point
+	is considered an inlier if it has enough neighbors within this radius. The
+	parameter map_outlier_neighbors defines what is enough. This has no effect
+	on the grid map that is written to the envire_map port.")
 
 	property('map_outlier_neighbors', '/unsigned', 2)
-	.doc("Map-Pointcloud outlier rejection minimum neighbors within radius.")
+	.doc("Outlier rejection is performed on the accumulated pointcloud. A point
+	is considered an inlier if it has this many neighbors within a given radius.
+	The	parameter map_outlier_radius defines this radius. This has no effect
+	on the grid map that is written to the envire_map port.")
 
 	property('min_translation', '/double', 0.1)
-	.doc("Minimum distance between two subsequent nodes.")
+	.doc("Minimum distance between two subsequent nodes. If odometry is
+	available, it is used to determine the traveled distance between scans,
+	if not ICP has to be performed. A too small value will result in high
+	cumputational costs and a rapidly growing graph. But distance should be
+	small enough to have enough overlap between scans for ICP.")
 
 	property('min_rotation', '/double', 0.25)
-	.doc("Minimum rotation difference between two subsequent nodes.")
+	.doc("Minimum rotation difference between two subsequent nodes. This is
+	especially important for scanners with a horizonal opening angle. for
+	sensors with 360° coverage this can be set much higher if odometry is
+	reasonably accurate.")
 
 	property('use_odometry', '/bool', true)
-	.doc("Whether to use odometry port.")
+	.doc("Whether to use the robot's odometry. If set to true, the localization
+	result should be read from the odometry2map port. By integrating the
+	robot2odometry transformation from the odometry, the current pose in map
+	coordinates can be retrieved. If set to false, every incoming scan has to be
+	matched with ICP to calculate the robot's movement. The result is then read
+	from the robot2map port directly.")
 
 	property('add_odometry_edges', '/bool', true)
-	.doc("Whether to add odometry edges to the graph.")
+	.doc("Whether to add odometry edges to the graph, should be true in most
+	cases. Set this to false if odometry should only be used to decide if a scan
+	should be added and to initialize ICP, but not be used for the graph. This
+	is mostly useful for debugging and result evaluation.")
 
 	property('start_pose', '/base/Pose')
-	.doc("Start pose of the robot in map coordinates.")
+	.doc("Start pose of the robot in map coordinates. This can remain at the
+	origin for single robot mapping. In a distributed setup, the start poses of
+	all robots should reflect their relative poses at the start of the exploration.")
 
 	property('use_odometry_heading', '/bool', false)
-	.doc("Whether to initialize the robot's pose from odometry.")
+	.doc("Whether to initialize the robot's pose from odometry. This is useful
+	when the odometry includes global heading from a compass and will then
+	preserve this heading in the generated map, e.g. the map will be north aligned.")
 
 	property('gicp_config', '/slam3d/GICPConfiguration')
-	.doc("Parameters for Generalized ICP.")
+	.doc("Parameters for Generalized ICP. This set is used for sequential scan
+	matching and should be quite robust, e.g. fail rarely. A quite good guess
+	for the transformation from odometry can be assumed. Scans might have only
+	little overlap depending on the environment.")
 
 	property('gicp_coarse_config', '/slam3d/GICPConfiguration')
-	.doc("Parameters for coarse Generalized ICP when doing loop closures.")
+	.doc("Parameters for coarse Generalized ICP. This is performed first to verify
+	a possible loop closure. It should operate on lower density clouds to increase
+	the convergence radius and speedup computation. Maximum feature distance should
+	be lower to avoid invalid matches. The maximum fitness score should be lower
+	to reduce false positives. The resulting transformation	is then used to
+	initialize the normal ICP used fpr sequential matches.")
 
 	property('log_type', '/int', 0)
-	.doc("Standard(0), Base(1), File(2)")
+	.doc("Selects the type of logging that is used by slam3d. Standard(0) simply
+	writes to standard output, Base(1) uses ROCK's base-logging mechanism and
+	File(2)	creates a file slam3d.log.")
 	
 	property('log_level', '/int', 2)
 	.dynamic()
-	.doc("Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
+	.doc("Set which type of messages are logged. Messages with the specified log-level
+	and above will be generated. Note that when Base logger is used, a DEBUG build is
+	required to see debug and info messages.
+	Levels are: Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
 
 	property('robot_name', '/std/string', "robot")
-	.doc("This robot's name.")
+	.doc("This robot's name. It will be attached to measurements that are send to other robots.")
 
 	property('map_frame', '/std/string', "map")
 	.doc("The frame that the map is represented in.")
 
 	property('use_colors_as_viewpoints', '/bool', false)
-	.doc("Whether to get viewpoints from pointcloud's color vector.")
+	.doc("Whether to get viewpoints from pointcloud's color vector. This non-
+	standard behaviour should only be activated if such special pointclouds
+	are provided. If true, raytracing will be done from viewpoint for each
+	point individually.")
 
 	property('grid_config', 'slam3d/GridConfiguration')
 	.doc("Size and resolution of generated grid map.")
@@ -140,8 +187,12 @@ task_context "PointcloudMapper" do
 	property('envire_path', '/std/string', "slam3d_envire")
 	.doc("The path where to write the serialized envire map.")
 
-	# The pointcloud will be added as first element to the graph
 	property('apriori_ply_map', '/std/string')
+	.doc("Load a pointcloud in ply format to initialize the map. It will be
+	added as the first element to the graph. Note that no special treatment
+	of this node is implemented yet. Most importantly the usually greater
+	size of this cloud will not be taken into account when matching against
+	incoming regular scans.")
 end
 
 ## Mapper that creates a Multi-Level-Surface-Map from an OcTree
