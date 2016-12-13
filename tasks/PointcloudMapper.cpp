@@ -355,6 +355,10 @@ bool PointcloudMapper::configureHook()
 	
 	mMapper->useOdometryHeading(_use_odometry_heading.get());
 	mLogger->message(INFO, (boost::format("use_odometry_heading:   %1%") % _use_odometry_heading.get()).str());
+	if(_use_odometry_heading.get() && (pose != base::Pose()))
+	{
+		mLogger->message(WARNING, "Heading from start pose will be overwritten! Consider setting use_odometry_heading to false.");
+	}
 	
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
