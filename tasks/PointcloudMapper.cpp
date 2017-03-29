@@ -577,10 +577,6 @@ void PointcloudMapper::updateHook()
 		}
 	}
 	
-	// Return if nothing has been received yet
-	if(mCurrentTime == base::Time())
-		return;
-	
 	// Publish the robot pose in map
 	base::samples::RigidBodyState rbs;
 	rbs.setTransform(mCurrentPose);
@@ -589,6 +585,10 @@ void PointcloudMapper::updateHook()
 	rbs.targetFrame = mMapFrame;
 	rbs.time = mCurrentTime;
 	_robot2map.write(rbs);
+	
+	// Return if nothing has been received yet
+	if(mCurrentTime == base::Time())
+		return;
 	
 	// Publish the odometry drift
 	if(mOdometry)
