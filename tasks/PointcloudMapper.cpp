@@ -125,8 +125,8 @@ PointCloud::Ptr PointcloudMapper::buildPointcloud(const VertexObjectList& vertic
 	boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
 	accumulated = mPclSensor->getAccumulatedCloud(vertices);
 
-	PointCloud::Ptr cleaned = mPclSensor->removeOutliers(accumulated, mMapOutlierRadius, mMapOutlierNeighbors);
-	PointCloud::Ptr downsampled = mPclSensor->downsample(cleaned, mMapResolution);
+	PointCloud::Ptr cleaned = mPclSensor->removeOutliers(accumulated, _map_outlier_radius, _map_outlier_neighbors);
+	PointCloud::Ptr downsampled = mPclSensor->downsample(cleaned, _map_resolution);
 
 	timeval finish = mClock->now();
 	int duration = finish.tv_sec - start.tv_sec;
@@ -359,20 +359,11 @@ bool PointcloudMapper::configureHook()
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
 	
-	mMapResolution = _map_resolution.get();
-	mLogger->message(INFO, (boost::format("map_resolution:         %1%") % mMapResolution).str());
-	
-	mOptimizationRate = _optimization_rate.get();
-	mLogger->message(INFO, (boost::format("optimization_rate:      %1%") % mOptimizationRate).str());
-	
-	mMapPublishRate = _map_publish_rate.get();
-	mLogger->message(INFO, (boost::format("map_publish_rate:       %1%") % mMapPublishRate).str());
-	
-	mMapOutlierRadius = _map_outlier_radius.get();
-	mLogger->message(INFO, (boost::format("map_outlier_radius:     %1%") % mMapOutlierRadius).str());
-	
-	mMapOutlierNeighbors = _map_outlier_neighbors.get();
-	mLogger->message(INFO, (boost::format("map_outlier_neighbors:  %1%") % mMapOutlierNeighbors).str());
+	mLogger->message(INFO, (boost::format("map_resolution:         %1%") % _map_resolution).str());
+	mLogger->message(INFO, (boost::format("map_outlier_radius:     %1%") % _map_outlier_radius).str());
+	mLogger->message(INFO, (boost::format("map_outlier_neighbors:  %1%") % _map_outlier_neighbors).str());
+	mLogger->message(INFO, (boost::format("map_publish_rate:       %1%") % _map_publish_rate).str());
+	mLogger->message(INFO, (boost::format("optimization_rate:      %1%") % _optimization_rate).str());
 	
 	mRobotName = _robot_name.get();
 	mLogger->message(INFO, (boost::format("robot_name:             %1%") % mRobotName).str());
@@ -560,11 +551,11 @@ void PointcloudMapper::updateHook()
 				mForceAdd = false;
 				mCurrentTime = scan_sample.time;
 				handleNewScan(mMapper->getLastVertex());
-				if(mOptimizationRate > 0 && (mScansAdded % mOptimizationRate) == 0)
+				if(_optimization_rate > 0 && (mScansAdded % _optimization_rate) == 0)
 				{
 					optimize();
 				}
-				if(mMapPublishRate > 0 && (mScansAdded % mMapPublishRate) == 0)
+				if(_map_publish_rate > 0 && (mScansAdded % _map_publish_rate) == 0)
 				{
 					generate_map();
 				}

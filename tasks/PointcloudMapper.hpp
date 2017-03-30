@@ -61,27 +61,18 @@ namespace slam3d
 		std::string mOdometryFrame;
 		std::string mMapFrame;
 		
-		bool mUseColorsAsViewpoints;
-		
 		int mScansAdded;
-		int mOptimizationRate;
-		int mMapPublishRate;
+		bool mForceAdd;
 		
 		// Parameters for creation of map-pcl
 		double mScanResolution;
-		double mMapResolution;
-		
-		// Parameters for outlier rejection in map-pcl
-		double   mMapOutlierRadius;
-		unsigned mMapOutlierNeighbors;
-		
+		bool mUseColorsAsViewpoints;
+
 		// Parameters for creation of MLS
 		envire::Environment mEnvironment;
 		envire::MLSGrid* mMultiLayerMap;
 		envire::Pointcloud* mPointcloud;
 		GridConfiguration mGridConf;
-		
-		bool mForceAdd;
 		
 		// Current state of transformations
 		Eigen::Affine3d mCurrentOdometry;
