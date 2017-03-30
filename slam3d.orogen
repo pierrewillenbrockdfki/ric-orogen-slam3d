@@ -101,7 +101,7 @@ task_context "PointcloudMapper" do
 	parameter map_outlier_neighbors defines what is enough. This has no effect
 	on the grid map that is written to the envire_map port.")
 
-	property('map_outlier_neighbors', '/unsigned', 2)
+	property('map_outlier_neighbors', '/int', 2)
 	.dynamic()
 	.doc("Outlier rejection is performed on the accumulated pointcloud. A point
 	is considered an inlier if it has this many neighbors within a given radius.
