@@ -68,13 +68,16 @@ task_context "PointcloudMapper" do
 	.doc("Pointclouds are downsampled to this resolution before being added to the map.")
 
 	property('map_resolution', '/double', 0.01)
+	.dynamic()
 	.doc("Map-Pointcloud is downsampled to this resolution before being published.")
 
 	property('optimization_rate', '/int', 0)
+	.dynamic()
 	.doc("Optimize the graph every X scans, that are added to the map. Optimization
 	is additionally run automatically after every successful loop-closure.")
 
 	property('map_publish_rate', '/int', 0)
+	.dynamic()
 	.doc("Publish Map-Pointcloud every X scans, that are added to the map.")
 
 	property('neighbor_radius', '/double', 1.0)
@@ -92,12 +95,14 @@ task_context "PointcloudMapper" do
 	of X edges from the target.")
 
 	property('map_outlier_radius', '/double', 0.2)
+	.dynamic()
 	.doc("Outlier rejection is performed on the accumulated pointcloud. A point
 	is considered an inlier if it has enough neighbors within this radius. The
 	parameter map_outlier_neighbors defines what is enough. This has no effect
 	on the grid map that is written to the envire_map port.")
 
-	property('map_outlier_neighbors', '/unsigned', 2)
+	property('map_outlier_neighbors', '/int', 2)
+	.dynamic()
 	.doc("Outlier rejection is performed on the accumulated pointcloud. A point
 	is considered an inlier if it has this many neighbors within a given radius.
 	The	parameter map_outlier_radius defines this radius. This has no effect
