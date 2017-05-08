@@ -17,7 +17,7 @@ namespace slam3d
 		virtual bool remove_dynamic_objects();
 		
 		// Overloaded methods
-		virtual void addScanToMap(const VertexObject& scan);
+		virtual void addScanToMap(PointCloudMeasurement::Ptr scan, const Transform& pose);
 		virtual void rebuildMap(const VertexObjectList& vertices);
 		virtual void sendMap();
 		

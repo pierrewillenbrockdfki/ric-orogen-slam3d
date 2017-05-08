@@ -42,7 +42,7 @@ namespace slam3d
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
 		virtual void handleNewScan(const VertexObject& scan);
-		virtual void addScanToMap(const VertexObject& scan);
+		virtual void addScanToMap(PointCloudMeasurement::Ptr scan, const Transform& pose);
 		virtual void rebuildMap(const VertexObjectList& vertices);
 		virtual void sendMap();
 		bool loadPLYMap(const std::string& path);

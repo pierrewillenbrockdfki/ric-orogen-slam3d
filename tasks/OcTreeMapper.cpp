@@ -34,24 +34,17 @@ OcTreeMapper::~OcTreeMapper()
 {
 }
 
-void OcTreeMapper::addScanToMap(const VertexObject& scan)
+void OcTreeMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Transform& pose)
 {
-	PointCloudMeasurement::Ptr pcl = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
-	if(!pcl)
-	{
-		mLogger->message(ERROR, "Measurement is not a point cloud!");
-		throw BadMeasurementType();
-	}
-
 	PointCloud::Ptr tempCloud(new PointCloud);
-	pcl::transformPointCloud(*(pcl->getPointCloud()), *tempCloud, (scan.corrected_pose * pcl->getSensorPose()).matrix());
+	pcl::transformPointCloud(*(scan->getPointCloud()), *tempCloud, (pose * scan->getSensorPose()).matrix());
 
 	octomap::Pointcloud octoCloud;
 	for(PointCloud::iterator it = tempCloud->begin(); it < tempCloud->end(); ++it)
 	{
 		octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
 	}
-	Vector3 origin = scan.corrected_pose.translation();
+	Vector3 origin = pose.translation();
 	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), mOctreeConf.rangeMax, true, true);
 }
 
@@ -70,7 +63,13 @@ void OcTreeMapper::rebuildMap(const VertexObjectList& vertices)
 		boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
 		for(VertexObjectList::const_iterator it = vertices.begin(); it != vertices.end(); it++)
 		{
-			addScanToMap(*it);
+			PointCloudMeasurement::Ptr pcm = boost::dynamic_pointer_cast<PointCloudMeasurement>(it->measurement);
+			if(!pcm)
+			{
+				mLogger->message(ERROR, "Measurement is not a point cloud!");
+				throw BadMeasurementType();
+			}
+			addScanToMap(pcm, it->corrected_pose);
 		}
 	}catch (boost::lock_error &e)
 	{

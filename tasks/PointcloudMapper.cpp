@@ -162,20 +162,19 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 
 void PointcloudMapper::handleNewScan(const VertexObject& scan)
 {
-	addScanToMap(scan);
+	PointCloudMeasurement::Ptr pcm = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
+	if(!pcm)
+	{
+		mLogger->message(ERROR, "Measurement is not a point cloud!");
+		throw BadMeasurementType();
+	}
+	addScanToMap(pcm, scan.corrected_pose);
 }
 
-void PointcloudMapper::addScanToMap(const VertexObject& scan)
-{
-	PointCloudMeasurement::Ptr m = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
-	if(!m)
-	{
-		mLogger->message(ERROR, "Vertex given to addScanToMap is not a Pointcloud!");
-		return;
-	}
-	
-	PointCloud::ConstPtr pcl = m->getPointCloud();
-	Transform sensor_pose = scan.corrected_pose * m->getSensorPose();
+void PointcloudMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Transform& pose)
+{	
+	PointCloud::ConstPtr pcl = scan->getPointCloud();
+	Transform sensor_pose = pose * scan->getSensorPose();
 	for(PointCloud::const_iterator it = pcl->begin(); it != pcl->end(); ++it)
 	{
 		Eigen::Vector3d p = sensor_pose * Eigen::Vector3d(it->x, it->y, it->z);
@@ -193,7 +192,13 @@ void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
 	boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
 	for(VertexObjectList::const_iterator v = vertices.begin(); v != vertices.end(); ++v)
 	{
-		addScanToMap(*v);
+		PointCloudMeasurement::Ptr pcm = boost::dynamic_pointer_cast<PointCloudMeasurement>(v->measurement);
+		if(!pcm)
+		{
+			mLogger->message(ERROR, "Measurement is not a point cloud!");
+			throw BadMeasurementType();
+		}
+		addScanToMap(pcm, v->corrected_pose);
 	}
 	sendMap();
 }
@@ -219,7 +224,7 @@ bool PointcloudMapper::loadPLYMap(const std::string& path)
 		{
 			VertexObject root_node = mMapper->getVertex(0);
 			mMapper->addExternalReading(initial_map, root_node.measurement->getUniqueId(), Transform::Identity(), Covariance::Identity(), "none");
-			addScanToMap(mMapper->getVertex(initial_map->getUniqueId()));
+			addScanToMap(initial_map, Transform::Identity());
 			return true;
 		}
 		catch(std::exception& e)
