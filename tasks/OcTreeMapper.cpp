@@ -37,14 +37,15 @@ OcTreeMapper::~OcTreeMapper()
 void OcTreeMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Transform& pose)
 {
 	PointCloud::Ptr tempCloud(new PointCloud);
-	pcl::transformPointCloud(*(scan->getPointCloud()), *tempCloud, (pose * scan->getSensorPose()).matrix());
+	Transform sensor = pose * scan->getSensorPose();
+	pcl::transformPointCloud(*(scan->getPointCloud()), *tempCloud, sensor.matrix());
 
 	octomap::Pointcloud octoCloud;
 	for(PointCloud::iterator it = tempCloud->begin(); it < tempCloud->end(); ++it)
 	{
 		octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
 	}
-	Vector3 origin = pose.translation();
+	Vector3 origin = sensor.translation();
 	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), mOctreeConf.rangeMax, true, true);
 }
 
