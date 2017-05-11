@@ -149,7 +149,12 @@ bool OcTreeMapper::remove_dynamic_objects()
 		PointCloud::Ptr cloud = m->getPointCloud();
 		for(PointCloud::iterator p = cloud->begin(); p != cloud->end();)
 		{
-			octomap::OcTreeNode* node = mOcTree->search(p->x, p->y, p->z);
+			base::Vector3d p_tf;
+			p_tf[0] = p->x;
+			p_tf[1] = p->y;
+			p_tf[2] = p->z;
+			p_tf = v->corrected_pose * m->getSensorPose() * p_tf;
+			octomap::OcTreeNode* node = mOcTree->search(p_tf[0], p_tf[1], p_tf[2]);
 			if(node && !mOcTree->isNodeOccupied(node))
 			{
 				deleted++;
