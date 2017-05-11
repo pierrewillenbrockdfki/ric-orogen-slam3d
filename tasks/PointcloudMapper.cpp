@@ -576,6 +576,9 @@ void PointcloudMapper::updateHook()
 				}
 				mCurrentPose = mMapper->getCurrentPose();
 				mCurrentDrift = mCurrentPose * mCurrentOdometry.inverse();
+			}else
+			{
+				addScanToMap(measurement, mMapper->getCurrentPose());
 			}
 		}catch(std::exception& e)
 		{
