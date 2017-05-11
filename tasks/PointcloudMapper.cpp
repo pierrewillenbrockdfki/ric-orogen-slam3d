@@ -160,15 +160,20 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 	_cloud.write(mapCloud);	
 }
 
-void PointcloudMapper::handleNewScan(const VertexObject& scan)
+PointCloudMeasurement::Ptr PointcloudMapper::castToPointcloud(Measurement::Ptr m)
 {
-	PointCloudMeasurement::Ptr pcm = boost::dynamic_pointer_cast<PointCloudMeasurement>(scan.measurement);
+	PointCloudMeasurement::Ptr pcm = boost::dynamic_pointer_cast<PointCloudMeasurement>(m);
 	if(!pcm)
 	{
 		mLogger->message(ERROR, "Measurement is not a point cloud!");
 		throw BadMeasurementType();
 	}
-	addScanToMap(pcm, scan.corrected_pose);
+	return pcm;
+}
+
+void PointcloudMapper::handleNewScan(const VertexObject& scan)
+{
+	addScanToMap(castToPointcloud(scan.measurement), scan.corrected_pose);
 }
 
 void PointcloudMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Transform& pose)
@@ -186,20 +191,25 @@ void PointcloudMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Trans
 	}
 }
 
-void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
+void PointcloudMapper::clearMap()
 {
 	mMultiLayerMap->clear();
+}
+
+void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
+{
+	timeval start = mClock->now();
+	clearMap();
+
 	boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
 	for(VertexObjectList::const_iterator v = vertices.begin(); v != vertices.end(); ++v)
 	{
-		PointCloudMeasurement::Ptr pcm = boost::dynamic_pointer_cast<PointCloudMeasurement>(v->measurement);
-		if(!pcm)
-		{
-			mLogger->message(ERROR, "Measurement is not a point cloud!");
-			throw BadMeasurementType();
-		}
-		addScanToMap(pcm, v->corrected_pose);
+		addScanToMap(castToPointcloud(v->measurement), v->corrected_pose);
 	}
+	timeval finish = mClock->now();
+	int duration = finish.tv_sec - start.tv_sec;
+	mLogger->message(INFO, (boost::format("Completely rebuild map from %1% scans in %2% seconds.") % vertices.size() % duration).str());
+
 	sendMap();
 }
 

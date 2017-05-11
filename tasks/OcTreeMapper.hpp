@@ -18,7 +18,7 @@ namespace slam3d
 		
 		// Overloaded methods
 		virtual void addScanToMap(PointCloudMeasurement::Ptr scan, const Transform& pose);
-		virtual void rebuildMap(const VertexObjectList& vertices);
+		virtual void clearMap();
 		virtual void sendMap();
 		
 		// Internal methods

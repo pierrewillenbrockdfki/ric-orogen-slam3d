@@ -49,40 +49,11 @@ void OcTreeMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Transform
 	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), mOctreeConf.rangeMax, true, true);
 }
 
-void OcTreeMapper::rebuildMap(const VertexObjectList& vertices)
+void OcTreeMapper::clearMap()
 {
 	// Reset OctoMap (OcTree::clear is currently not working)
 	delete mOcTree;
 	mOcTree = initOcTree(mOctreeConf);
-
-	mLogger->message(DEBUG, "Rebuilding OcTree from all scans.");
-	
-	// Rebuild from pointclouds
-	timeval start = mClock->now();
-	try
-	{
-		boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
-		for(VertexObjectList::const_iterator it = vertices.begin(); it != vertices.end(); it++)
-		{
-			PointCloudMeasurement::Ptr pcm = boost::dynamic_pointer_cast<PointCloudMeasurement>(it->measurement);
-			if(!pcm)
-			{
-				mLogger->message(ERROR, "Measurement is not a point cloud!");
-				throw BadMeasurementType();
-			}
-			addScanToMap(pcm, it->corrected_pose);
-		}
-	}catch (boost::lock_error &e)
-	{
-		mLogger->message(ERROR, "Could not access the pose graph to build OcTree!");
-		return;
-	}
-	timeval finish = mClock->now();
-	int duration = finish.tv_sec - start.tv_sec;
-	mLogger->message(INFO, (boost::format("Generated OcTree from %1% scans in %2% seconds.") % vertices.size() % duration).str());
-	
-	// Create mls-map and send it via Envire
-	sendMap();
 }
 
 void OcTreeMapper::buildMLS()
