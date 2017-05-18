@@ -37,8 +37,6 @@ namespace slam3d
 		void transformerCallback(const base::Time &time);
 
 		// Internal methods
-		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
-		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
 		virtual void handleNewScan(const VertexObject& scan);
@@ -47,7 +45,6 @@ namespace slam3d
 		virtual void rebuildMap(const VertexObjectList& vertices);
 		virtual void sendMap();
 		bool loadPLYMap(const std::string& path);
-		PointCloudMeasurement::Ptr castToPointcloud(Measurement::Ptr m);
 	
 		// Members
 		slam3d::Clock* mClock;
@@ -86,6 +83,10 @@ namespace slam3d
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");
 		PointcloudMapper(std::string const& name, RTT::ExecutionEngine* engine);
 		~PointcloudMapper();
+
+		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
+		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
+		PointCloudMeasurement::Ptr castToPointcloud(Measurement::Ptr m);
 
 		bool configureHook();
 		bool startHook();
