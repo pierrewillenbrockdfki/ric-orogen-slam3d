@@ -62,6 +62,7 @@ namespace slam3d
 		
 		int mScansAdded;
 		bool mForceAdd;
+		bool mOdometryReceived;
 		
 		// Parameters for creation of map-pcl
 		double mScanResolution;
