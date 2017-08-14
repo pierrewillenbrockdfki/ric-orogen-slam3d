@@ -570,6 +570,20 @@ void PointcloudMapper::updateHook()
 				{
 					generate_map();
 				}
+				
+				// Publish the odometry drift
+				mCurrentPose = mMapper->getCurrentPose();
+				if(mOdometryReceived)
+				{
+					mCurrentDrift = mCurrentPose * mCurrentOdometry.inverse();
+					base::samples::RigidBodyState rbs;
+					rbs.setTransform(mCurrentDrift);
+					rbs.invalidateCovariances();
+					rbs.sourceFrame = mOdometryFrame;
+					rbs.targetFrame = mMapFrame;
+					rbs.time = mCurrentTime;
+					_odometry2map.write(rbs);
+				}
 			}else
 			{
 				addScanToMap(measurement, mMapper->getCurrentPose());
@@ -581,7 +595,6 @@ void PointcloudMapper::updateHook()
 	}
 	
 	// Publish the robot pose in map
-	mCurrentPose = mMapper->getCurrentPose();
 	base::samples::RigidBodyState rbs;
 	rbs.setTransform(mCurrentPose);
 	rbs.invalidateCovariances();
@@ -589,16 +602,6 @@ void PointcloudMapper::updateHook()
 	rbs.targetFrame = mMapFrame;
 	rbs.time = mCurrentTime;
 	_robot2map.write(rbs);
-	
-	// Publish the odometry drift
-	if(mOdometryReceived)
-	{
-		mCurrentDrift = mCurrentPose * mCurrentOdometry.inverse();
-		rbs.setTransform(mCurrentDrift);
-		rbs.sourceFrame = mOdometryFrame;
-		rbs.time = mCurrentTime;
-		_odometry2map.write(rbs);
-	}
 }
 
 void PointcloudMapper::errorHook()
