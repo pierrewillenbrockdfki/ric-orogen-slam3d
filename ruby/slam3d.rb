@@ -47,35 +47,5 @@ module Slam3d
 		setup_filter_mapper(converter.cloud, filter, mapper, params)
 	end
 
-	def Slam3d.setup_navigation(planner, follower, calc_pose, traversability, mapper, odo, motion_controller)
-
-		Orocos.conf.apply(planner, ['default'])
-		planner.configure
-		planner.start
-
-		Orocos.conf.apply(traversability, ['default'])
-		Bundles.transformer.setup(traversability)
-		traversability.configure
-		traversability.start
-
-		Orocos.conf.apply(calc_pose, ['default'])
-		calc_pose.configure
-		calc_pose.start
-
-		Orocos.conf.apply(follower, ['default'])
-		follower.configure
-		follower.start
-		
-		## Setup the data connections
-		mapper.odometry2map.connect_to(calc_pose.odometry2map)
-		odo.odometry_samples.connect_to(calc_pose.robot2odometry)
-		mapper.envire_map.connect_to(traversability.mls_map)
-		traversability.traversability_map.connect_to(planner.traversability_map)
-		calc_pose.robot2map.connect_to(planner.start_pose_samples)
-		calc_pose.robot2map.connect_to(follower.robot_pose)
-		planner.trajectory.connect_to(follower.trajectory)
-		planner.escape_trajectory.connect_to(follower.trajectory)
-		follower.motion_command.connect_to(motion_controller.motion_command)
-	end
 end
 
