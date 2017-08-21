@@ -504,7 +504,18 @@ void PointcloudMapper::transformerCallback(const base::Time &time)
 	try
 	{
 		mCurrentOdometry = mOdometry->getOdometricPose(time);
-		mOdometryReceived = true;
+		if(!mOdometryReceived)
+		{
+			mOdometryReceived = true;
+			mCurrentDrift = mMapper->getCurrentPose() * mCurrentOdometry.inverse();
+			base::samples::RigidBodyState rbs;
+			rbs.setTransform(mCurrentDrift);
+			rbs.invalidateCovariances();
+			rbs.sourceFrame = mOdometryFrame;
+			rbs.targetFrame = mMapFrame;
+			rbs.time = time;
+			_odometry2map.write(rbs);
+		}
 	}
 	catch(OdometryException &e)
 	{
