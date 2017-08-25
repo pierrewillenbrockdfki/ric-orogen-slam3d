@@ -402,7 +402,6 @@ bool PointcloudMapper::configureHook()
 	
 	mScansAdded = 0;
 	mForceAdd = false;
-	mOdometryReceived = false;
 	
 	// Initialize MLS-Map
 	mGridConf = _grid_config.get();
@@ -504,12 +503,15 @@ void PointcloudMapper::transformerCallback(const base::Time &time)
 	try
 	{
 		mCurrentOdometry = mOdometry->getOdometricPose(time);
-		if(!mOdometryReceived)
-		{
-			mOdometryReceived = true;
-			mCurrentTime = time;
-			sendTransforms();
-		}
+
+		// Send the current pose
+		base::samples::RigidBodyState rbs;
+		rbs.invalidateCovariances();
+		rbs.time = time;
+		rbs.sourceFrame = mRobotFrame;
+		rbs.targetFrame = mMapFrame;
+		rbs.setTransform(mCurrentDrift * mCurrentOdometry);
+		_robot2map.write(rbs);
 	}
 	catch(OdometryException &e)
 	{
@@ -578,33 +580,30 @@ void PointcloudMapper::updateHook()
 			{
 				addScanToMap(measurement, mMapper->getCurrentPose());
 			}
-			mCurrentPose = mMapper->getCurrentPose();
 			mCurrentTime = scan_sample.time;
-			sendTransforms();
+			
+			// Send the calculated transform
+			base::samples::RigidBodyState rbs;
+			rbs.invalidateCovariances();
+			rbs.targetFrame = mMapFrame;
+			rbs.time = mCurrentTime;
+			
+			if(mOdometry)
+			{
+				mCurrentDrift = mMapper->getCurrentPose() * mCurrentOdometry.inverse();
+				rbs.sourceFrame = mOdometryFrame;
+				rbs.setTransform(mCurrentDrift);
+				_odometry2map.write(rbs);
+			}else
+			{
+				rbs.sourceFrame = mRobotFrame;
+				rbs.setTransform(mMapper->getCurrentPose());
+				_robot2map.write(rbs);
+			}
 		}catch(std::exception& e)
 		{
 			mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
 		}
-	}
-}
-
-void PointcloudMapper::sendTransforms()
-{
-	// Publish the robot pose in map
-	base::samples::RigidBodyState rbs;
-	rbs.setTransform(mCurrentPose);
-	rbs.invalidateCovariances();
-	rbs.sourceFrame = mRobotFrame;
-	rbs.targetFrame = mMapFrame;
-	rbs.time = mCurrentTime;
-	_robot2map.write(rbs);
-
-	// Publish the odometry drift
-	if(mOdometryReceived)
-	{
-		rbs.setTransform(mCurrentPose * mCurrentOdometry.inverse());
-		rbs.sourceFrame = mOdometryFrame;
-		_odometry2map.write(rbs);
 	}
 }
 

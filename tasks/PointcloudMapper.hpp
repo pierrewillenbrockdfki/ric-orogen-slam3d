@@ -39,7 +39,6 @@ namespace slam3d
 		// Internal methods
 		PointCloud::Ptr buildPointcloud(const VertexObjectList& vertices);
 		void sendPointcloud(const VertexObjectList& vertices);
-		void sendTransforms();
 		virtual void handleNewScan(const VertexObject& scan);
 		virtual void addScanToMap(PointCloudMeasurement::Ptr scan, const Transform& pose);
 		virtual void clearMap();
@@ -63,7 +62,6 @@ namespace slam3d
 		
 		int mScansAdded;
 		bool mForceAdd;
-		bool mOdometryReceived;
 		
 		// Parameters for creation of map-pcl
 		double mScanResolution;
@@ -77,7 +75,7 @@ namespace slam3d
 		
 		// Current state of transformations
 		Eigen::Affine3d mCurrentOdometry;
-		Eigen::Affine3d mCurrentPose;
+		Eigen::Affine3d mCurrentDrift;
 		base::Time mCurrentTime;
 
 	public:
