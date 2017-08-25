@@ -157,4 +157,8 @@
       </Completion>
     </Configuration>
   </Settings>
+  <VirtualDirectory Name="ruby">
+    <File Name="ruby/CMakeLists.txt"/>
+    <File Name="ruby/slam3d.rb"/>
+  </VirtualDirectory>
 </CodeLite_Project>
