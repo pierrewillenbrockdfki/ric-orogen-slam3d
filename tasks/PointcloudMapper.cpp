@@ -507,14 +507,8 @@ void PointcloudMapper::transformerCallback(const base::Time &time)
 		if(!mOdometryReceived)
 		{
 			mOdometryReceived = true;
-			mCurrentDrift = mMapper->getCurrentPose() * mCurrentOdometry.inverse();
-			base::samples::RigidBodyState rbs;
-			rbs.setTransform(mCurrentDrift);
-			rbs.invalidateCovariances();
-			rbs.sourceFrame = mOdometryFrame;
-			rbs.targetFrame = mMapFrame;
-			rbs.time = time;
-			_odometry2map.write(rbs);
+			mCurrentTime = time;
+			sendTransforms();
 		}
 	}
 	catch(OdometryException &e)
@@ -571,7 +565,6 @@ void PointcloudMapper::updateHook()
 			{
 				mScansAdded++;
 				mForceAdd = false;
-				mCurrentTime = scan_sample.time;
 				handleNewScan(mMapper->getLastVertex());
 				if(_optimization_rate > 0 && (mScansAdded % _optimization_rate) == 0)
 				{
@@ -581,30 +574,22 @@ void PointcloudMapper::updateHook()
 				{
 					generate_map();
 				}
-				
-				// Publish the odometry drift
-				mCurrentPose = mMapper->getCurrentPose();
-				if(mOdometryReceived)
-				{
-					mCurrentDrift = mCurrentPose * mCurrentOdometry.inverse();
-					base::samples::RigidBodyState rbs;
-					rbs.setTransform(mCurrentDrift);
-					rbs.invalidateCovariances();
-					rbs.sourceFrame = mOdometryFrame;
-					rbs.targetFrame = mMapFrame;
-					rbs.time = mCurrentTime;
-					_odometry2map.write(rbs);
-				}
 			}else
 			{
 				addScanToMap(measurement, mMapper->getCurrentPose());
 			}
+			mCurrentPose = mMapper->getCurrentPose();
+			mCurrentTime = scan_sample.time;
+			sendTransforms();
 		}catch(std::exception& e)
 		{
 			mLogger->message(ERROR, (boost::format("Adding scan to map failed: %1%") % e.what()).str());
 		}
 	}
-	
+}
+
+void PointcloudMapper::sendTransforms()
+{
 	// Publish the robot pose in map
 	base::samples::RigidBodyState rbs;
 	rbs.setTransform(mCurrentPose);
@@ -613,6 +598,14 @@ void PointcloudMapper::updateHook()
 	rbs.targetFrame = mMapFrame;
 	rbs.time = mCurrentTime;
 	_robot2map.write(rbs);
+
+	// Publish the odometry drift
+	if(mOdometryReceived)
+	{
+		rbs.setTransform(mCurrentPose * mCurrentOdometry.inverse());
+		rbs.sourceFrame = mOdometryFrame;
+		_odometry2map.write(rbs);
+	}
 }
 
 void PointcloudMapper::errorHook()
