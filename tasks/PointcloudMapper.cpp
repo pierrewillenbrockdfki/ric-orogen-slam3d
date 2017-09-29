@@ -82,7 +82,7 @@ bool PointcloudMapper::force_add()
 
 bool PointcloudMapper::write_envire()
 {
-	mEnvironment.serialize(_envire_path.get());
+	mEnvironment->serialize(_envire_path.get());
 	return true;
 }
 
@@ -216,7 +216,7 @@ void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
 void PointcloudMapper::sendMap()
 {
 	// Publish the MLS-Map	
-	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
+	envire::OrocosEmitter emitter(mEnvironment, _envire_map);
 	emitter.setTime(mCurrentTime);
 	emitter.flush();
 }
@@ -423,15 +423,16 @@ bool PointcloudMapper::configureHook()
 	
 	// Add MLS to Environment
 	envire::FrameNode* mls_node = new envire::FrameNode();
-	mEnvironment.addChild(mEnvironment.getRootNode(), mls_node);
-	mEnvironment.setFrameNode(mMultiLayerMap, mls_node);
+	mEnvironment = new envire::Environment();
+	mEnvironment->addChild(mEnvironment->getRootNode(), mls_node);
+	mEnvironment->setFrameNode(mMultiLayerMap, mls_node);
 	
 	// Add point cloud to environment
 	mPointcloud = new envire::Pointcloud();
 	mPointcloud->setUniqueId("slam3d-pointcloud");
 	envire::FrameNode* cloud_node = new envire::FrameNode();
-	mEnvironment.addChild(mEnvironment.getRootNode(), cloud_node);
-	mEnvironment.setFrameNode(mPointcloud, cloud_node);
+	mEnvironment->addChild(mEnvironment->getRootNode(), cloud_node);
+	mEnvironment->setFrameNode(mPointcloud, cloud_node);
 
 	// load a-priori map file
 	if(!_apriori_ply_map.value().empty() && loadPLYMap(_apriori_ply_map.value()))
@@ -620,6 +621,7 @@ void PointcloudMapper::stopHook()
 void PointcloudMapper::cleanupHook()
 {
 	PointcloudMapperBase::cleanupHook();
+	delete mEnvironment;
 	delete mMapper;
 	delete mPclSensor;
 	if(mOdometry)

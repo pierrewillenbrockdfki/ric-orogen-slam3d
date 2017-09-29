@@ -95,7 +95,7 @@ void OcTreeMapper::sendMap()
 	mOcTree->updateInnerOccupancy();
 	mOcTree->writeBinaryConst("slam3d_octomap.bt");
 	buildMLS();
-	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
+	envire::OrocosEmitter emitter(mEnvironment, _envire_map);
 	emitter.flush();
 }
 

@@ -68,7 +68,7 @@ namespace slam3d
 		bool mUseColorsAsViewpoints;
 
 		// Parameters for creation of MLS
-		envire::Environment mEnvironment;
+		envire::Environment* mEnvironment;
 		envire::MLSGrid* mMultiLayerMap;
 		envire::Pointcloud* mPointcloud;
 		GridConfiguration mGridConf;

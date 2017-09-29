@@ -154,7 +154,7 @@ void PointcloudMapper2D::sendMap()
 		}
 	}
 	
-	envire::OrocosEmitter emitter(&mEnvironment, _envire_map);
+	envire::OrocosEmitter emitter(mEnvironment, _envire_map);
 	emitter.setTime(mCurrentTime);
 	emitter.flush();
 }
@@ -174,8 +174,8 @@ bool PointcloudMapper2D::configureHook()
 
 	// Add grid to environment
 	envire::FrameNode* grid_node = new envire::FrameNode();
-	mEnvironment.addChild(mEnvironment.getRootNode(), grid_node);
-	mEnvironment.setFrameNode(mGrid, grid_node);
+	mEnvironment->addChild(mEnvironment->getRootNode(), grid_node);
+	mEnvironment->setFrameNode(mGrid, grid_node);
 	
 	// Setup the temporary arrays for raytracing
 	size_t arr_size = x_size * y_size;
