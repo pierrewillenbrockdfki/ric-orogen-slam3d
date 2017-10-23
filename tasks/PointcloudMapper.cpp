@@ -581,7 +581,10 @@ void PointcloudMapper::updateHook()
 				}
 			}else
 			{
-				addScanToMap(measurement, mMapper->getCurrentPose());
+				if(_map_update_rate > 0 && (mScansAdded % _map_update_rate) == 0)
+				{
+					addScanToMap(measurement, mMapper->getCurrentPose());
+				}
 			}
 			mCurrentTime = scan_sample.time;
 			

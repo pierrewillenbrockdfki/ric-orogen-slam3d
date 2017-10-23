@@ -80,6 +80,10 @@ task_context "PointcloudMapper" do
 	.dynamic()
 	.doc("Publish Map-Pointcloud every X scans, that are added to the map.")
 
+	property('map_update_rate', '/int', 0)
+	.dynamic()
+	.doc("Add every X'th scan to the grid-map, even if it is not added to the graph.")
+
 	property('neighbor_radius', '/double', 1.0)
 	.doc("A new node is linked against neighbors within this radius, but not
 	more than max_neighbor_links.")
