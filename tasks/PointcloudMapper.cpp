@@ -180,6 +180,7 @@ void PointcloudMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Trans
 {	
 	PointCloud::ConstPtr pcl = scan->getPointCloud();
 	Transform sensor_pose = pose * scan->getSensorPose();
+	boost::unique_lock<boost::shared_mutex> guard(mMapMutex);
 	for(PointCloud::const_iterator it = pcl->begin(); it != pcl->end(); ++it)
 	{
 		Eigen::Vector3d p = sensor_pose * Eigen::Vector3d(it->x, it->y, it->z);
@@ -193,6 +194,7 @@ void PointcloudMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Trans
 
 void PointcloudMapper::clearMap()
 {
+	boost::unique_lock<boost::shared_mutex> guard(mMapMutex);
 	mMultiLayerMap->clear();
 }
 
