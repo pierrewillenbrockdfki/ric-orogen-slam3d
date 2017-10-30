@@ -295,6 +295,7 @@ task_context "ScanConverter" do
 
 	input_port 'scan', '/velodyne_lidar/MultilevelLaserScan'
 	input_port 'depth_map', '/base/samples/DepthMap'
+	input_port 'distance_image', '/base/samples/DistanceImage'
 	output_port 'cloud', '/base/samples/Pointcloud'
 	port_driven
 end
