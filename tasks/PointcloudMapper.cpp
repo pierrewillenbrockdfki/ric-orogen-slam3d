@@ -6,7 +6,7 @@
 #include <base/samples/Pointcloud.hpp>
 #include <base/samples/RigidBodyState.hpp>
 
-#include <slam3d/BoostMapper.hpp>
+#include <slam3d/BoostGraph.hpp>
 #include <slam3d/FileLogger.hpp>
 #include <slam3d/G2oSolver.hpp>
 
@@ -235,7 +235,7 @@ bool PointcloudMapper::loadPLYMap(const std::string& path)
 		try
 		{
 			VertexObject root_node = mMapper->getVertex(0);
-			mMapper->addExternalReading(initial_map, root_node.measurement->getUniqueId(), Transform::Identity(), Covariance::Identity(), "none");
+			mMapper->addExternalMeasurement(initial_map, root_node.measurement->getUniqueId(), Transform::Identity(), Covariance::Identity(), "none");
 			addScanToMap(initial_map, Transform::Identity());
 			return true;
 		}
@@ -332,9 +332,9 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());
 	
 	mSolver = new G2oSolver(mLogger);
-	mMapper = new BoostMapper(mLogger);
+	mMapper = new BoostGraph(mLogger);
 
-	mLogger->message(INFO, " = GraphMapper - Parameters =");
+	mLogger->message(INFO, " = Graph - Parameters =");
 	mLogger->message(INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());	
 	if(_use_odometry.get())
 	{
@@ -351,7 +351,7 @@ bool PointcloudMapper::configureHook()
 	double min_translation = _min_translation.get();
 	double min_rotation = _min_rotation.get();
 	mLogger->message(INFO, (boost::format("min_pose_distance:      %1% / %2%") % min_translation % min_rotation).str());
-	mMapper->setMinPoseDistance(min_translation, min_rotation);
+	mPclSensor->setMinPoseDistance(min_translation, min_rotation);
 	
 	double neighbor_radius = _neighbor_radius.get();
 	mLogger->message(INFO, (boost::format("neighbor_radius:        %1%") % neighbor_radius).str());
@@ -361,7 +361,7 @@ bool PointcloudMapper::configureHook()
 	
 	unsigned range = _patch_building_range.get();
 	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
-	mMapper->setPatchBuildingRange(range);
+	mPclSensor->setPatchBuildingRange(range);
 	
 	base::Pose pose = _start_pose.get();
 	base::Position p = pose.position;
@@ -566,9 +566,9 @@ void PointcloudMapper::updateHook()
 				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), laserPose));
 			}
 
-			if(mMapper->addReading(measurement, mForceAdd))
+			if(mPclSensor->addMeasurement(measurement, mForceAdd))
 			{
-				mScansAdded++;
+/*				mScansAdded++;
 				mForceAdd = false;
 				handleNewScan(mMapper->getLastVertex());
 				if(_optimization_rate > 0 && (mScansAdded % _optimization_rate) == 0)
@@ -585,7 +585,7 @@ void PointcloudMapper::updateHook()
 				{
 					addScanToMap(measurement, mMapper->getCurrentPose());
 				}
-			}
+*/			}
 			mCurrentTime = scan_sample.time;
 			
 			// Send the calculated transform
