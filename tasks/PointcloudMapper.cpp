@@ -55,7 +55,7 @@ bool PointcloudMapper::generate_cloud()
 {
 	// Publish accumulated cloud
 	mLogger->message(INFO, "Requested pointcloud generation.");
-	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+	VertexObjectList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
 	boost::thread projThread(&PointcloudMapper::sendPointcloud, this, vertices);
 	return true;
 }
@@ -65,7 +65,7 @@ bool PointcloudMapper::generate_map()
 	mLogger->message(INFO, "Requested map generation.");
 	if(mMapper->optimized())
 	{
-		VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+		VertexObjectList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
 		boost::thread projThread(&PointcloudMapper::rebuildMap, this, vertices);
 	}else
 	{
@@ -95,7 +95,7 @@ bool PointcloudMapper::write_graph()
 bool PointcloudMapper::write_ply(const std::string& folder)
 {
 	mLogger->message(INFO, "Write pointcloud to PLY file.");
-	VertexObjectList vertices = mMapper->getVertexObjectsFromSensor(mPclSensor->getName());
+	VertexObjectList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
 	PointCloud::Ptr accCloud;
 	try
 	{
@@ -165,7 +165,6 @@ PointCloudMeasurement::Ptr PointcloudMapper::castToPointcloud(Measurement::Ptr m
 	PointCloudMeasurement::Ptr pcm = boost::dynamic_pointer_cast<PointCloudMeasurement>(m);
 	if(!pcm)
 	{
-		mLogger->message(ERROR, "Measurement is not a point cloud!");
 		throw BadMeasurementType();
 	}
 	return pcm;
@@ -568,7 +567,7 @@ void PointcloudMapper::updateHook()
 
 			if(mPclSensor->addMeasurement(measurement, mForceAdd))
 			{
-/*				mScansAdded++;
+				mScansAdded++;
 				mForceAdd = false;
 				handleNewScan(mMapper->getLastVertex());
 				if(_optimization_rate > 0 && (mScansAdded % _optimization_rate) == 0)
@@ -585,7 +584,7 @@ void PointcloudMapper::updateHook()
 				{
 					addScanToMap(measurement, mMapper->getCurrentPose());
 				}
-*/			}
+			}
 			mCurrentTime = scan_sample.time;
 			
 			// Send the calculated transform
