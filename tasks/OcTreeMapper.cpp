@@ -103,7 +103,7 @@ bool OcTreeMapper::remove_dynamic_objects()
 {
 	mLogger->message(INFO, "Requested dynamic object removal.");
 	timeval start = mClock->now();
-	VertexObjectList vertices = mMapper->getVerticesFromSensor(mPclSensor->getName());
+	VertexObjectList vertices = mGraph->getVerticesFromSensor(mPclSensor->getName());
 	unsigned deleted = 0;
 	
 	boost::unique_lock<boost::shared_mutex> guard(mGraphMutex);

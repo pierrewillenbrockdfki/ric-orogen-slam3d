@@ -1,63 +1,75 @@
 #include "RockOdometry.hpp"
+
+#include <slam3d/Graph.hpp>
 #include <boost/format.hpp>
 using namespace slam3d;
 
-RockOdometry::RockOdometry(transformer::Transformation& tf, Logger* logger)
- : Odometry(logger), mTransformation(tf)
+RockOdometry::RockOdometry(const std::string& name, Graph* graph, Logger* logger, transformer::Transformation& tf)
+ : PoseSensor(name, graph, logger), mTransformation(tf)
 {
+	mLastVertex = 0;
+	mLastOdometricPose = Transform::Identity();
+	mCurrentOdometricPose = Transform::Identity();
 }
 
 RockOdometry::~RockOdometry()
 {
 }
 
-Transform RockOdometry::getOdometricPose(timeval stamp)
+void RockOdometry::handleNewVertex(IdType vertex)
 {
-	base::Time ts = base::Time::fromSeconds(stamp.tv_sec, stamp.tv_usec);
-	Eigen::Affine3d affine = getOdometricPose(ts);
-	
-	Transform tf;
-	if((affine.matrix().array() == affine.matrix().array()).all())
+	if(mLastVertex > 0)
 	{
-		tf.linear() = affine.linear();
-		tf.translation() = affine.translation();
-	}else
-	{
-		mLogger->message(ERROR, "Odometry sample contained invalid data!");
-		throw OdometryException();
+		Transform tf = mLastOdometricPose.inverse() * mCurrentOdometricPose;
+		std::cout << tf.linear() << std::endl << tf.translation() << std::endl;
+		Covariance cov = calculateCovariance(tf);
+		mGraph->addConstraint(mLastVertex, vertex, tf, cov, mName, "odometry");
+		mGraph->setCorrectedPose(vertex, mGraph->getCurrentPose() * tf);
 	}
-	return tf;
+	mLastVertex = vertex;
+	mLastOdometricPose = mCurrentOdometricPose;
 }
 
-Eigen::Affine3d RockOdometry::getOdometricPose(base::Time t)
+Transform RockOdometry::getPose(timeval stamp)
 {
-	Eigen::Affine3d odom;
+	base::Time ts = base::Time::fromSeconds(stamp.tv_sec, stamp.tv_usec);
+	getPose(ts);
+	return mCurrentOdometricPose;
+}
+
+Eigen::Affine3d RockOdometry::getPose(base::Time t)
+{
+	Eigen::Affine3d affine;
 	bool res;
 	try
 	{
-		res = mTransformation.get(t, odom, false);
+		res = mTransformation.get(t, affine, false);
 	}catch(std::exception& e)
 	{
-		mLogger->message(ERROR, e.what());
-		throw OdometryException();
+		throw InvalidPose(e.what());
 	}
 	
 	if(!res)
 	{
 		transformer::TransformationStatus s = mTransformation.getStatus();
-		mLogger->message(ERROR, (boost::format("Transformation not available! [success: %1%, no chain: %2%, no sample: %3%, interpolation failed: %4%]") % s.generated_transformations % s.failed_no_chain % s.failed_no_sample % s.failed_interpolation_impossible).str());
-		throw OdometryException();
+		throw InvalidPose(
+			(boost::format("Transformation not available! [success: %1%, no chain: %2%, no sample: %3%, interpolation failed: %4%]")
+			% s.generated_transformations
+			% s.failed_no_chain
+			% s.failed_no_sample
+			% s.failed_interpolation_impossible).str());
 	}
 	
-	return odom;
-}
-
-TransformWithCovariance RockOdometry::getRelativePose(timeval last, timeval next)
-{
-	TransformWithCovariance twc;
-	twc.transform = Transform::Identity();
-	twc.covariance = Covariance::Identity();
-	return twc;
+	if((affine.matrix().array() == affine.matrix().array()).all())
+	{
+		mCurrentOdometricPose.linear() = affine.linear();
+		mCurrentOdometricPose.translation() = affine.translation();
+	}else
+	{
+		throw InvalidPose("Odometry sample contained invalid data.");
+	}
+	
+	return affine;
 }
 
 Covariance RockOdometry::calculateCovariance(const Transform &tf)

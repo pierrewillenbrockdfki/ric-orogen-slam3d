@@ -49,7 +49,7 @@ namespace slam3d
 		// Members
 		slam3d::Clock* mClock;
 		slam3d::Logger* mLogger;
-		slam3d::Graph* mMapper;
+		slam3d::Graph* mGraph;
 		slam3d::PointCloudSensor* mPclSensor;
 		slam3d::Solver* mSolver;
 		RockOdometry* mOdometry;
