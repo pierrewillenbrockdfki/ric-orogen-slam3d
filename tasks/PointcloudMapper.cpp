@@ -568,7 +568,7 @@ void PointcloudMapper::updateHook()
 				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), laserPose));
 			}
 
-			if(mPclSensor->addMeasurement(measurement, mForceAdd))
+			if(mPclSensor->addMeasurement(measurement, mOdometry->getPose(measurement->getTimestamp()), mForceAdd))
 			{
 				mScansAdded++;
 				mForceAdd = false;

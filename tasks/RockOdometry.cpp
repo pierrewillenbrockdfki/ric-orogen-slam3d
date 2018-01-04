@@ -21,7 +21,6 @@ void RockOdometry::handleNewVertex(IdType vertex)
 	if(mLastVertex > 0)
 	{
 		Transform tf = mLastOdometricPose.inverse() * mCurrentOdometricPose;
-		std::cout << tf.linear() << std::endl << tf.translation() << std::endl;
 		Covariance cov = calculateCovariance(tf);
 		mGraph->addConstraint(mLastVertex, vertex, tf, cov, mName, "odometry");
 		mGraph->setCorrectedPose(vertex, mGraph->getCurrentPose() * tf);
