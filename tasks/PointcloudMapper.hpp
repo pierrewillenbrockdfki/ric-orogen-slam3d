@@ -6,8 +6,8 @@
 #include <slam3d/PointCloudSensor.hpp>
 #include <slam3d/Solver.hpp>
 
-#include <envire/maps/MLSGrid.hpp>
-#include <envire/maps/Pointcloud.hpp>
+#include <envire_core/items/Item.hpp>
+#include <maps/grid/MLSMap.hpp>
 
 #include <queue>
 #include <boost/thread/shared_mutex.hpp>
@@ -66,12 +66,9 @@ namespace slam3d
 		
 		// Parameters for creation of map-pcl
 		double mScanResolution;
-		bool mUseColorsAsViewpoints;
 
 		// Parameters for creation of MLS
-		envire::Environment* mEnvironment;
-		envire::MLSGrid* mMultiLayerMap;
-		envire::Pointcloud* mPointcloud;
+		envire::core::Item<maps::grid::MLSMapKalman> mMultiLayerMap;
 		GridConfiguration mGridConf;
 		
 		// Current state of transformations

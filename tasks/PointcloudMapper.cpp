@@ -16,8 +16,6 @@
 #include <pcl/common/transforms.h>
 #include <pcl/io/ply_io.h>
 
-#include <envire/Orocos.hpp>
-
 using namespace slam3d;
 
 PointcloudMapper::PointcloudMapper(std::string const& name)
@@ -82,7 +80,23 @@ bool PointcloudMapper::force_add()
 
 bool PointcloudMapper::write_envire()
 {
-	mEnvironment->serialize(_envire_path.get());
+	boost::filesystem::path env_path(_envire_path.value());
+	boost::filesystem::create_directories(env_path);
+	env_path += "mls_map-";
+	env_path += base::Time::now().toString(base::Time::Seconds, "%Y%m%d-%H%M");
+	env_path += ".bin";
+
+	std::ofstream ostream;
+	ostream.open(env_path.string());
+	if(!ostream.is_open())
+	{
+		mLogger->message(ERROR, (boost::format("Failed to serialize MLS map! Couldn't open file %1%") % env_path.string()).str());
+		return false;
+	}
+
+	boost::archive::binary_oarchive bin_out(ostream);
+	bin_out << mMultiLayerMap.getData();
+	ostream.close();
 	return true;
 }
 
@@ -145,19 +159,10 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 		mLogger->message(ERROR, "Could not access the pose graph to build Pointcloud!");
 		return;
 	}
-	base::samples::Pointcloud mapCloud;
-	mPointcloud->vertices.clear();
-	for(PointCloud::iterator it = accCloud->begin(); it < accCloud->end(); ++it)
-	{
-		base::Vector3d vec;
-		vec[0] = it->x;
-		vec[1] = it->y;
-		vec[2] = it->z;
-		mapCloud.points.push_back(vec);
-		mPointcloud->vertices.push_back(vec);
-	}
-	mapCloud.time = base::Time::fromMicroseconds(accCloud->header.stamp);
-	_cloud.write(mapCloud);	
+	
+	pcl::PCLPointCloud2 mapCloud;
+	pcl::toPCLPointCloud2(*accCloud, mapCloud);
+	_cloud.write(mapCloud);
 }
 
 PointCloudMeasurement::Ptr PointcloudMapper::castToPointcloud(Measurement::Ptr m)
@@ -178,23 +183,14 @@ void PointcloudMapper::handleNewScan(const VertexObject& scan)
 void PointcloudMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Transform& pose)
 {	
 	PointCloud::ConstPtr pcl = scan->getPointCloud();
-	Transform sensor_pose = pose * scan->getSensorPose();
 	boost::unique_lock<boost::shared_mutex> guard(mMapMutex);
-	for(PointCloud::const_iterator it = pcl->begin(); it != pcl->end(); ++it)
-	{
-		Eigen::Vector3d p = sensor_pose * Eigen::Vector3d(it->x, it->y, it->z);
-		if(p[2] >= mGridConf.min_z && p[2] <= mGridConf.max_z)
-		{
-			envire::MLSGrid::SurfacePatch patch( p[2], 0.1 );
-			mMultiLayerMap->update(Eigen::Vector2d(p[0], p[1]) , patch );
-		}
-	}
+	mMultiLayerMap.getData().mergePointCloud(*pcl, pose * scan->getSensorPose());
 }
 
 void PointcloudMapper::clearMap()
 {
 	boost::unique_lock<boost::shared_mutex> guard(mMapMutex);
-	mMultiLayerMap->clear();
+	mMultiLayerMap.getData().clear();
 }
 
 void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
@@ -216,10 +212,9 @@ void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
 
 void PointcloudMapper::sendMap()
 {
-	// Publish the MLS-Map	
-	envire::OrocosEmitter emitter(mEnvironment, _envire_map);
-	emitter.setTime(mCurrentTime);
-	emitter.flush();
+	// Publish the MLS-Map
+	mMultiLayerMap.setTime(mCurrentTime);
+	_mls.write(mMultiLayerMap.asSpatioTemporal());
 }
 
 bool PointcloudMapper::loadPLYMap(const std::string& path)
@@ -398,9 +393,6 @@ bool PointcloudMapper::configureHook()
 	mMapFrame = _map_frame.get();
 	mLogger->message(INFO, (boost::format("map_frame:              %1%") % mMapFrame).str());
 
-	mUseColorsAsViewpoints = _use_colors_as_viewpoints.get();
-	mLogger->message(INFO, (boost::format("use_viewpoints:         %1%") % mUseColorsAsViewpoints).str());
-
 	mGraph->registerSensor(mPclSensor);
 	mGraph->setSolver(mSolver);
 	
@@ -421,22 +413,10 @@ bool PointcloudMapper::configureHook()
 	size_t x_size = (mGridConf.max_x - mGridConf.min_x) / mGridConf.resolution;
 	size_t y_size = (mGridConf.max_y - mGridConf.min_y) / mGridConf.resolution;
 	
-	mMultiLayerMap = new envire::MultiLevelSurfaceGrid(x_size, y_size, mGridConf.resolution, mGridConf.resolution, mGridConf.min_x, mGridConf.min_y);
-	mMultiLayerMap->setUniqueId("/slam3d-mls");
-	mMultiLayerMap->getConfig() = _grid_mls_config.get();
-	
-	// Add MLS to Environment
-	envire::FrameNode* mls_node = new envire::FrameNode();
-	mEnvironment = new envire::Environment();
-	mEnvironment->addChild(mEnvironment->getRootNode(), mls_node);
-	mEnvironment->setFrameNode(mMultiLayerMap, mls_node);
-	
-	// Add point cloud to environment
-	mPointcloud = new envire::Pointcloud();
-	mPointcloud->setUniqueId("slam3d-pointcloud");
-	envire::FrameNode* cloud_node = new envire::FrameNode();
-	mEnvironment->addChild(mEnvironment->getRootNode(), cloud_node);
-	mEnvironment->setFrameNode(mPointcloud, cloud_node);
+	mMultiLayerMap.setData(maps::grid::MLSMapKalman(maps::grid::Vector2ui(x_size, y_size), Eigen::Vector2d(mGridConf.resolution, mGridConf.resolution), _grid_mls_config.value()));
+	mMultiLayerMap.getData().getId() = "/slam3d-mls";
+	mMultiLayerMap.getData().translate(Eigen::Vector3d(mGridConf.min_x, mGridConf.min_y, 0));
+	mMultiLayerMap.setFrame(_map_frame.value());
 
 	// load a-priori map file
 	if(!_apriori_ply_map.value().empty() && loadPLYMap(_apriori_ply_map.value()))
@@ -460,15 +440,6 @@ PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Poi
 	cloud_out->header.stamp = cloud_in.time.toMicroseconds();
 	cloud_out->reserve(cloud_in.points.size());
 	
-	if(mUseColorsAsViewpoints)
-	{
-		if(cloud_in.colors.size() != cloud_in.points.size())
-		{
-			mLogger->message(WARNING, "Color vector from pointcloud has invalid size!");
-			mUseColorsAsViewpoints = false;
-		}
-	}
-	
 	unsigned numPoints = cloud_in.points.size();
 	for(unsigned i = 0; i < numPoints; ++i)
 	{
@@ -476,14 +447,6 @@ PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Poi
 		p.x = cloud_in.points[i][0];
 		p.y = cloud_in.points[i][1];
 		p.z = cloud_in.points[i][2];
-		
-		if(mUseColorsAsViewpoints)
-		{
-			p.vp_x = cloud_in.colors[i][0];
-			p.vp_y = cloud_in.colors[i][1];
-			p.vp_z = cloud_in.colors[i][2];
-		}
-		
 		cloud_out->push_back(p);
 	}
 	return cloud_out;
@@ -628,7 +591,6 @@ void PointcloudMapper::stopHook()
 void PointcloudMapper::cleanupHook()
 {
 	PointcloudMapperBase::cleanupHook();
-	delete mEnvironment;
 	delete mGraph;
 	delete mPclSensor;
 	if(mOdometry)

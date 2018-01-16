@@ -9,7 +9,6 @@
 	<logo>http://</logo>
 	
 	<depend package="slam/slam3d" />
-	<depend package="slam/orogen/envire" />
 	<depend package="drivers/velodyne_lidar" />
 	<depend package="drivers/orogen/transformer" />
 	<depend package="base/cmake" />
@@ -18,6 +17,9 @@
 	<depend package="tools/orocos.rb" />
 	<depend package="gui/vizkit" />
 	<depend package="slam/octomap" />
+	
+    <depend package="envire/orogen/envire_maps" />
+    <depend package="slam/orogen/pcl" />
 	
 	<tags>stable</tags>
 	

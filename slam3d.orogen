@@ -3,14 +3,16 @@ name "slam3d"
 using_library 'velodyne_lidar'
 using_library 'slam3d'
 using_library 'transformer'
-using_library 'envire'
 using_library 'octomap'
+using_library 'maps'
+using_library 'envire_maps'
 
 import_types_from 'base'
+import_types_from 'envire_maps'
+import_types_from 'pcl'
 import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
 import_types_from 'slam3d/GICPConfiguration.hpp'
-import_types_from 'envire'
-import_types_from 'envire/maps/MLSConfiguration.hpp'
+import_types_from 'maps/grid/MLSConfig.hpp'
 import_types_from 'OctoMapConfiguration.hpp'
 import_types_from 'GridConfiguration.hpp'
 
@@ -19,8 +21,8 @@ task_context "PointcloudMapper" do
 	needs_configuration
 
 	input_port 'scan', '/base/samples/Pointcloud'
-	output_port 'cloud', '/base/samples/Pointcloud'
-	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
+	output_port 'cloud', '/pcl/PCLPointCloud2'
+	output_port 'mls', spatio_temporal('/maps/grid/MLSMapKalman')
 	output_port 'robot2map', 'base/samples/RigidBodyState'
 	output_port 'odometry2map', 'base/samples/RigidBodyState'
 
@@ -181,16 +183,10 @@ task_context "PointcloudMapper" do
 	property('map_frame', '/std/string', "map")
 	.doc("The frame that the map is represented in.")
 
-	property('use_colors_as_viewpoints', '/bool', false)
-	.doc("Whether to get viewpoints from pointcloud's color vector. This non-
-	standard behaviour should only be activated if such special pointclouds
-	are provided. If true, raytracing will be done from viewpoint for each
-	point individually.")
-
 	property('grid_config', 'slam3d/GridConfiguration')
 	.doc("Size and resolution of generated grid map.")
 
-	property('grid_mls_config', '/envire/MLSConfiguration')
+	property('grid_mls_config', '/maps/grid/MLSConfig')
 	.doc("Multi-Layer-Surface-Map specific configuration.")
 
 	property('envire_path', '/std/string', "slam3d_envire")
@@ -214,11 +210,6 @@ task_context "OcTreeMapper" do
 	
 	property('octo_map_config', 'slam3d/OctoMapConfiguration')
 	.doc("OctoMap specific configuration.")
-end
-
-## Pointcloud-Mapper for 2D
-task_context "PointcloudMapper2D" do
-	subclasses "PointcloudMapper"
 end
 
 ## Task to dump velodyne-Scans to KITTI-Format
@@ -305,17 +296,4 @@ task_context "LineScanConverter" do
 	input_port 'scan', '/base/samples/LaserScan'
 	output_port 'cloud', '/base/samples/Pointcloud'
 	port_driven 'scan'
-end
-
-## Task to create Multi-Layer-Surface-Map
-task_context "MLSMapProjector" do
-	input_port 'cloud', '/base/samples/Pointcloud'
-	output_port 'envire_map', ro_ptr('std/vector</envire/BinaryEvent>')
-	port_driven 'cloud'
-
-	property('grid_config', 'slam3d/GridConfiguration')
-	.doc("Size and resolution of generated map.")
-
-	property('mls_config', '/envire/MLSConfiguration')
-	.doc("Multi-Layer-Surface-Map specific configuration.")
 end

@@ -5,8 +5,6 @@
 
 #include <pcl/common/transforms.h>
 
-#include <envire/Orocos.hpp>
-
 using namespace slam3d;
 
 octomap::OcTree* initOcTree(const OctoMapConfiguration &conf)
@@ -58,6 +56,8 @@ void OcTreeMapper::clearMap()
 
 void OcTreeMapper::buildMLS()
 {
+	mLogger->message(WARNING, "Generating MLS from OcTree is not implemented.");
+/*
 	mLogger->message(DEBUG, "Generating MLS from OcTree.");
 	mMultiLayerMap->clear();
 	for(octomap::OcTree::leaf_iterator leaf = mOcTree->begin_leafs() ; leaf != mOcTree->end_leafs(); ++leaf)
@@ -87,6 +87,7 @@ void OcTreeMapper::buildMLS()
 			}
 		}
 	}
+*/
 }
 
 void OcTreeMapper::sendMap()
@@ -95,8 +96,8 @@ void OcTreeMapper::sendMap()
 	mOcTree->updateInnerOccupancy();
 	mOcTree->writeBinaryConst("slam3d_octomap.bt");
 	buildMLS();
-	envire::OrocosEmitter emitter(mEnvironment, _envire_map);
-	emitter.flush();
+	mMultiLayerMap.setTime(mCurrentTime);
+	_mls.write(mMultiLayerMap.asSpatioTemporal());
 }
 
 bool OcTreeMapper::remove_dynamic_objects()
