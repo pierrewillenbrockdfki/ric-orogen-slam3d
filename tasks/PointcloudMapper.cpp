@@ -229,7 +229,7 @@ bool PointcloudMapper::loadPLYMap(const std::string& path)
 		try
 		{
 			VertexObject root_node = mGraph->getVertex(0);
-			mGraph->addExternalMeasurement(initial_map, root_node.measurement->getUniqueId(), Transform::Identity(), Covariance::Identity(), "none");
+			mGraph->addExternalMeasurement(initial_map, root_node.measurement->getUniqueId(), Transform::Identity(), Covariance<6>::Identity(), "none");
 			addScanToMap(initial_map, Transform::Identity());
 			return true;
 		}

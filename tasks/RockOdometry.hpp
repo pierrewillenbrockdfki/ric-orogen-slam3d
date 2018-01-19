@@ -16,7 +16,7 @@ namespace slam3d
 		
 		Transform getPose(timeval stamp);
 		Eigen::Affine3d getPose(base::Time t);
-		Covariance calculateCovariance(const Transform &tf);
+		Covariance<6> calculateCovariance(const Transform &tf);
 
 	private:
 		transformer::Transformation& mTransformation;

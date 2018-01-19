@@ -21,7 +21,7 @@ void RockOdometry::handleNewVertex(IdType vertex)
 	if(mLastVertex > 0)
 	{
 		Transform tf = mLastOdometricPose.inverse() * mCurrentOdometricPose;
-		Covariance cov = calculateCovariance(tf);
+		Covariance<6> cov = calculateCovariance(tf);
 		mGraph->addConstraint(mLastVertex, vertex, tf, cov, mName, "odometry");
 		mGraph->setCorrectedPose(vertex, mGraph->getCurrentPose() * tf);
 	}
@@ -71,7 +71,7 @@ Eigen::Affine3d RockOdometry::getPose(base::Time t)
 	return affine;
 }
 
-Covariance RockOdometry::calculateCovariance(const Transform &tf)
+Covariance<6> RockOdometry::calculateCovariance(const Transform &tf)
 {
-	return Covariance::Identity() * 100;
+	return Covariance<6>::Identity() * 100;
 }
