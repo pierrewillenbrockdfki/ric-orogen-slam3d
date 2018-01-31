@@ -4,8 +4,8 @@
 #include <boost/format.hpp>
 using namespace slam3d;
 
-RockOdometry::RockOdometry(const std::string& name, Graph* graph, Logger* logger, transformer::Transformation& tf)
- : PoseSensor(name, graph, logger), mTransformation(tf)
+RockOdometry::RockOdometry(const std::string& name, Graph* graph, Solver* solver, Logger* logger, transformer::Transformation& tf)
+ : PoseSensor(name, graph, solver, logger), mTransformation(tf)
 {
 	mLastVertex = 0;
 	mLastOdometricPose = Transform::Identity();
@@ -25,6 +25,9 @@ void RockOdometry::handleNewVertex(IdType vertex)
 		mGraph->addConstraint(mLastVertex, vertex, tf, cov, mName, "odometry");
 		mGraph->setCorrectedPose(vertex, mGraph->getCurrentPose() * tf);
 	}
+	Eigen::Quaterniond state(mCurrentOdometricPose.rotation());
+	Direction upVector = state.inverse() * Eigen::Vector3d::UnitZ();
+	mSolver->addDirectionPrior(vertex, upVector, Direction::UnitZ());
 	mLastVertex = vertex;
 	mLastOdometricPose = mCurrentOdometricPose;
 }

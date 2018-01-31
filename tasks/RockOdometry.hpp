@@ -9,7 +9,7 @@ namespace slam3d
 	class RockOdometry : public PoseSensor
 	{
 	public:
-		RockOdometry(const std::string& name, Graph* graph, Logger* logger, transformer::Transformation& tf);
+		RockOdometry(const std::string& name, Graph* graph, Solver* s, Logger* logger, transformer::Transformation& tf);
 		~RockOdometry();
 
 		void handleNewVertex(IdType vertex);

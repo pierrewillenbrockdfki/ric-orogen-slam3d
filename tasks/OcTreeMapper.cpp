@@ -43,7 +43,7 @@ void OcTreeMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Transform
 	{
 		octoCloud.push_back(octomap::point3d(it->x, it->y,it->z));
 	}
-	Vector3 origin = sensor.translation();
+	Eigen::Vector3d origin = sensor.translation();
 	mOcTree->insertPointCloud(octoCloud, octomap::point3d(origin(0), origin(1), origin(2)), mOctreeConf.rangeMax, true, true);
 }
 
