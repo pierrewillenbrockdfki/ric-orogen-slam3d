@@ -12,6 +12,7 @@ namespace slam3d
 		RockOdometry(const std::string& name, Graph* graph, Solver* s, Logger* logger, transformer::Transformation& tf);
 		~RockOdometry();
 
+		void setGravityReference(const Direction& ref) {mGravityReference = ref;}
 		void handleNewVertex(IdType vertex);
 		
 		Transform getPose(timeval stamp);
@@ -23,6 +24,7 @@ namespace slam3d
 		Transform mCurrentOdometricPose;
 		Transform mLastOdometricPose;
 		IdType mLastVertex;
+		Direction mGravityReference;
 	};
 }
 

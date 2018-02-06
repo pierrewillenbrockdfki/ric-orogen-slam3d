@@ -10,6 +10,7 @@ RockOdometry::RockOdometry(const std::string& name, Graph* graph, Solver* solver
 	mLastVertex = 0;
 	mLastOdometricPose = Transform::Identity();
 	mCurrentOdometricPose = Transform::Identity();
+	mGravityReference = Direction::UnitZ();
 }
 
 RockOdometry::~RockOdometry()
@@ -27,7 +28,7 @@ void RockOdometry::handleNewVertex(IdType vertex)
 	}
 	Eigen::Quaterniond state(mCurrentOdometricPose.rotation());
 	Direction upVector = state.inverse() * Eigen::Vector3d::UnitZ();
-	mSolver->addDirectionPrior(vertex, upVector, Direction::UnitZ());
+	mSolver->addDirectionPrior(vertex, upVector, mGravityReference);
 	mLastVertex = vertex;
 	mLastOdometricPose = mCurrentOdometricPose;
 }

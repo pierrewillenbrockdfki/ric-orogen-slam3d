@@ -339,6 +339,11 @@ bool PointcloudMapper::configureHook()
 		{
 			mGraph->registerPoseSensor(mOdometry);
 		}
+		base::Vector3d vec3d = _gravity_reference.get();
+		if(vec3d.norm() > 0)
+		{
+			mOdometry->setGravityReference(vec3d);
+		}
 	}else
 	{
 		mOdometry = NULL;
