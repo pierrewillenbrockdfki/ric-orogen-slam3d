@@ -5,7 +5,7 @@
 using namespace slam3d;
 
 RockOdometry::RockOdometry(const std::string& name, Graph* graph, Solver* solver, Logger* logger, transformer::Transformation& tf)
- : PoseSensor(name, graph, solver, logger), mTransformation(tf)
+ : PoseSensor(name, graph, logger), mTransformation(tf), mSolver(solver)
 {
 	mLastVertex = 0;
 	mLastOdometricPose = Transform::Identity();

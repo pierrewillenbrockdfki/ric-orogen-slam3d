@@ -2,6 +2,7 @@
 #define SLAM3D_ROCK_ODOMETRY_HPP
 
 #include <slam3d/PoseSensor.hpp>
+#include <slam3d/Solver.hpp>
 #include <transformer/Transformer.hpp>
 
 namespace slam3d
@@ -25,6 +26,7 @@ namespace slam3d
 		Transform mLastOdometricPose;
 		IdType mLastVertex;
 		Direction mGravityReference;
+		Solver* mSolver;
 	};
 }
 
