@@ -160,8 +160,8 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 		return;
 	}
 	
-	pcl::PCLPointCloud2 mapCloud;
-	pcl::toPCLPointCloud2(*accCloud, mapCloud);
+	base::samples::Pointcloud mapCloud;
+	createFromPcl(accCloud, mapCloud);
 	_cloud.write(mapCloud);
 }
 
