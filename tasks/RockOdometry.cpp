@@ -21,10 +21,12 @@ void RockOdometry::handleNewVertex(IdType vertex)
 {
 	if(mLastVertex > 0)
 	{
-		Transform tf = mLastOdometricPose.inverse() * mCurrentOdometricPose;
-		Covariance<6> cov = calculateCovariance(tf);
-		mGraph->addConstraint(mLastVertex, vertex, tf, cov, mName, "odometry");
-		mGraph->setCorrectedPose(vertex, mGraph->getCurrentPose() * tf);
+		TransformWithCovariance twc;
+		twc.transform = mLastOdometricPose.inverse() * mCurrentOdometricPose;
+		twc.covariance = calculateCovariance(twc.transform);
+		ConstraintSE3::Ptr se3(new ConstraintSE3(mName, twc));
+		mGraph->addConstraint(mLastVertex, vertex, se3);
+		mGraph->setCorrectedPose(vertex, mGraph->getVertex(mLastVertex).corrected_pose * twc.transform);
 	}
 	Eigen::Quaterniond state(mCurrentOdometricPose.rotation());
 	Direction upVector = state.inverse() * Eigen::Vector3d::UnitZ();

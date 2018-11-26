@@ -229,7 +229,7 @@ bool PointcloudMapper::loadPLYMap(const std::string& path)
 		try
 		{
 			VertexObject root_node = mGraph->getVertex(0);
-			mGraph->addExternalMeasurement(initial_map, root_node.measurement->getUniqueId(), Transform::Identity(), Covariance<6>::Identity(), "none");
+			mMapper->addExternalMeasurement(initial_map, root_node.measurement->getUniqueId(), TransformWithCovariance(), "ply-loader");
 			addScanToMap(initial_map, Transform::Identity());
 			return true;
 		}
@@ -327,6 +327,7 @@ bool PointcloudMapper::configureHook()
 	
 	mSolver = new G2oSolver(mLogger);
 	mGraph = new BoostGraph(mLogger);
+	mMapper = new Mapper(mGraph, mLogger);
 
 	mLogger->message(INFO, " = Graph - Parameters =");
 	mLogger->message(INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());	
@@ -337,7 +338,7 @@ bool PointcloudMapper::configureHook()
 		mLogger->message(INFO, (boost::format("add_odometry_edges:     %1%") % _add_odometry_edges).str());
 		if(_add_odometry_edges)
 		{
-			mGraph->registerPoseSensor(mOdometry);
+			mMapper->registerPoseSensor(mOdometry);
 		}
 		base::Vector3d vec3d = _gravity_reference.get();
 		if(vec3d.norm() > 0)
@@ -398,7 +399,7 @@ bool PointcloudMapper::configureHook()
 	mMapFrame = _map_frame.get();
 	mLogger->message(INFO, (boost::format("map_frame:              %1%") % mMapFrame).str());
 
-	mGraph->registerSensor(mPclSensor);
+	mMapper->registerSensor(mPclSensor);
 	mGraph->setSolver(mSolver);
 	
 	mScansAdded = 0;
@@ -540,7 +541,7 @@ void PointcloudMapper::updateHook()
 			{
 				mScansAdded++;
 				mForceAdd = false;
-				handleNewScan(mGraph->getLastVertex());
+				handleNewScan(mMapper->getLastVertex());
 				if(_optimization_rate > 0 && (mScansAdded % _optimization_rate) == 0)
 				{
 					optimize();
@@ -553,7 +554,7 @@ void PointcloudMapper::updateHook()
 			{
 				if(_map_update_rate > 0 && (mScansAdded % _map_update_rate) == 0)
 				{
-					addScanToMap(measurement, mGraph->getCurrentPose());
+					addScanToMap(measurement, mMapper->getCurrentPose());
 				}
 			}
 			mCurrentTime = scan_sample.time;
@@ -566,14 +567,14 @@ void PointcloudMapper::updateHook()
 			
 			if(mOdometry)
 			{
-				mCurrentDrift = mGraph->getCurrentPose() * mCurrentOdometry.inverse();
+				mCurrentDrift = mMapper->getCurrentPose() * mCurrentOdometry.inverse();
 				rbs.sourceFrame = mOdometryFrame;
 				rbs.setTransform(mCurrentDrift);
 				_odometry2map.write(rbs);
 			}else
 			{
 				rbs.sourceFrame = mRobotFrame;
-				rbs.setTransform(mGraph->getCurrentPose());
+				rbs.setTransform(mMapper->getCurrentPose());
 				_robot2map.write(rbs);
 			}
 		}catch(std::exception& e)

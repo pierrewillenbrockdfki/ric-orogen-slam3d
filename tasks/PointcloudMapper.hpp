@@ -2,7 +2,7 @@
 #define SLAM3D_POINTCLOUDMAPPER_TASK_HPP
 
 #include <slam3d/PointcloudMapperBase.hpp>
-#include <slam3d/Graph.hpp>
+#include <slam3d/Mapper.hpp>
 #include <slam3d/PointCloudSensor.hpp>
 #include <slam3d/Solver.hpp>
 
@@ -50,6 +50,7 @@ namespace slam3d
 		slam3d::Clock* mClock;
 		slam3d::Logger* mLogger;
 		slam3d::Graph* mGraph;
+		slam3d::Mapper* mMapper;
 		slam3d::PointCloudSensor* mPclSensor;
 		slam3d::Solver* mSolver;
 		RockOdometry* mOdometry;
