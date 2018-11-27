@@ -19,18 +19,23 @@ RockOdometry::~RockOdometry()
 
 void RockOdometry::handleNewVertex(IdType vertex)
 {
+	// Add odometry transform to previous vertex
 	if(mLastVertex > 0)
 	{
 		TransformWithCovariance twc;
 		twc.transform = mLastOdometricPose.inverse() * mCurrentOdometricPose;
 		twc.covariance = calculateCovariance(twc.transform);
-		ConstraintSE3::Ptr se3(new ConstraintSE3(mName, twc));
+		SE3Constraint::Ptr se3(new SE3Constraint(mName, twc));
 		mGraph->addConstraint(mLastVertex, vertex, se3);
 		mGraph->setCorrectedPose(vertex, mGraph->getVertex(mLastVertex).corrected_pose * twc.transform);
 	}
+	
+	// Add a gravity vector to this vertex
 	Eigen::Quaterniond state(mCurrentOdometricPose.rotation());
-	Direction upVector = state.inverse() * Eigen::Vector3d::UnitZ();
-	mSolver->addDirectionPrior(vertex, upVector, mGravityReference);
+	Direction upVector = state.inverse() * Eigen::Vector3d::UnitZ();	
+	GravityConstraint::Ptr grav(new GravityConstraint(mName, upVector, mGravityReference, Covariance<2>::Identity()));
+	mGraph->addConstraint(vertex, 0, grav);
+	
 	mLastVertex = vertex;
 	mLastOdometricPose = mCurrentOdometricPose;
 }
