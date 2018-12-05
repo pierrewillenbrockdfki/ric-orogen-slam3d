@@ -1,6 +1,6 @@
 #include "RockOdometry.hpp"
 
-#include <slam3d/Graph.hpp>
+#include <slam3d/core/Graph.hpp>
 #include <boost/format.hpp>
 using namespace slam3d;
 

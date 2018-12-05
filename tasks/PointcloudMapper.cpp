@@ -6,9 +6,9 @@
 #include <base/samples/Pointcloud.hpp>
 #include <base/samples/RigidBodyState.hpp>
 
-#include <slam3d/BoostGraph.hpp>
-#include <slam3d/FileLogger.hpp>
-#include <slam3d/G2oSolver.hpp>
+#include <slam3d/graph/boost/BoostGraph.hpp>
+#include <slam3d/core/FileLogger.hpp>
+#include <slam3d/solver/g2o/G2oSolver.hpp>
 
 #include <boost/format.hpp>
 #include <boost/thread.hpp>

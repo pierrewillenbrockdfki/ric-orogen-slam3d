@@ -3,7 +3,7 @@
 #include "Common.hpp"
 
 #include <base/samples/Pointcloud.hpp>
-#include <slam3d/FileLogger.hpp>
+#include <slam3d/core/FileLogger.hpp>
 
 #include <pcl/filters/voxel_grid.h>
 #include <boost/format.hpp>

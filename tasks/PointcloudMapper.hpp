@@ -2,9 +2,8 @@
 #define SLAM3D_POINTCLOUDMAPPER_TASK_HPP
 
 #include <slam3d/PointcloudMapperBase.hpp>
-#include <slam3d/Mapper.hpp>
-#include <slam3d/PointCloudSensor.hpp>
-#include <slam3d/Solver.hpp>
+#include <slam3d/core/Mapper.hpp>
+#include <slam3d/sensor/pcl/PointCloudSensor.hpp>
 
 #include <envire_core/items/Item.hpp>
 #include <maps/grid/MLSMap.hpp>

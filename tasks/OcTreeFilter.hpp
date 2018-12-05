@@ -5,7 +5,7 @@
 
 #include <base/samples/Pointcloud.hpp>
 #include <octomap/OcTree.h>
-#include <slam3d/PointCloudSensor.hpp>
+#include <slam3d/sensor/pcl/PointCloudSensor.hpp>
 
 #include "OctoMapConfiguration.hpp"
 

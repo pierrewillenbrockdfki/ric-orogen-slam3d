@@ -1,8 +1,8 @@
 #ifndef SLAM3D_ROCK_ODOMETRY_HPP
 #define SLAM3D_ROCK_ODOMETRY_HPP
 
-#include <slam3d/PoseSensor.hpp>
-#include <slam3d/Solver.hpp>
+#include <slam3d/core/PoseSensor.hpp>
+#include <slam3d/core/Solver.hpp>
 #include <transformer/Transformer.hpp>
 
 namespace slam3d
