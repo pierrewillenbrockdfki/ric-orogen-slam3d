@@ -18,8 +18,8 @@
 	<depend package="gui/vizkit" />
 	<depend package="slam/octomap" />
 	
-    <depend package="envire/orogen/envire_maps" />
-    <depend package="slam/orogen/pcl" />
+	<depend package="envire/orogen/envire_maps" />
+	<depend package="slam/orogen/pcl" />
 	
 	<tags>stable</tags>
 	
