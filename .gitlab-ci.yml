@@ -2,6 +2,9 @@ binaries:
    stage: build
    image: d-reg.hb.dfki.de:5000/slam3d/ci-slam3d-ubuntu_16.04
    script:
+   - rm -rf /opt/rock/slam/orogen/slam3d
+   - ln -s /builds/dfki-slam/orogen-slam3d /opt/rock/slam/orogen/slam3d
+   - cd /opt/rock/slam/orogen/slam3d
    - amake
    only:
    - master
