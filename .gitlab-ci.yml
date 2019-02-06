@@ -1,6 +1,14 @@
-binaries:
+xenial:
    stage: build
    image: d-reg.hb.dfki.de:5000/slam3d/ci-slam3d-ubuntu_16.04
+   script:
+   - amake
+   only:
+   - master
+
+bionic:
+   stage: build
+   image: d-reg.hb.dfki.de:5000/slam3d/ci-slam3d-ubuntu_18.04
    script:
    - amake
    only:
