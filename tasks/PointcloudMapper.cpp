@@ -292,7 +292,7 @@ bool PointcloudMapper::configureHook()
 
 	mLogger->message(INFO, "=== Configure PointCloudMapper ===");
 
-	mPclSensor = new PointCloudSensor("pointcloud", mLogger, Transform::Identity());
+	mPclSensor = new PointCloudSensor("LaserScanner", mLogger, Transform::Identity());
 	GICPConfiguration conf = _gicp_config.get();
 	mPclSensor->setFineConfiguaration(conf);
 	mLogger->message(INFO, " = GICP - Parameters =");
