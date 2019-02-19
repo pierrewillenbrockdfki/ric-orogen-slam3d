@@ -365,6 +365,7 @@ bool PointcloudMapper::configureHook()
 	unsigned range = _patch_building_range.get();
 	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
 	mPclSensor->setPatchBuildingRange(range);
+	mPclSensor->setMultiThreaded(true);
 	
 //	base::Pose pose = _start_pose.get();
 //	base::Position p = pose.position;
