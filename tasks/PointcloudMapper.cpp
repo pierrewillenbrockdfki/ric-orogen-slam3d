@@ -292,7 +292,7 @@ bool PointcloudMapper::configureHook()
 
 	mLogger->message(INFO, "=== Configure PointCloudMapper ===");
 
-	mPclSensor = new PointCloudSensor("LaserScanner", mLogger, Transform::Identity());
+	mPclSensor = new PointCloudSensor("LaserScanner", mLogger);
 	GICPConfiguration conf = _gicp_config.get();
 	mPclSensor->setFineConfiguaration(conf);
 	mLogger->message(INFO, " = GICP - Parameters =");
@@ -365,7 +365,6 @@ bool PointcloudMapper::configureHook()
 	unsigned range = _patch_building_range.get();
 	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
 	mPclSensor->setPatchBuildingRange(range);
-	mPclSensor->setMultiThreaded(true);
 	
 //	base::Pose pose = _start_pose.get();
 //	base::Position p = pose.position;
