@@ -293,19 +293,16 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, "=== Configure PointCloudMapper ===");
 
 	mPclSensor = new PointCloudSensor("LaserScanner", mLogger);
-	GICPConfiguration conf = _gicp_config.get();
+	RegistrationParameters conf = _gicp_config.get();
 	mPclSensor->setFineConfiguaration(conf);
 	mLogger->message(INFO, " = GICP - Parameters =");
 	mLogger->message(INFO, (boost::format("correspondence_randomness:    %1%") % conf.correspondence_randomness).str());
 	mLogger->message(INFO, (boost::format("euclidean_fitness_epsilon:    %1%") % conf.euclidean_fitness_epsilon).str());
 	mLogger->message(INFO, (boost::format("max_correspondence_distance:  %1%") % conf.max_correspondence_distance).str());
 	mLogger->message(INFO, (boost::format("max_fitness_score:            %1%") % conf.max_fitness_score).str());
-	mLogger->message(INFO, (boost::format("max_sensor_distance:          %1%") % conf.max_sensor_distance).str());
 	mLogger->message(INFO, (boost::format("maximum_iterations:           %1%") % conf.maximum_iterations).str());
 	mLogger->message(INFO, (boost::format("maximum_optimizer_iterations: %1%") % conf.maximum_optimizer_iterations).str());
-	mLogger->message(INFO, (boost::format("orientation_sigma:            %1%") % conf.orientation_sigma).str());
 	mLogger->message(INFO, (boost::format("point_cloud_density:          %1%") % conf.point_cloud_density).str());
-	mLogger->message(INFO, (boost::format("position_sigma:               %1%") % conf.position_sigma).str());
 	mLogger->message(INFO, (boost::format("rotation_epsilon:             %1%") % conf.rotation_epsilon).str());
 	mLogger->message(INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());
 
@@ -316,12 +313,9 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("euclidean_fitness_epsilon:    %1%") % conf.euclidean_fitness_epsilon).str());
 	mLogger->message(INFO, (boost::format("max_correspondence_distance:  %1%") % conf.max_correspondence_distance).str());
 	mLogger->message(INFO, (boost::format("max_fitness_score:            %1%") % conf.max_fitness_score).str());
-	mLogger->message(INFO, (boost::format("max_sensor_distance:          %1%") % conf.max_sensor_distance).str());
 	mLogger->message(INFO, (boost::format("maximum_iterations:           %1%") % conf.maximum_iterations).str());
 	mLogger->message(INFO, (boost::format("maximum_optimizer_iterations: %1%") % conf.maximum_optimizer_iterations).str());
-	mLogger->message(INFO, (boost::format("orientation_sigma:            %1%") % conf.orientation_sigma).str());
 	mLogger->message(INFO, (boost::format("point_cloud_density:          %1%") % conf.point_cloud_density).str());
-	mLogger->message(INFO, (boost::format("position_sigma:               %1%") % conf.position_sigma).str());
 	mLogger->message(INFO, (boost::format("rotation_epsilon:             %1%") % conf.rotation_epsilon).str());
 	mLogger->message(INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());
 	
