@@ -489,7 +489,14 @@ void PointcloudMapper::transformerCallback(const base::Time &time)
 
 void PointcloudMapper::updateHook()
 {
-	PointcloudMapperBase::updateHook();
+	try
+	{
+		PointcloudMapperBase::updateHook();
+	}catch(std::exception &e)
+	{
+		mLogger->message(ERROR, e.what());
+		return;
+	}
 
 	base::samples::Pointcloud scan_sample;
 	while(_scan.read(scan_sample, false) == RTT::NewData)
