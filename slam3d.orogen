@@ -80,7 +80,7 @@ task_context "PointcloudMapper" do
 
 	property('map_publish_rate', '/int', 0)
 	.dynamic()
-	.doc("Publish Map-Pointcloud every X scans, that are added to the map.")
+	.doc("Publish MLS-Map every X scans, that are added to the map.")
 
 	property('map_update_rate', '/int', 0)
 	.dynamic()
