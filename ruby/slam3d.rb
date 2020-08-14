@@ -29,7 +29,6 @@ module Slam3d
 	def Slam3d.setup_filter_mapper(scan_port, filter, mapper, params)
 
 		Orocos.conf.apply(filter, params, true)
-		Bundles.transformer.setup(filter)
 		filter.configure
 		filter.start
 
