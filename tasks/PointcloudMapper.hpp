@@ -61,7 +61,8 @@ namespace slam3d
 		std::string mOdometryFrame;
 		std::string mMapFrame;
 		
-		int mScansAdded;
+		unsigned mScansAdded;
+		unsigned mScansReceived; 
 		bool mForceAdd;
 		
 		// Parameters for creation of map-pcl

@@ -215,6 +215,7 @@ void PointcloudMapper::sendMap()
 	// Publish the MLS-Map
 	mMultiLayerMap.setTime(mCurrentTime);
 	_mls.write(mMultiLayerMap.asSpatioTemporal());
+	mScansReceived = 0;
 }
 
 bool PointcloudMapper::loadPLYMap(const std::string& path)
@@ -397,6 +398,7 @@ bool PointcloudMapper::configureHook()
 	mGraph->setSolver(mSolver);
 	
 	mScansAdded = 0;
+	mScansReceived = 0;
 	mForceAdd = false;
 	
 	// Initialize MLS-Map
@@ -537,6 +539,8 @@ void PointcloudMapper::updateHook()
 			{
 				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), laserPose));
 			}
+			
+			mScansReceived++;
 
 			if(mPclSensor->addMeasurement(measurement, mOdometry->getPose(measurement->getTimestamp())))
 			{
@@ -553,9 +557,10 @@ void PointcloudMapper::updateHook()
 				}
 			}else
 			{
-				if(_map_update_rate > 0 && (mScansAdded % _map_update_rate) == 0)
+				if(_map_update_rate > 0 && (mScansReceived >= _map_update_rate) == 0)
 				{
 					addScanToMap(measurement, mMapper->getCurrentPose());
+					sendMap();
 				}
 			}
 			mCurrentTime = scan_sample.time;
