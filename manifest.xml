@@ -21,6 +21,19 @@
 	<depend package="envire/orogen/envire_maps" />
 	<depend package="slam/orogen/pcl" />
 	
+    <keywords>
+		<keyword>Mapping</keyword>
+    </keywords>
+
+	<stage>1</stage>
+	<use>multi project</use>
+	<activity>active</activity>
+
+	<classifiers>
+		<classifier>c++</classifier>
+		<classifier>rock</classifier>
+	</classifiers>
+    
 	<tags>stable</tags>
 	
 </package>
