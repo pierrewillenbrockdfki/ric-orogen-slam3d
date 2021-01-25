@@ -361,15 +361,7 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
 	mPclSensor->setPatchBuildingRange(range);
 	
-//	base::Pose pose = _start_pose.get();
-//	base::Position p = pose.position;
-//	base::Orientation o = pose.orientation;
-//	mLogger->message(INFO, (boost::format("start_pose:             pos: (%1%, %2%, %3%) / quat: (%4%, %5%, %6%, %7%)")
-//	 % p[0] % p[1] % p[2] % o.x() % o.y() % o.z() % o.w()).str());
-//	mGraph->setCurrentPose(pose2transform(pose));
-	
-//	mGraph->useOdometryHeading(_use_odometry_heading.get());
-//	mLogger->message(INFO, (boost::format("use_odometry_heading:   %1%") % _use_odometry_heading.get()).str());
+	mGraph->fixNext();
 	
 	mScanResolution = _scan_resolution.get();
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
@@ -395,7 +387,7 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("map_frame:              %1%") % mMapFrame).str());
 
 	mMapper->registerSensor(mPclSensor);
-	mGraph->setSolver(mSolver);
+	mGraph->setSolver(mSolver, _optimization_rate);
 	
 	mScansAdded = 0;
 	mScansReceived = 0;
@@ -547,10 +539,6 @@ void PointcloudMapper::updateHook()
 				mScansAdded++;
 				mForceAdd = false;
 				handleNewScan(mMapper->getLastVertex());
-				if(_optimization_rate > 0 && (mScansAdded % _optimization_rate) == 0)
-				{
-					optimize();
-				}
 				if(_map_publish_rate > 0 && (mScansAdded % _map_publish_rate) == 0)
 				{
 					generate_map();
