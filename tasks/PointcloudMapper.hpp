@@ -44,6 +44,7 @@ namespace slam3d
 		virtual void rebuildMap(const VertexObjectList& vertices);
 		virtual void sendMap();
 		bool loadPLYMap(const std::string& path);
+		void configurePclSensor();
 	
 		// Members
 		slam3d::Clock* mClock;
@@ -52,21 +53,14 @@ namespace slam3d
 		slam3d::Mapper* mMapper;
 		slam3d::PointCloudSensor* mPclSensor;
 		slam3d::Solver* mSolver;
+		slam3d::Solver* mPatchSolver;
 		RockOdometry* mOdometry;
 		boost::shared_mutex mGraphMutex;
 		boost::shared_mutex mMapMutex;
-
-		std::string mRobotName;
-		std::string mRobotFrame;
-		std::string mOdometryFrame;
-		std::string mMapFrame;
 		
 		unsigned mScansAdded;
 		unsigned mScansReceived; 
 		bool mForceAdd;
-		
-		// Parameters for creation of map-pcl
-		double mScanResolution;
 
 		// Parameters for creation of MLS
 		envire::core::Item<maps::grid::MLSMapKalman> mMultiLayerMap;

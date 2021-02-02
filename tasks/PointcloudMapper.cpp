@@ -134,18 +134,12 @@ bool PointcloudMapper::write_ply(const std::string& folder)
 PointCloud::Ptr PointcloudMapper::buildPointcloud(const VertexObjectList& vertices)
 {
 	timeval start = mClock->now();
-	PointCloud::Ptr accumulated;
-
 	boost::shared_lock<boost::shared_mutex> guard(mGraphMutex);
-	accumulated = mPclSensor->getAccumulatedCloud(vertices);
-
-	PointCloud::Ptr cleaned = mPclSensor->removeOutliers(accumulated, _map_outlier_radius, _map_outlier_neighbors);
-	PointCloud::Ptr downsampled = mPclSensor->downsample(cleaned, _map_resolution);
-
+	PointCloud::Ptr cloud = mPclSensor->buildMap(vertices);
 	timeval finish = mClock->now();
 	int duration = finish.tv_sec - start.tv_sec;
 	mLogger->message(INFO, (boost::format("Generated Pointcloud from %1% scans in %2% seconds.") % vertices.size() % duration).str());
-	return downsampled;
+	return cloud;
 }
 
 void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
@@ -226,7 +220,7 @@ bool PointcloudMapper::loadPLYMap(const std::string& path)
 	{
 		Transform pc_tr(pcl_cloud->sensor_orientation_.cast<ScalarType>());
 		pc_tr.translation() = pcl_cloud->sensor_origin_.block(0,0,3,1).cast<ScalarType>();
-		PointCloudMeasurement::Ptr initial_map(new PointCloudMeasurement(pcl_cloud, mRobotName, mPclSensor->getName(), pc_tr));
+		PointCloudMeasurement::Ptr initial_map(new PointCloudMeasurement(pcl_cloud, _robot_name, mPclSensor->getName(), pc_tr));
 		try
 		{
 			VertexObject root_node = mGraph->getVertex(0);
@@ -267,33 +261,44 @@ bool PointcloudMapper::setLog_level(boost::int32_t value)
 	return true;
 }
 
-bool PointcloudMapper::configureHook()
-{	
-	if (! PointcloudMapperBase::configureHook())
-		return false;
-		
-	mClock = new Clock();
-	switch(_log_type)
-	{
-	case 0:
-		mLogger = new Logger(*mClock);
-		break;
-	case 1:
-		mLogger = new BaseLogger();
-		break;
-	case 2:
-		mLogger = new FileLogger(*mClock, "slam3d.log");
-		break;
-	default:
-		mLogger = new Logger(*mClock);
-		mLogger->message(WARNING, "Invalid logger type, using standard logger.");
-	}
-
-	setLog_level(_log_level);
-
+void PointcloudMapper::configurePclSensor()
+{
 	mLogger->message(INFO, "=== Configure PointCloudMapper ===");
+	
+	double min_translation = _min_translation.get();
+	double min_rotation = _min_rotation.get();
+	mLogger->message(INFO, (boost::format("min_pose_distance:      %1% m / %2% rad") % min_translation % min_rotation).str());
+	mPclSensor->setMinPoseDistance(min_translation, min_rotation);
+	
+	double neighbor_radius = _neighbor_radius.get();
+	mLogger->message(INFO, (boost::format("neighbor_radius:        %1%") % neighbor_radius).str());
 
-	mPclSensor = new PointCloudSensor("LaserScanner", mLogger);
+	int max_neighbor_links = _max_neighbor_links.get();
+	mLogger->message(INFO, (boost::format("max_neighbor_links:     %1%") % max_neighbor_links).str());
+	mPclSensor->setNeighborRadius(neighbor_radius, max_neighbor_links);
+	
+	unsigned range = _patch_building_range.get();
+	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
+	mPclSensor->setPatchBuildingRange(range);
+
+	double map_res = _map_resolution.get();
+	mLogger->message(INFO, (boost::format("map_resolution:         %1%") % map_res).str());
+	mPclSensor->setMapResolution(map_res);
+
+	double olr = _map_outlier_radius.get();
+	unsigned oln = _map_outlier_neighbors.get();
+	mLogger->message(INFO, (boost::format("map_outlier_radius:     %1%") % olr).str());
+	mLogger->message(INFO, (boost::format("map_outlier_neighbors:  %1%") % oln).str());
+	mPclSensor->setMapOutlierRemoval(olr, oln);
+
+	bool link_prev = _sequential_icp.get();
+	mLogger->message(INFO, (boost::format("sequential_icp:  %1%") % link_prev).str());
+	mPclSensor->setLinkPrevious(link_prev);	
+	
+	unsigned loop_len = _min_loop_length.get();
+	mLogger->message(INFO, (boost::format("min_loop_length:  %1%") % loop_len).str());
+	mPclSensor->setMinLoopLength(loop_len);
+	
 	RegistrationParameters conf = _gicp_config.get();
 	mPclSensor->setFineConfiguaration(conf);
 	mLogger->message(INFO, " = GICP - Parameters =");
@@ -318,11 +323,49 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("maximum_optimizer_iterations: %1%") % conf.maximum_optimizer_iterations).str());
 	mLogger->message(INFO, (boost::format("point_cloud_density:          %1%") % conf.point_cloud_density).str());
 	mLogger->message(INFO, (boost::format("rotation_epsilon:             %1%") % conf.rotation_epsilon).str());
-	mLogger->message(INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());
-	
+	mLogger->message(INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());	
+}
+
+bool PointcloudMapper::configureHook()
+{	
+	if (! PointcloudMapperBase::configureHook())
+		return false;
+		
+	mClock = new Clock();
+	switch(_log_type)
+	{
+	case 0:
+		mLogger = new Logger(*mClock);
+		break;
+	case 1:
+		mLogger = new BaseLogger();
+		break;
+	case 2:
+		mLogger = new FileLogger(*mClock, "slam3d.log");
+		break;
+	default:
+		mLogger = new Logger(*mClock);
+		mLogger->message(WARNING, "Invalid logger type, using standard logger.");
+	}
+
+	setLog_level(_log_level);
+
+	// Create all internal objects
 	mSolver = new G2oSolver(mLogger);
-	mGraph = new BoostGraph(mLogger);
+	mPatchSolver = new G2oSolver(mLogger);
+
+	mPclSensor = new PointCloudSensor("LaserScanner", mLogger);
+	mPclSensor->setPatchSolver(mPatchSolver);
+
 	mMapper = new Mapper(mGraph, mLogger);
+	mMapper->registerSensor(mPclSensor);
+
+	mGraph = new BoostGraph(mLogger);
+	mGraph->setSolver(mSolver, _optimization_rate);
+	mGraph->fixNext();
+
+	// Read and set parameters
+	configurePclSensor();
 
 	mLogger->message(INFO, " = Graph - Parameters =");
 	mLogger->message(INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());	
@@ -346,48 +389,15 @@ bool PointcloudMapper::configureHook()
 	}
 	mCurrentOdometry = Eigen::Affine3d::Identity();
 	
-	double min_translation = _min_translation.get();
-	double min_rotation = _min_rotation.get();
-	mLogger->message(INFO, (boost::format("min_pose_distance:      %1% / %2%") % min_translation % min_rotation).str());
-	mPclSensor->setMinPoseDistance(min_translation, min_rotation);
-	
-	double neighbor_radius = _neighbor_radius.get();
-	mLogger->message(INFO, (boost::format("neighbor_radius:        %1%") % neighbor_radius).str());
-	int max_neighbor_links = _max_neighbor_links.get();
-	mLogger->message(INFO, (boost::format("max_neighbor_links:     %1%") % max_neighbor_links).str());
-	mPclSensor->setNeighborRadius(neighbor_radius, max_neighbor_links);
-	
-	unsigned range = _patch_building_range.get();
-	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
-	mPclSensor->setPatchBuildingRange(range);
-	
-	mGraph->fixNext();
-	
-	mScanResolution = _scan_resolution.get();
-	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % mScanResolution).str());
-	
-	mLogger->message(INFO, (boost::format("map_resolution:         %1%") % _map_resolution).str());
-	mLogger->message(INFO, (boost::format("map_outlier_radius:     %1%") % _map_outlier_radius).str());
-	mLogger->message(INFO, (boost::format("map_outlier_neighbors:  %1%") % _map_outlier_neighbors).str());
+	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % _scan_resolution).str());	
 	mLogger->message(INFO, (boost::format("map_publish_rate:       %1%") % _map_publish_rate).str());
 	mLogger->message(INFO, (boost::format("optimization_rate:      %1%") % _optimization_rate).str());
 	
-	mRobotName = _robot_name.get();
-	mLogger->message(INFO, (boost::format("robot_name:             %1%") % mRobotName).str());
-	
+	mLogger->message(INFO, (boost::format("robot_name:             %1%") % _robot_name).str());
 	mLogger->message(INFO, (boost::format("laser_frame:            %1%") % _laser_frame.get()).str());
-	
-	mRobotFrame = _robot_frame.get();
-	mLogger->message(INFO, (boost::format("robot_frame:            %1%") % mRobotFrame).str());
-	
-	mOdometryFrame = _odometry_frame.get();
-	mLogger->message(INFO, (boost::format("odometry_frame:         %1%") % mOdometryFrame).str());
-
-	mMapFrame = _map_frame.get();
-	mLogger->message(INFO, (boost::format("map_frame:              %1%") % mMapFrame).str());
-
-	mMapper->registerSensor(mPclSensor);
-	mGraph->setSolver(mSolver, _optimization_rate);
+	mLogger->message(INFO, (boost::format("robot_frame:            %1%") % _robot_frame).str());
+	mLogger->message(INFO, (boost::format("odometry_frame:         %1%") % _odometry_frame).str());
+	mLogger->message(INFO, (boost::format("map_frame:              %1%") % _map_frame).str());
 	
 	mScansAdded = 0;
 	mScansReceived = 0;
@@ -470,8 +480,8 @@ void PointcloudMapper::transformerCallback(const base::Time &time)
 		base::samples::RigidBodyState rbs;
 		rbs.invalidateCovariances();
 		rbs.time = time;
-		rbs.sourceFrame = mRobotFrame;
-		rbs.targetFrame = mMapFrame;
+		rbs.sourceFrame = _robot_frame;
+		rbs.targetFrame = _map_frame;
 		rbs.setTransform(mCurrentDrift * mCurrentOdometry);
 		_robot2map.write(rbs);
 	}
@@ -522,14 +532,14 @@ void PointcloudMapper::updateHook()
 		PointCloudMeasurement::Ptr measurement;
 		try
 		{
-			if(mScanResolution > 0)
+			if(_scan_resolution > 0)
 			{
-				PointCloud::Ptr downsampled_cloud = mPclSensor->downsample(cloud, mScanResolution);
+				PointCloud::Ptr downsampled_cloud = mPclSensor->downsample(cloud, _scan_resolution);
 				mLogger->message(DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
-				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, mRobotName, mPclSensor->getName(), laserPose));
+				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, _robot_name, mPclSensor->getName(), laserPose));
 			}else
 			{
-				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, mRobotName, mPclSensor->getName(), laserPose));
+				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, _robot_name, mPclSensor->getName(), laserPose));
 			}
 			
 			mScansReceived++;
@@ -545,7 +555,7 @@ void PointcloudMapper::updateHook()
 				}
 			}else
 			{
-				if(_map_update_rate > 0 && (mScansReceived >= _map_update_rate) == 0)
+				if((_map_update_rate > 0) && (mScansReceived >= _map_update_rate))
 				{
 					addScanToMap(measurement, mMapper->getCurrentPose());
 					sendMap();
@@ -556,18 +566,18 @@ void PointcloudMapper::updateHook()
 			// Send the calculated transform
 			base::samples::RigidBodyState rbs;
 			rbs.invalidateCovariances();
-			rbs.targetFrame = mMapFrame;
+			rbs.targetFrame = _map_frame;
 			rbs.time = mCurrentTime;
 			
 			if(mOdometry)
 			{
 				mCurrentDrift = mMapper->getCurrentPose() * mCurrentOdometry.inverse();
-				rbs.sourceFrame = mOdometryFrame;
+				rbs.sourceFrame = _odometry_frame;
 				rbs.setTransform(mCurrentDrift);
 				_odometry2map.write(rbs);
 			}else
 			{
-				rbs.sourceFrame = mRobotFrame;
+				rbs.sourceFrame = _robot_frame;
 				rbs.setTransform(mMapper->getCurrentPose());
 				_robot2map.write(rbs);
 			}
@@ -596,6 +606,7 @@ void PointcloudMapper::cleanupHook()
 	if(mOdometry)
 		delete mOdometry;
 	delete mSolver;
+	delete mPatchSolver;
 	delete mLogger;
 	delete mClock;
 }

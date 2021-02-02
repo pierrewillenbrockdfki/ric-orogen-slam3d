@@ -86,6 +86,9 @@ task_context "PointcloudMapper" do
 	.dynamic()
 	.doc("Add every X'th scan to the grid-map, even if it is not added to the graph.")
 
+	property('sequential_icp', '/bool', true)
+	.doc("Whether sequential scan matching is performed. Should normally be set to true.")
+
 	property('neighbor_radius', '/double', 1.0)
 	.doc("A new node is linked against neighbors within this radius, but not
 	more than max_neighbor_links.")
@@ -93,6 +96,11 @@ task_context "PointcloudMapper" do
 	property('max_neighbor_links', '/int', 5)
 	.doc("Maximum number of additional constraints per node added to the graph.
 	This can be used to limit the computational costs of adding a node.")
+
+	property('min_loop_length', '/int', 10)
+	.doc("Minimum number of nodes that must be part of a loop for it to be a
+	valid loop closure. Use higher values to avoid that to many links are
+	created between nearby scan nodes.")
 
 	property('patch_building_range', '/int', 0)
 	.doc("If set to a value X > 0, pointclouds are matched against accumulated
