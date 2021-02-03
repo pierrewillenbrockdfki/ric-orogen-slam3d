@@ -261,71 +261,6 @@ bool PointcloudMapper::setLog_level(boost::int32_t value)
 	return true;
 }
 
-void PointcloudMapper::configurePclSensor()
-{
-	mLogger->message(INFO, "=== Configure PointCloudMapper ===");
-	
-	double min_translation = _min_translation.get();
-	double min_rotation = _min_rotation.get();
-	mLogger->message(INFO, (boost::format("min_pose_distance:      %1% m / %2% rad") % min_translation % min_rotation).str());
-	mPclSensor->setMinPoseDistance(min_translation, min_rotation);
-	
-	double neighbor_radius = _neighbor_radius.get();
-	mLogger->message(INFO, (boost::format("neighbor_radius:        %1%") % neighbor_radius).str());
-
-	int max_neighbor_links = _max_neighbor_links.get();
-	mLogger->message(INFO, (boost::format("max_neighbor_links:     %1%") % max_neighbor_links).str());
-	mPclSensor->setNeighborRadius(neighbor_radius, max_neighbor_links);
-	
-	unsigned range = _patch_building_range.get();
-	mLogger->message(INFO, (boost::format("patch_building_range:   %1%") % range).str());
-	mPclSensor->setPatchBuildingRange(range);
-
-	double map_res = _map_resolution.get();
-	mLogger->message(INFO, (boost::format("map_resolution:         %1%") % map_res).str());
-	mPclSensor->setMapResolution(map_res);
-
-	double olr = _map_outlier_radius.get();
-	unsigned oln = _map_outlier_neighbors.get();
-	mLogger->message(INFO, (boost::format("map_outlier_radius:     %1%") % olr).str());
-	mLogger->message(INFO, (boost::format("map_outlier_neighbors:  %1%") % oln).str());
-	mPclSensor->setMapOutlierRemoval(olr, oln);
-
-	bool link_prev = _sequential_icp.get();
-	mLogger->message(INFO, (boost::format("sequential_icp:  %1%") % link_prev).str());
-	mPclSensor->setLinkPrevious(link_prev);	
-	
-	unsigned loop_len = _min_loop_length.get();
-	mLogger->message(INFO, (boost::format("min_loop_length:  %1%") % loop_len).str());
-	mPclSensor->setMinLoopLength(loop_len);
-	
-	RegistrationParameters conf = _gicp_config.get();
-	mPclSensor->setFineConfiguaration(conf);
-	mLogger->message(INFO, " = GICP - Parameters =");
-	mLogger->message(INFO, (boost::format("correspondence_randomness:    %1%") % conf.correspondence_randomness).str());
-	mLogger->message(INFO, (boost::format("euclidean_fitness_epsilon:    %1%") % conf.euclidean_fitness_epsilon).str());
-	mLogger->message(INFO, (boost::format("max_correspondence_distance:  %1%") % conf.max_correspondence_distance).str());
-	mLogger->message(INFO, (boost::format("max_fitness_score:            %1%") % conf.max_fitness_score).str());
-	mLogger->message(INFO, (boost::format("maximum_iterations:           %1%") % conf.maximum_iterations).str());
-	mLogger->message(INFO, (boost::format("maximum_optimizer_iterations: %1%") % conf.maximum_optimizer_iterations).str());
-	mLogger->message(INFO, (boost::format("point_cloud_density:          %1%") % conf.point_cloud_density).str());
-	mLogger->message(INFO, (boost::format("rotation_epsilon:             %1%") % conf.rotation_epsilon).str());
-	mLogger->message(INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());
-
-	conf = _gicp_coarse_config.get();
-	mPclSensor->setCoarseConfiguaration(conf);
-	mLogger->message(INFO, " = GICP - Coarse Parameters =");
-	mLogger->message(INFO, (boost::format("correspondence_randomness:    %1%") % conf.correspondence_randomness).str());
-	mLogger->message(INFO, (boost::format("euclidean_fitness_epsilon:    %1%") % conf.euclidean_fitness_epsilon).str());
-	mLogger->message(INFO, (boost::format("max_correspondence_distance:  %1%") % conf.max_correspondence_distance).str());
-	mLogger->message(INFO, (boost::format("max_fitness_score:            %1%") % conf.max_fitness_score).str());
-	mLogger->message(INFO, (boost::format("maximum_iterations:           %1%") % conf.maximum_iterations).str());
-	mLogger->message(INFO, (boost::format("maximum_optimizer_iterations: %1%") % conf.maximum_optimizer_iterations).str());
-	mLogger->message(INFO, (boost::format("point_cloud_density:          %1%") % conf.point_cloud_density).str());
-	mLogger->message(INFO, (boost::format("rotation_epsilon:             %1%") % conf.rotation_epsilon).str());
-	mLogger->message(INFO, (boost::format("transformation_epsilon:       %1%") % conf.transformation_epsilon).str());	
-}
-
 bool PointcloudMapper::configureHook()
 {	
 	if (! PointcloudMapperBase::configureHook())
@@ -365,9 +300,18 @@ bool PointcloudMapper::configureHook()
 	mGraph->fixNext();
 
 	// Read and set parameters
-	configurePclSensor();
+	mLogger->message(INFO, "=== PointCloudSensor - Parameters ===");
+	mPclSensor->setMinPoseDistance(_min_translation, _min_rotation);
+	mPclSensor->setNeighborRadius(_neighbor_radius, _max_neighbor_links);
+	mPclSensor->setPatchBuildingRange(_patch_building_range);
+	mPclSensor->setMapResolution(_map_resolution);
+	mPclSensor->setMapOutlierRemoval(_map_outlier_radius, _map_outlier_neighbors);
+	mPclSensor->setLinkPrevious(_sequential_icp);	
+	mPclSensor->setMinLoopLength(_min_loop_length);
+	mPclSensor->setRegistrationParameters(_gicp_config, false);
+	mPclSensor->setRegistrationParameters(_gicp_coarse_config, true);
 
-	mLogger->message(INFO, " = Graph - Parameters =");
+	mLogger->message(INFO, " === Mapper - Parameters ===");
 	mLogger->message(INFO, (boost::format("use_odometry:           %1%") % _use_odometry.get()).str());	
 	if(_use_odometry.get())
 	{

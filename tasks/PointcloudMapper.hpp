@@ -44,7 +44,6 @@ namespace slam3d
 		virtual void rebuildMap(const VertexObjectList& vertices);
 		virtual void sendMap();
 		bool loadPLYMap(const std::string& path);
-		void configurePclSensor();
 	
 		// Members
 		slam3d::Clock* mClock;
