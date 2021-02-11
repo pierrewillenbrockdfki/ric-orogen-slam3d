@@ -292,12 +292,12 @@ bool PointcloudMapper::configureHook()
 	mPclSensor = new PointCloudSensor("LaserScanner", mLogger);
 	mPclSensor->setPatchSolver(mPatchSolver);
 
-	mMapper = new Mapper(mGraph, mLogger);
-	mMapper->registerSensor(mPclSensor);
-
 	mGraph = new BoostGraph(mLogger);
 	mGraph->setSolver(mSolver, _optimization_rate);
 	mGraph->fixNext();
+
+	mMapper = new Mapper(mGraph, mLogger);
+	mMapper->registerSensor(mPclSensor);
 
 	// Read and set parameters
 	mLogger->message(INFO, "=== PointCloudSensor - Parameters ===");
