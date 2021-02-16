@@ -492,6 +492,7 @@ void PointcloudMapper::updateHook()
 			{
 				mScansAdded++;
 				mForceAdd = false;
+				mPclSensor->linkLastToNeighbors();
 				handleNewScan(mMapper->getLastVertex());
 				if(_map_publish_rate > 0 && (mScansAdded % _map_publish_rate) == 0)
 				{
