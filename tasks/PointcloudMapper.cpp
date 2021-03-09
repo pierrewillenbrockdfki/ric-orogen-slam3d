@@ -492,6 +492,7 @@ void PointcloudMapper::updateHook()
 			{
 				mScansAdded++;
 				mForceAdd = false;
+				mCurrentDrift = mMapper->getCurrentPose() * mOdometry->getPose().inverse();
 				mPclSensor->linkLastToNeighbors();
 				handleNewScan(mMapper->getLastVertex());
 				if(_map_publish_rate > 0 && (mScansAdded % _map_publish_rate) == 0)
@@ -516,7 +517,6 @@ void PointcloudMapper::updateHook()
 			
 			if(mOdometry)
 			{
-				mCurrentDrift = mMapper->getCurrentPose() * mCurrentOdometry.inverse();
 				rbs.sourceFrame = _odometry_frame;
 				rbs.setTransform(mCurrentDrift);
 				_odometry2map.write(rbs);

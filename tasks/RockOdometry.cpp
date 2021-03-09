@@ -47,6 +47,11 @@ Transform RockOdometry::getPose(timeval stamp)
 	return mCurrentOdometricPose;
 }
 
+Transform RockOdometry::getPose() const
+{
+	return mCurrentOdometricPose;
+}
+
 Eigen::Affine3d RockOdometry::getPose(base::Time t)
 {
 	Eigen::Affine3d affine;

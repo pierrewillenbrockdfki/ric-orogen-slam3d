@@ -17,6 +17,7 @@ namespace slam3d
 		void handleNewVertex(IdType vertex);
 		
 		Transform getPose(timeval stamp);
+		Transform getPose() const;
 		Eigen::Affine3d getPose(base::Time t);
 		Covariance<6> calculateCovariance(const Transform &tf);
 
