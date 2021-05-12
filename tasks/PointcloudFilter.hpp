@@ -17,6 +17,7 @@ namespace slam3d
 		unsigned mPassRate;
 		
 		unsigned mSkipCount;
+		bool mReceivedFirst;
 
 	public:
 		PointcloudFilter(std::string const& name = "slam3d::PointcloudFilter", TaskCore::TaskState initial_state = Stopped);

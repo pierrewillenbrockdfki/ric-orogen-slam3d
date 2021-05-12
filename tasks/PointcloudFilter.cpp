@@ -37,6 +37,8 @@ bool PointcloudFilter::startHook()
 {
 	if (! PointcloudFilterBase::startHook())
 		return false;
+
+	mReceivedFirst = false;
 	return true;
 }
 
@@ -48,6 +50,13 @@ void PointcloudFilter::updateHook()
 	base::samples::Pointcloud cloud;
 	while(_input.read(cloud, false) == RTT::NewData)
 	{
+		// Discard the first scan, as it is often incomplete for rotating sensors
+		if(!mReceivedFirst)
+		{
+			mReceivedFirst = true;
+			continue;
+		}
+
 		mSkipCount++;
 		if(mSkipCount < mPassRate)
 		{
