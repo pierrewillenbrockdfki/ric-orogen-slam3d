@@ -212,8 +212,7 @@ task_context "PointcloudMapper" do
 end
 
 ## Mapper that creates a Multi-Level-Surface-Map from an OcTree
-task_context "OcTreeMapper" do
-	subclasses "PointcloudMapper"
+task_context "OcTreeMapper", subclasses: "PointcloudMapper" do
 	
 	operation('remove_dynamic_objects')
 	.returns('/bool')
