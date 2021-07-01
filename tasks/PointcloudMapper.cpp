@@ -397,6 +397,11 @@ PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Poi
 		p.z = cloud_in.points[i][2];
 		cloud_out->push_back(p);
 	}
+    
+	if(mScansAdded == 0 && _initial_patch_radius > 0)
+	{
+		mPclSensor->fillGroundPlane(cloud_out, _initial_patch_radius);
+	}
 	return cloud_out;
 }
 
