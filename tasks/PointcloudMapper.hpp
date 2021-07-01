@@ -57,12 +57,12 @@ namespace slam3d
 		boost::shared_mutex mGraphMutex;
 		boost::shared_mutex mMapMutex;
 		
-		unsigned mScansAdded;
-		unsigned mScansReceived; 
+		int mScansAdded;
+		int mScansReceived; 
 		bool mForceAdd;
 
 		// Parameters for creation of MLS
-		envire::core::Item<maps::grid::MLSMapKalman> mMultiLayerMap;
+		envire::core::Item<maps::grid::MLSMapSloped> mMultiLayerMap;
 		GridConfiguration mGridConf;
 		
 		// Current state of transformations

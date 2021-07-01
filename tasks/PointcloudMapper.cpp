@@ -361,7 +361,7 @@ bool PointcloudMapper::configureHook()
 	size_t x_size = (mGridConf.max_x - mGridConf.min_x) / mGridConf.resolution;
 	size_t y_size = (mGridConf.max_y - mGridConf.min_y) / mGridConf.resolution;
 	
-	mMultiLayerMap.setData(maps::grid::MLSMapKalman(maps::grid::Vector2ui(x_size, y_size), Eigen::Vector2d(mGridConf.resolution, mGridConf.resolution), _grid_mls_config.value()));
+	mMultiLayerMap.setData(maps::grid::MLSMapSloped(maps::grid::Vector2ui(x_size, y_size), Eigen::Vector2d(mGridConf.resolution, mGridConf.resolution), _grid_mls_config.value()));
 	mMultiLayerMap.getData().getId() = "/slam3d-mls";
 	mMultiLayerMap.getData().translate(Eigen::Vector3d(mGridConf.min_x, mGridConf.min_y, 0));
 	mMultiLayerMap.setFrame(_map_frame.value());
