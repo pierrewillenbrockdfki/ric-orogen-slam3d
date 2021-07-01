@@ -16,7 +16,6 @@
 	<depend package="base/logging" />
 	<depend package="tools/orocos.rb" />
 	<depend package="gui/vizkit" />
-	<depend package="slam/octomap" />
 	
 	<depend package="envire/orogen/envire_maps" />
 	<depend package="slam/orogen/pcl" />

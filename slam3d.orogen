@@ -3,7 +3,6 @@ name "slam3d"
 using_library 'velodyne_lidar'
 using_library 'slam3d'
 using_library 'transformer'
-using_library 'octomap'
 using_library 'maps'
 using_library 'envire_maps'
 
@@ -13,7 +12,6 @@ import_types_from 'pcl'
 import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
 import_types_from 'slam3d/sensor/pcl/RegistrationParameters.hpp'
 import_types_from 'maps/grid/MLSConfig.hpp'
-import_types_from 'OctoMapConfiguration.hpp'
 import_types_from 'GridConfiguration.hpp'
 
 ## Mapper using Pointclouds
@@ -211,17 +209,6 @@ task_context "PointcloudMapper" do
 	.doc("Direction of gravity (upward) in robot coordinates.")
 end
 
-## Mapper that creates a Multi-Level-Surface-Map from an OcTree
-task_context "OcTreeMapper", subclasses: "PointcloudMapper" do
-	
-	operation('remove_dynamic_objects')
-	.returns('/bool')
-	.doc("Removes points from scans that have changed in the environment.")
-	
-	property('octo_map_config', 'slam3d/OctoMapConfiguration')
-	.doc("OctoMap specific configuration.")
-end
-
 ## Task to dump velodyne-Scans to KITTI-Format
 task_context "PointcloudToBinary" do
 	input_port 'pcl', '/base/samples/Pointcloud'
@@ -249,44 +236,6 @@ task_context "PointcloudFilter" do
 	
 	property('pass_rate', '/int', 1)
 	.doc("Only pass every n'th scan.")
-end
-
-## Filter to remove outliers and moving objects
-task_context "OcTreeFilter" do
-	input_port 'input', '/base/samples/Pointcloud'
-	output_port 'output', '/base/samples/Pointcloud'
-	port_driven 'input'
-
-	transformer do
-		transform "laser", "odometry"
-		align_port 'input'
-		max_latency 0.5
-	end
-
-	property('log_type', '/int', 0)
-	.doc("Standard(0), Base(1), File(2)")
-
-	property('log_level', '/int', 2)
-	.dynamic()
-	.doc("Debug(0), Info(1), Warn(2), Error(3), Fatal(4)")
-
-	property('min_height', '/double', -1)
-	.doc("Remove all points below this height.")
-
-	property('max_height', '/double', 1)
-	.doc("Remove all points above this height.")
-
-	property('min_distance', '/double', 0.5)
-	.doc("Remove all points within this radius of the sensor.")
-
-	property('max_distance', '/double', 10)
-	.doc("Remove all points beyond this radius of the sensor.")
-	
-	property('pass_rate', '/int', 1)
-	.doc("Only pass every n'th scan.")
-
-	property('octo_map_config', 'slam3d/OctoMapConfiguration')
-	.doc("OctoMap specific configuration.")
 end
 
 ## Convert MultilevelLaserScan (deprecated format)
