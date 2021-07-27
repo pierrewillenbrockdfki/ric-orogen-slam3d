@@ -3,7 +3,9 @@
 	<description brief="Components for 3D-SLAM">
 		Orogen components using the slam3d library.
 	</description>
-	<author>Sebastian Kasperski/sebastian.kasperski@dfki.de</author>
+	<author email="sebastian.kasperski@dfki.de">Sebastian Kasperski</author>
+	<maintainer email="sebastian.kasperski@dfki.de">Sebastian Kasperski</maintainer>
+
 	<license></license>
 	<url>http://</url>
 	<logo>http://</logo>
@@ -36,3 +38,4 @@
 	<tags>stable</tags>
 	
 </package>
+
