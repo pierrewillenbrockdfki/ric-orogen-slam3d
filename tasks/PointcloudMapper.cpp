@@ -220,7 +220,7 @@ bool PointcloudMapper::loadPLYMap(const std::string& path)
 	{
 		Transform pc_tr(pcl_cloud->sensor_orientation_.cast<ScalarType>());
 		pc_tr.translation() = pcl_cloud->sensor_origin_.block(0,0,3,1).cast<ScalarType>();
-		PointCloudMeasurement::Ptr initial_map(new PointCloudMeasurement(pcl_cloud, _robot_name, mPclSensor->getName(), pc_tr));
+		PointCloudMeasurement::Ptr initial_map(new PointCloudMeasurement(pcl_cloud, _robot_name.get(), mPclSensor->getName(), pc_tr));
 		try
 		{
 			VertexObject root_node = mGraph->getVertex(0);
@@ -337,11 +337,11 @@ bool PointcloudMapper::configureHook()
 	mLogger->message(INFO, (boost::format("map_publish_rate:       %1%") % _map_publish_rate).str());
 	mLogger->message(INFO, (boost::format("optimization_rate:      %1%") % _optimization_rate).str());
 	
-	mLogger->message(INFO, (boost::format("robot_name:             %1%") % _robot_name).str());
+	mLogger->message(INFO, (boost::format("robot_name:             %1%") % _robot_name.get()).str());
 	mLogger->message(INFO, (boost::format("laser_frame:            %1%") % _laser_frame.get()).str());
-	mLogger->message(INFO, (boost::format("robot_frame:            %1%") % _robot_frame).str());
-	mLogger->message(INFO, (boost::format("odometry_frame:         %1%") % _odometry_frame).str());
-	mLogger->message(INFO, (boost::format("map_frame:              %1%") % _map_frame).str());
+	mLogger->message(INFO, (boost::format("robot_frame:            %1%") % _robot_frame.get()).str());
+	mLogger->message(INFO, (boost::format("odometry_frame:         %1%") % _odometry_frame.get()).str());
+	mLogger->message(INFO, (boost::format("map_frame:              %1%") % _map_frame.get()).str());
 	
 	mScansAdded = 0;
 	mScansReceived = 0;
@@ -364,7 +364,7 @@ bool PointcloudMapper::configureHook()
 	mMultiLayerMap.setData(maps::grid::MLSMapSloped(maps::grid::Vector2ui(x_size, y_size), Eigen::Vector2d(mGridConf.resolution, mGridConf.resolution), _grid_mls_config.value()));
 	mMultiLayerMap.getData().getId() = "/slam3d-mls";
 	mMultiLayerMap.getData().translate(Eigen::Vector3d(mGridConf.min_x, mGridConf.min_y, 0));
-	mMultiLayerMap.setFrame(_map_frame.value());
+	mMultiLayerMap.setFrame(_map_frame.get());
 
 	// load a-priori map file
 	if(!_apriori_ply_map.value().empty() && loadPLYMap(_apriori_ply_map.value()))
@@ -429,8 +429,8 @@ void PointcloudMapper::transformerCallback(const base::Time &time)
 		base::samples::RigidBodyState rbs;
 		rbs.invalidateCovariances();
 		rbs.time = time;
-		rbs.sourceFrame = _robot_frame;
-		rbs.targetFrame = _map_frame;
+		rbs.sourceFrame = _robot_frame.get();
+		rbs.targetFrame = _map_frame.get();
 		rbs.setTransform(mCurrentDrift * mCurrentOdometry);
 		_robot2map.write(rbs);
 	}
@@ -462,7 +462,7 @@ void PointcloudMapper::updateHook()
 			if(!_laser2robot.get(scan_sample.time, affine, false) || !affine.matrix().allFinite())
 			{
 				mLogger->message(ERROR, (boost::format("Failed to receive a valid transform from '%1%' to '%2%'!")
-					% _laser_frame % _robot_frame).str());
+					% _laser_frame.get() % _robot_frame.get()).str());
 				continue;
 			}
 			laserPose.linear() = affine.linear();
@@ -485,10 +485,10 @@ void PointcloudMapper::updateHook()
 			{
 				PointCloud::Ptr downsampled_cloud = mPclSensor->downsample(cloud, _scan_resolution);
 				mLogger->message(DEBUG, (boost::format("Downsampled cloud has %1% points.") % downsampled_cloud->size()).str());
-				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, _robot_name, mPclSensor->getName(), laserPose));
+				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(downsampled_cloud, _robot_name.get(), mPclSensor->getName(), laserPose));
 			}else
 			{
-				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, _robot_name, mPclSensor->getName(), laserPose));
+				measurement = PointCloudMeasurement::Ptr(new PointCloudMeasurement(cloud, _robot_name.get(), mPclSensor->getName(), laserPose));
 			}
 			
 			mScansReceived++;
@@ -517,17 +517,17 @@ void PointcloudMapper::updateHook()
 			// Send the calculated transform
 			base::samples::RigidBodyState rbs;
 			rbs.invalidateCovariances();
-			rbs.targetFrame = _map_frame;
+			rbs.targetFrame = _map_frame.get();
 			rbs.time = mCurrentTime;
 			
 			if(mOdometry)
 			{
-				rbs.sourceFrame = _odometry_frame;
+				rbs.sourceFrame = _odometry_frame.get();
 				rbs.setTransform(mCurrentDrift);
 				_odometry2map.write(rbs);
 			}else
 			{
-				rbs.sourceFrame = _robot_frame;
+				rbs.sourceFrame = _robot_frame.get();
 				rbs.setTransform(mMapper->getCurrentPose());
 				_robot2map.write(rbs);
 			}
