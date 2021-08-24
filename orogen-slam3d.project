@@ -20,6 +20,7 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="tasks">
+    <File Name="tasks/CMakeLists.txt"/>
     <File Name="tasks/PointcloudMapper.cpp"/>
     <File Name="tasks/PointcloudMapper.hpp"/>
     <File Name="tasks/ScanConverter.hpp"/>
@@ -38,9 +39,9 @@
     <File Name="tasks/PointcloudFilter.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="autoproj">
+    <File Name="CMakeLists.txt"/>
     <File Name="manifest.xml"/>
     <File Name="slam3d.orogen"/>
-    <File Name="tasks/CMakeLists.txt"/>
     <File Name="GridConfiguration.hpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="scripts">
