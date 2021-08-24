@@ -95,7 +95,7 @@ bool PointcloudMapper::write_envire()
 	}
 
 	boost::archive::binary_oarchive bin_out(ostream);
-	bin_out << mMultiLayerMap.getData();
+	bin_out << mMultiLayerMap;
 	ostream.close();
 	return true;
 }
@@ -178,13 +178,13 @@ void PointcloudMapper::addScanToMap(PointCloudMeasurement::Ptr scan, const Trans
 {	
 	PointCloud::ConstPtr pcl = scan->getPointCloud();
 	boost::unique_lock<boost::shared_mutex> guard(mMapMutex);
-	mMultiLayerMap.getData().mergePointCloud(*pcl, pose * scan->getSensorPose());
+	mMultiLayerMap.mergePointCloud(*pcl, pose * scan->getSensorPose());
 }
 
 void PointcloudMapper::clearMap()
 {
 	boost::unique_lock<boost::shared_mutex> guard(mMapMutex);
-	mMultiLayerMap.getData().clear();
+	mMultiLayerMap.clear();
 }
 
 void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
@@ -207,8 +207,7 @@ void PointcloudMapper::rebuildMap(const VertexObjectList& vertices)
 void PointcloudMapper::sendMap()
 {
 	// Publish the MLS-Map
-	mMultiLayerMap.setTime(mCurrentTime);
-	_mls.write(mMultiLayerMap.asSpatioTemporal());
+	_mls.write(mMultiLayerMap);
 	mScansReceived = 0;
 }
 
@@ -361,10 +360,9 @@ bool PointcloudMapper::configureHook()
 	size_t x_size = (mGridConf.max_x - mGridConf.min_x) / mGridConf.resolution;
 	size_t y_size = (mGridConf.max_y - mGridConf.min_y) / mGridConf.resolution;
 	
-	mMultiLayerMap.setData(maps::grid::MLSMapSloped(maps::grid::Vector2ui(x_size, y_size), Eigen::Vector2d(mGridConf.resolution, mGridConf.resolution), _grid_mls_config.value()));
-	mMultiLayerMap.getData().getId() = "/slam3d-mls";
-	mMultiLayerMap.getData().translate(Eigen::Vector3d(mGridConf.min_x, mGridConf.min_y, 0));
-	mMultiLayerMap.setFrame(_map_frame.get());
+	mMultiLayerMap = maps::grid::MLSMapSloped(maps::grid::Vector2ui(x_size, y_size), Eigen::Vector2d(mGridConf.resolution, mGridConf.resolution), _grid_mls_config.value());
+	mMultiLayerMap.getId() = "/slam3d-mls";
+	mMultiLayerMap.translate(Eigen::Vector3d(mGridConf.min_x, mGridConf.min_y, 0));
 
 	// load a-priori map file
 	if(!_apriori_ply_map.value().empty() && loadPLYMap(_apriori_ply_map.value()))

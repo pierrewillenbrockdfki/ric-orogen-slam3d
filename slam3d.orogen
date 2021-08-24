@@ -4,7 +4,6 @@ using_library 'velodyne_lidar'
 using_library 'slam3d'
 using_library 'transformer'
 using_library 'maps'
-using_library 'envire_maps'
 
 import_types_from 'base'
 import_types_from 'envire_maps'

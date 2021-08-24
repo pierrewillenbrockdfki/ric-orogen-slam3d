@@ -5,7 +5,6 @@
 #include <slam3d/core/Mapper.hpp>
 #include <slam3d/sensor/pcl/PointCloudSensor.hpp>
 
-#include <envire_core/items/Item.hpp>
 #include <maps/grid/MLSMap.hpp>
 
 #include <queue>
@@ -62,7 +61,7 @@ namespace slam3d
 		bool mForceAdd;
 
 		// Parameters for creation of MLS
-		envire::core::Item<maps::grid::MLSMapSloped> mMultiLayerMap;
+		maps::grid::MLSMapSloped mMultiLayerMap;
 		GridConfiguration mGridConf;
 		
 		// Current state of transformations
