@@ -19,7 +19,7 @@
 	<depend package="tools/orocos.rb" />
 	<depend package="gui/vizkit" />
 	
-	<depend package="envire/orogen/envire_maps" />
+	<depend package="slam/orogen/maps" />
 	<depend package="slam/orogen/pcl" />
 	
     <keywords>
