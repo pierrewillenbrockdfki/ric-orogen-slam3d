@@ -17,13 +17,11 @@ namespace slam3d
 		void handleNewVertex(IdType vertex);
 		
 		Transform getPose(timeval stamp);
-		Transform getPose() const;
-		Eigen::Affine3d getPose(base::Time t);
+		Transform getPose(base::Time t);
 		Covariance<6> calculateCovariance(const Transform &tf);
 
 	private:
 		transformer::Transformation& mTransformation;
-		Transform mCurrentOdometricPose;
 		Transform mLastOdometricPose;
 		IdType mLastVertex;
 		Direction mGravityReference;

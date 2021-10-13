@@ -9,7 +9,6 @@ RockOdometry::RockOdometry(const std::string& name, Graph* graph, Solver* solver
 {
 	mLastVertex = 0;
 	mLastOdometricPose = Transform::Identity();
-	mCurrentOdometricPose = Transform::Identity();
 	mGravityReference = Direction::UnitZ();
 }
 
@@ -20,10 +19,12 @@ RockOdometry::~RockOdometry()
 void RockOdometry::handleNewVertex(IdType vertex)
 {
 	// Add odometry transform to previous vertex
+	timeval stamp = mGraph->getVertex(vertex).measurement->getTimestamp();
+	Transform currentOdometricPose = getPose(stamp);
 	if(mLastVertex > 0)
 	{
 		TransformWithCovariance twc;
-		twc.transform = mLastOdometricPose.inverse() * mCurrentOdometricPose;
+		twc.transform = mLastOdometricPose.inverse() * currentOdometricPose;
 		twc.covariance = calculateCovariance(twc.transform);
 		SE3Constraint::Ptr se3(new SE3Constraint(mName, twc));
 		mGraph->addConstraint(mLastVertex, vertex, se3);
@@ -31,28 +32,22 @@ void RockOdometry::handleNewVertex(IdType vertex)
 	}
 	
 	// Add a gravity vector to this vertex
-	Eigen::Quaterniond state(mCurrentOdometricPose.rotation());
+	Eigen::Quaterniond state(currentOdometricPose.rotation());
 	Direction upVector = state.inverse() * Eigen::Vector3d::UnitZ();	
 	GravityConstraint::Ptr grav(new GravityConstraint(mName, upVector, mGravityReference, Covariance<2>::Identity()));
 	mGraph->addConstraint(vertex, 0, grav);
 	
 	mLastVertex = vertex;
-	mLastOdometricPose = mCurrentOdometricPose;
+	mLastOdometricPose = currentOdometricPose;
 }
 
 Transform RockOdometry::getPose(timeval stamp)
 {
 	base::Time ts = base::Time::fromSeconds(stamp.tv_sec, stamp.tv_usec);
-	getPose(ts);
-	return mCurrentOdometricPose;
+	return getPose(ts);
 }
 
-Transform RockOdometry::getPose() const
-{
-	return mCurrentOdometricPose;
-}
-
-Eigen::Affine3d RockOdometry::getPose(base::Time t)
+Transform RockOdometry::getPose(base::Time t)
 {
 	Eigen::Affine3d affine;
 	bool res;
@@ -77,14 +72,14 @@ Eigen::Affine3d RockOdometry::getPose(base::Time t)
 	
 	if((affine.matrix().array() == affine.matrix().array()).all())
 	{
-		mCurrentOdometricPose.linear() = affine.linear();
-		mCurrentOdometricPose.translation() = affine.translation();
+		Transform result;
+		result.linear() = affine.linear();
+		result.translation() = affine.translation();
+		return result;
 	}else
 	{
 		throw InvalidPose("Odometry sample contained invalid data.");
 	}
-	
-	return affine;
 }
 
 Covariance<6> RockOdometry::calculateCovariance(const Transform &tf)

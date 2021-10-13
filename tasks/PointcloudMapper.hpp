@@ -65,7 +65,6 @@ namespace slam3d
 		GridConfiguration mGridConf;
 		
 		// Current state of transformations
-		Eigen::Affine3d mCurrentOdometry;
 		Eigen::Affine3d mCurrentDrift;
 		base::Time mCurrentTime;
 

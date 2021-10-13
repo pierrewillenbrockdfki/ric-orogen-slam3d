@@ -330,7 +330,6 @@ bool PointcloudMapper::configureHook()
 	{
 		mOdometry = NULL;
 	}
-	mCurrentOdometry = Eigen::Affine3d::Identity();
 	
 	mLogger->message(INFO, (boost::format("scan_resolution:        %1%") % _scan_resolution).str());	
 	mLogger->message(INFO, (boost::format("map_publish_rate:       %1%") % _map_publish_rate).str());
@@ -421,15 +420,13 @@ void PointcloudMapper::transformerCallback(const base::Time &time)
 {
 	try
 	{
-		mCurrentOdometry = mOdometry->getPose(time);
-
 		// Send the current pose
 		base::samples::RigidBodyState rbs;
+		rbs.setTransform(mCurrentDrift * mOdometry->getPose(time));
 		rbs.invalidateCovariances();
 		rbs.time = time;
 		rbs.sourceFrame = _robot_frame.get();
 		rbs.targetFrame = _map_frame.get();
-		rbs.setTransform(mCurrentDrift * mCurrentOdometry);
 		_robot2map.write(rbs);
 	}
 	catch(InvalidPose &e)
@@ -495,7 +492,7 @@ void PointcloudMapper::updateHook()
 			{
 				mScansAdded++;
 				mForceAdd = false;
-				mCurrentDrift = mMapper->getCurrentPose() * mOdometry->getPose().inverse();
+				mCurrentDrift = mMapper->getCurrentPose() * mOdometry->getPose(measurement->getTimestamp()).inverse();
 				mPclSensor->linkLastToNeighbors();
 				handleNewScan(mMapper->getLastVertex());
 				if(_map_publish_rate > 0 && (mScansAdded % _map_publish_rate) == 0)
