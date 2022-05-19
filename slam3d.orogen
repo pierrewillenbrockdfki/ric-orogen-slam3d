@@ -152,9 +152,12 @@ task_context "PointcloudMapper" do
 	all robots should reflect their relative poses at the start of the exploration.")
 
 	property('use_odometry_heading', '/bool', false)
-	.doc("Whether to initialize the robot's pose from odometry. This is useful
+	.doc("Whether to initialize the robot's heading from odometry. This is useful
 	when the odometry includes global heading from a compass and will then
 	preserve this heading in the generated map, e.g. the map will be north aligned.")
+
+	property('use_odometry_pose', '/bool', false)
+	.doc("Similar to use_odometry_heading, but initializes full pose from odometry.")
 
 	property('gicp_config', '/slam3d/RegistrationParameters')
 	.doc("Parameters for Generalized ICP. This set is used for sequential scan
