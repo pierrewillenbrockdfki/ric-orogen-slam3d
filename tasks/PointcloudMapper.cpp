@@ -295,7 +295,11 @@ bool PointcloudMapper::configureHook()
 	mGraph->setSolver(mSolver, _optimization_rate);
 	mGraph->fixNext();
 
-	mMapper = new Mapper(mGraph, mLogger);
+	Eigen::Affine3d affine = _start_pose.get().toTransform();
+	Transform startPose;
+	startPose.linear() = affine.linear();
+	startPose.translation() = affine.translation();
+	mMapper = new Mapper(mGraph, mLogger, startPose);
 	mMapper->registerSensor(mPclSensor);
 
 	// Read and set parameters
