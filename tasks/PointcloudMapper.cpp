@@ -292,7 +292,7 @@ bool PointcloudMapper::configureHook()
 	mPclSensor->setPatchSolver(mPatchSolver);
 
 	mGraph = new BoostGraph(mLogger);
-	mGraph->setSolver(mSolver, _optimization_rate);
+	mGraph->setSolver(mSolver);
 	mGraph->fixNext();
 
 	Transform startPose;
@@ -524,6 +524,12 @@ void PointcloudMapper::updateHook()
 				mCurrentDrift = mMapper->getCurrentPose() * mOdometry->getPose(measurement->getTimestamp()).inverse();
 				mPclSensor->linkLastToNeighbors();
 				handleNewScan(mMapper->getLastVertex());
+				
+				if(mGraph->getNumOfNewConstraints() >= _optimization_rate)
+				{
+					optimize();
+				}
+				
 				if(_map_publish_rate > 0 && (mScansAdded % _map_publish_rate) == 0)
 				{
 					generate_map();
