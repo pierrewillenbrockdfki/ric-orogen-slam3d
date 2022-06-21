@@ -12,11 +12,10 @@
 
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
 
 #include <pcl/common/transforms.h>
 #include <pcl/io/ply_io.h>
-
-#include <boost/filesystem.hpp>
 
 using namespace slam3d;
 
