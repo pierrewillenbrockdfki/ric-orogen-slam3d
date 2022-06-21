@@ -8,6 +8,7 @@ add_library(${SLAM3D_TASKLIB_NAME} SHARED
 add_dependencies(${SLAM3D_TASKLIB_NAME}
     regen-typekit)
 
+find_package(Boost REQUIRED filesystem)
 find_package(PCL 1.7 REQUIRED COMPONENTS io)
 target_link_libraries(${SLAM3D_TASKLIB_NAME}
   PUBLIC

@@ -16,6 +16,8 @@
 #include <pcl/common/transforms.h>
 #include <pcl/io/ply_io.h>
 
+#include <boost/filesystem.hpp>
+
 using namespace slam3d;
 
 PointcloudMapper::PointcloudMapper(std::string const& name)
