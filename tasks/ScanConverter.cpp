@@ -1,8 +1,5 @@
 #include "ScanConverter.hpp"
 
-#include <velodyne_lidar/MultilevelLaserScan.h>
-#include <velodyne_lidar/pointcloudConvertHelper.hpp>
-
 #include <base-logging/Logging.hpp>
 #include <base/samples/Pointcloud.hpp>
 
@@ -48,7 +45,6 @@ void ScanConverter::updateHook()
 	ScanConverterBase::updateHook();
 
 	int con = 0;
-	if(_scan.connected()) con++;
 	if(_depth_map.connected()) con++;
 	if(_distance_image.connected()) con++;
 	if(con > 1)
@@ -59,19 +55,6 @@ void ScanConverter::updateHook()
 
 	// Get scans from any of the input ports
 	base::samples::Pointcloud cloud;
-
-	// Deprecated velodyne output format
-	velodyne_lidar::MultilevelLaserScan scan;
-	while(_scan.read(scan, false) == RTT::NewData)
-	{
-		// Convert to PointCloud
-		cloud.points.clear();
-		std::vector<Eigen::Vector3d> pc;
-		velodyne_lidar::ConvertHelper::convertScanToPointCloud(scan, pc);
-		copyPointCloud(pc, cloud.points);
-		cloud.time = scan.time;
-		_cloud.write(cloud);
-	}
 
 	base::samples::DepthMap depthMap;
 	while(_depth_map.read(depthMap, false) == RTT::NewData)

@@ -2,7 +2,6 @@
 
 #include <base-logging/Logging.hpp>
 #include <base/samples/RigidBodyState.hpp>
-#include <velodyne_lidar/pointcloudConvertHelper.hpp>
 
 using namespace slam3d;
 

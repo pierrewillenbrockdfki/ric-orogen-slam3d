@@ -1,6 +1,5 @@
 name "slam3d"
 
-using_library 'velodyne_lidar'
 using_library 'slam3d'
 using_library 'transformer'
 using_library 'maps'
@@ -8,7 +7,6 @@ using_library 'maps'
 import_types_from 'base'
 import_types_from 'maps'
 import_types_from 'pcl'
-import_types_from 'velodyne_lidar/MultilevelLaserScan.h'
 import_types_from 'slam3d/sensor/pcl/RegistrationParameters.hpp'
 import_types_from 'maps/grid/MLSConfig.hpp'
 import_types_from 'GridConfiguration.hpp'
@@ -242,12 +240,10 @@ task_context "PointcloudFilter" do
 	.doc("Only pass every n'th scan.")
 end
 
-## Convert MultilevelLaserScan (deprecated format)
-## or a Depthmap from a velodyne scanner to Pointcloud format
+## Convert Depthmap to Pointcloud format
 task_context "ScanConverter" do
 	error_states :MULTIPLE_INPUT_CONNECTIONS
 
-	input_port 'scan', '/velodyne_lidar/MultilevelLaserScan'
 	input_port 'depth_map', '/base/samples/DepthMap'
 	input_port 'distance_image', '/base/samples/DistanceImage'
 	output_port 'cloud', '/base/samples/Pointcloud'
