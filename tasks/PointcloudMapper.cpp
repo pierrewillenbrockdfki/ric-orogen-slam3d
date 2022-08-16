@@ -296,7 +296,19 @@ bool PointcloudMapper::configureHook()
 	mGraph->setSolver(mSolver);
 	mGraph->fixNext();
 
-	mMapper = new Mapper(mGraph, mLogger);
+	Transform startPose;
+	if(_use_odometry_heading || _use_odometry_pose)
+	{
+		mStartPoseInitialized = false;
+	}else
+	{
+		Eigen::Affine3d affine = _start_pose.get().toTransform();
+		startPose.linear() = affine.linear();
+		startPose.translation() = affine.translation();
+		mStartPoseInitialized = true;
+	}
+
+	mMapper = new Mapper(mGraph, mLogger, startPose);
 	mMapper->registerSensor(mPclSensor);
 
 	// Read and set parameters
@@ -445,6 +457,34 @@ void PointcloudMapper::updateHook()
 	{
 		mLogger->message(ERROR, e.what());
 		return;
+	}
+
+	// Check if we have to set start pose from odometry
+	if(!mStartPoseInitialized)
+	{
+		Transform startPose;
+		Eigen::Affine3d affine = Eigen::Affine3d::Identity();
+		try
+		{
+			if(!_robot2odometry.get(base::Time::now(), affine, false) || !affine.matrix().allFinite())
+			{
+				mLogger->message(ERROR, (boost::format("Failed to receive a valid transform from '%1%' to '%2%'!")
+					% _robot_frame.get() % _odometry_frame.get()).str());
+				return;
+			}
+		}
+		catch(std::exception &e)
+		{
+			mLogger->message(ERROR, e.what());
+			return;
+		}
+		startPose.linear() = affine.linear();
+		if(_use_odometry_pose)
+		{
+			startPose.translation() = affine.translation();
+		}
+		mMapper->setStartPose(startPose);
+		mStartPoseInitialized = true;
 	}
 
 	base::samples::Pointcloud scan_sample;

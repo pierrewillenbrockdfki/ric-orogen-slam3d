@@ -59,6 +59,7 @@ namespace slam3d
 		int mScansAdded;
 		int mScansReceived; 
 		bool mForceAdd;
+		bool mStartPoseInitialized;
 
 		// Parameters for creation of MLS
 		maps::grid::MLSMapSloped mMultiLayerMap;
