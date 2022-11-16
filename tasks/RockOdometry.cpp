@@ -1,4 +1,5 @@
 #include "RockOdometry.hpp"
+#include "Common.hpp"
 
 #include <slam3d/core/Graph.hpp>
 #include <boost/format.hpp>
@@ -43,7 +44,7 @@ void RockOdometry::handleNewVertex(IdType vertex)
 
 Transform RockOdometry::getPose(timeval stamp)
 {
-	base::Time ts = base::Time::fromSeconds(stamp.tv_sec, stamp.tv_usec);
+	base::Time ts = timeval2time(stamp);
 	return getPose(ts);
 }
 

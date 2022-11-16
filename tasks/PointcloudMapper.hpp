@@ -74,10 +74,6 @@ namespace slam3d
 		PointcloudMapper(std::string const& name, RTT::ExecutionEngine* engine);
 		~PointcloudMapper();
 
-		slam3d::PointCloud::Ptr createFromRockMessage(const base::samples::Pointcloud& cloud);
-		void createFromPcl(slam3d::PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud);
-		PointCloudMeasurement::Ptr castToPointcloud(Measurement::Ptr m);
-
 		bool configureHook();
 		bool startHook();
 		void updateHook();

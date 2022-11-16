@@ -160,16 +160,6 @@ void PointcloudMapper::sendPointcloud(const VertexObjectList& vertices)
 	_cloud.write(mapCloud);
 }
 
-PointCloudMeasurement::Ptr PointcloudMapper::castToPointcloud(Measurement::Ptr m)
-{
-	PointCloudMeasurement::Ptr pcm = boost::dynamic_pointer_cast<PointCloudMeasurement>(m);
-	if(!pcm)
-	{
-		throw BadMeasurementType();
-	}
-	return pcm;
-}
-
 void PointcloudMapper::handleNewScan(const VertexObject& scan)
 {
 	addScanToMap(castToPointcloud(scan.measurement), scan.corrected_pose);
@@ -392,43 +382,6 @@ bool PointcloudMapper::startHook()
 	return true;
 }
 
-PointCloud::Ptr PointcloudMapper::createFromRockMessage(const base::samples::Pointcloud& cloud_in)
-{
-	PointCloud::Ptr cloud_out(new PointCloud);
-	cloud_out->header.stamp = cloud_in.time.toMicroseconds();
-	cloud_out->reserve(cloud_in.points.size());
-	
-	unsigned numPoints = cloud_in.points.size();
-	for(unsigned i = 0; i < numPoints; ++i)
-	{
-		PointType p;
-		p.x = cloud_in.points[i][0];
-		p.y = cloud_in.points[i][1];
-		p.z = cloud_in.points[i][2];
-		cloud_out->push_back(p);
-	}
-    
-	if(mScansAdded == 0 && _initial_patch_radius > 0)
-	{
-		mPclSensor->fillGroundPlane(cloud_out, _initial_patch_radius);
-	}
-	return cloud_out;
-}
-
-void PointcloudMapper::createFromPcl(PointCloud::ConstPtr pcl_cloud, base::samples::Pointcloud& base_cloud)
-{
-	base_cloud.time.fromMicroseconds(pcl_cloud->header.stamp);
-	base_cloud.points.reserve(pcl_cloud->size());
-	for(PointCloud::const_iterator it = pcl_cloud->begin(); it < pcl_cloud->end(); it++)
-	{
-		base::Point p;
-		p[0] = it->x;
-		p[1] = it->y;
-		p[2] = it->z;
-		base_cloud.points.push_back(p);
-	}
-}
-
 void PointcloudMapper::transformerCallback(const base::Time &time)
 {
 	try
@@ -512,6 +465,10 @@ void PointcloudMapper::updateHook()
 
 		// Transform base::samples::Pointcloud --> Pointcloud
 		PointCloud::Ptr cloud = createFromRockMessage(scan_sample);
+		if(mScansAdded == 0 && _initial_patch_radius > 0)
+		{
+			mPclSensor->fillGroundPlane(cloud, _initial_patch_radius);
+		}
 		
 		// Downsample and add to map
 		PointCloudMeasurement::Ptr measurement;
