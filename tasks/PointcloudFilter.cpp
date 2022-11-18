@@ -67,8 +67,13 @@ void PointcloudFilter::updateHook()
 		for(std::vector<base::Vector3d>::const_iterator it = cloud.points.begin(); it < cloud.points.end(); ++it)
 		{
 			double sq_dist = ((*it)[0] * (*it)[0]) + ((*it)[1] * (*it)[1]) + ((*it)[2] * (*it)[2]);
-			if((*it)[2] < mMaxHeight && (*it)[2] > mMinHeight && sq_dist < mSqMaxDistance && sq_dist > mSqMinDistance)
-				filtered_cloud.points.push_back(*it);
+			
+			if((mMaxHeight || mMinHeight) && (*it)[2] > mMaxHeight && (*it)[2] < mMinHeight)
+				continue;
+			if(sq_dist > mSqMaxDistance || sq_dist < mSqMinDistance)
+				continue;
+
+			filtered_cloud.points.push_back(*it);
 		}
 		filtered_cloud.time = cloud.time;
 		_output.write(filtered_cloud);
