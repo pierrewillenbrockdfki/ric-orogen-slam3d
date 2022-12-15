@@ -550,6 +550,7 @@ void PointcloudMapper::stopHook()
 void PointcloudMapper::cleanupHook()
 {
 	PointcloudMapperBase::cleanupHook();
+	delete mMapper;
 	delete mGraph;
 	delete mPclSensor;
 	if(mOdometry)
