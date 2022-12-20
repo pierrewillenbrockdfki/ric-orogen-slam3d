@@ -1,6 +1,8 @@
 name "slam3d"
 
-using_library 'slam3d'
+using_library 'slam3d_graph_boost'
+using_library 'slam3d_sensor_pcl'
+using_library 'slam3d_solver_g2o'
 using_library 'transformer'
 using_library 'maps'
 
