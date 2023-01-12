@@ -214,7 +214,8 @@ bool PointcloudMapper::loadPLYMap(const std::string& path)
 		try
 		{
 			VertexObject root_node = mGraph->getVertex(0);
-			mMapper->addExternalMeasurement(initial_map, root_node.measurement->getUniqueId(), TransformWithCovariance(), "ply-loader");
+			mMapper->addExternalMeasurement(initial_map, root_node.measurement->getUniqueId(),
+				Transform::Identity(), Covariance<6>::Identity(), "ply-loader");
 			addScanToMap(initial_map, Transform::Identity());
 			return true;
 		}

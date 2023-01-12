@@ -24,12 +24,10 @@ void RockOdometry::handleNewVertex(IdType vertex)
 	Transform currentOdometricPose = getPose(stamp);
 	if(mLastVertex > 0)
 	{
-		TransformWithCovariance twc;
-		twc.transform = mLastOdometricPose.inverse() * currentOdometricPose;
-		twc.covariance = calculateCovariance(twc.transform);
-		SE3Constraint::Ptr se3(new SE3Constraint(mName, twc));
+		Transform transform = mLastOdometricPose.inverse() * currentOdometricPose;
+		SE3Constraint::Ptr se3(new SE3Constraint(mName, transform, calculateCovariance(transform).inverse()));
 		mGraph->addConstraint(mLastVertex, vertex, se3);
-		mGraph->setCorrectedPose(vertex, mGraph->getVertex(mLastVertex).corrected_pose * twc.transform);
+		mGraph->setCorrectedPose(vertex, mGraph->getVertex(mLastVertex).corrected_pose * transform);
 	}
 	
 	// Add a gravity vector to this vertex
