@@ -444,6 +444,12 @@ void PointcloudMapper::updateHook()
 	base::samples::Pointcloud scan_sample;
 	while(_scan.read(scan_sample, false) == RTT::NewData)
 	{
+		if(scan_sample.points.size() == 0)
+		{
+			mLogger->message(ERROR, "Scan sample has no points.");
+			continue;
+		}
+
 		// Get laser pose
 		Transform laserPose = Transform::Identity();
 		try
