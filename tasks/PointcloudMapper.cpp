@@ -499,7 +499,7 @@ void PointcloudMapper::updateHook()
 				mForceAdd = false;
 				mCurrentDrift = orthogonalize(mMapper->getCurrentPose() * mOdometry->getPose(measurement->getTimestamp()).inverse());
 				mPclSensor->linkLastToNeighbors();
-				handleNewScan(mMapper->getLastVertex());
+				handleNewScan(mGraph->getVertex(mPclSensor->getLastVertexId()));
 				
 				if(mGraph->getNumOfNewConstraints() >= _optimization_rate)
 				{
