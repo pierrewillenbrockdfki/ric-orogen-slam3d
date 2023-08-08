@@ -493,11 +493,15 @@ void PointcloudMapper::updateHook()
 			
 			mScansReceived++;
 
-			if(mPclSensor->addMeasurement(measurement, mOdometry->getPose(measurement->getTimestamp())))
+			if(mOdometry && mPclSensor->addMeasurement(measurement, mOdometry->getPose(measurement->getTimestamp())) ||
+                            (!mOdometry && mPclSensor->addMeasurement(measurement)))
 			{
 				mScansAdded++;
 				mForceAdd = false;
-				mCurrentDrift = orthogonalize(mMapper->getCurrentPose() * mOdometry->getPose(measurement->getTimestamp()).inverse());
+                                if(mOdometry)
+                                    mCurrentDrift = orthogonalize(mMapper->getCurrentPose() * mOdometry->getPose(measurement->getTimestamp()).inverse());
+                                else
+                                    mCurrentDrift = orthogonalize(mMapper->getCurrentPose().inverse());
 				mPclSensor->linkLastToNeighbors();
 				handleNewScan(mMapper->getLastVertex());
 				
@@ -556,6 +560,7 @@ void PointcloudMapper::stopHook()
 
 void PointcloudMapper::cleanupHook()
 {
+	_robot2odometry.registerUpdateCallback(boost::function<void (const base::Time &ts)>());
 	PointcloudMapperBase::cleanupHook();
 	delete mMapper;
 	delete mGraph;
