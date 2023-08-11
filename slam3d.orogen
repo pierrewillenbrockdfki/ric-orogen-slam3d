@@ -6,6 +6,8 @@ using_library 'slam3d_solver_g2o'
 using_library 'transformer'
 using_library 'maps'
 
+cxx_standard maximum_library_cxx_standard
+
 import_types_from 'base'
 import_types_from 'maps'
 import_types_from 'pcl'
