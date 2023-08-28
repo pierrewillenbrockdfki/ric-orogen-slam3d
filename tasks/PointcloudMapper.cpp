@@ -557,6 +557,10 @@ void PointcloudMapper::stopHook()
 void PointcloudMapper::cleanupHook()
 {
 	PointcloudMapperBase::cleanupHook();
+
+	// Unregister the transformer callback
+	_robot2odometry.registerUpdateCallback(boost::function<void (const base::Time &ts)>());
+
 	delete mMapper;
 	delete mGraph;
 	delete mPclSensor;
