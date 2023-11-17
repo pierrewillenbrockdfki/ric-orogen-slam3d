@@ -495,10 +495,16 @@ void PointcloudMapper::updateHook()
 
 			bool added = false;
 			if(mOdometry)
-				if(added = mPclSensor->addMeasurement(measurement, mOdometry->getPose(measurement->getTimestamp())))
+			{
+				added = mPclSensor->addMeasurement(measurement, mOdometry->getPose(measurement->getTimestamp()));
+				if(added)
+				{
 					mCurrentDrift = orthogonalize(mMapper->getCurrentPose() * mOdometry->getPose(measurement->getTimestamp()).inverse());
-			else
+				}
+			}else
+			{
 				added = mPclSensor->addMeasurement(measurement);
+			}
 
 			if(added)
 			{
