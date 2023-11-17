@@ -32,6 +32,8 @@ task_context "PointcloudMapper" do
 
 		transform_output "robot2map", "robot" => "map"
 		transform_output "odometry2map", "odometry" => "map"
+
+		align_port("scan")
 	end
 
 	operation('generate_cloud')
