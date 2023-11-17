@@ -72,6 +72,8 @@ namespace slam3d
 		Eigen::Affine3d mCurrentDrift;
 		base::Time mCurrentTime;
 
+		int scan_idx_tr;
+
 	public:
 		PointcloudMapper(std::string const& name = "slam3d::PointcloudMapper");
 		PointcloudMapper(std::string const& name, RTT::ExecutionEngine* engine);

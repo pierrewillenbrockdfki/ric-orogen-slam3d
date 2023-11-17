@@ -257,6 +257,9 @@ bool PointcloudMapper::configureHook()
 	if (! PointcloudMapperBase::configureHook())
 		return false;
 		
+	scan_idx_tr = _transformer.registerDataStream< base::samples::Pointcloud >(
+			base::Time::fromSeconds(0), boost::bind( &PointcloudMapper::scanTransformerCallback, this, _1, _2), 2, "scan");
+
 	mClock = new Clock();
 	switch(_log_type)
 	{
@@ -441,6 +444,12 @@ void PointcloudMapper::updateHook()
 		mStartPoseInitialized = true;
 	}
 
+	base::samples::Pointcloud scan_sample;
+	while(_scan.read(scan_sample, false) == RTT::NewData)
+	{
+		_transformer.pushData(scan_idx_tr, aggregator::determineTimestamp(scan_sample), scan_sample);
+	}
+
 }
 
 void PointcloudMapper::scanTransformerCallback(const base::Time &ts,
@@ -590,4 +599,6 @@ void PointcloudMapper::cleanupHook()
 	delete mPatchSolver;
 	delete mLogger;
 	delete mClock;
+
+	_transformer.unregisterDataStream(scan_idx_tr);
 }
